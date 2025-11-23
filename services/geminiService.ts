@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
 import type { SearchResult } from '../types';
 
@@ -212,90 +211,5 @@ export async function generateSpeechFromText(text: string): Promise<string | nul
     } catch (error) {
         console.error("Single-speaker speech generation failed:", error);
         return null;
-    }
-}
-
-export async function generateVideo(
-    params: { 
-        prompt?: string; 
-        image?: { data: string; mimeType: string }; 
-        aspectRatio: '16:9' | '9:16'; 
-    },
-    onProgress: (msg: string) => void
-): Promise<string> {
-    // Check for API Key selection for Veo (Paid feature)
-    if ((window as any).aistudio && (window as any).aistudio.hasSelectedApiKey) {
-        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-        if (!hasKey) {
-            await (window as any).aistudio.openSelectKey();
-        }
-    }
-
-    // Always create a new instance to get the latest key
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-    onProgress("Sending request to Veo model...");
-    
-    try {
-        const config: any = {
-            numberOfVideos: 1,
-            resolution: '720p', 
-            aspectRatio: params.aspectRatio
-        };
-
-        const request: any = {
-            model: 'veo-3.1-fast-generate-preview',
-            config: config
-        };
-
-        if (params.prompt) {
-            request.prompt = params.prompt;
-        } else if (!params.image) {
-             throw new Error("Prompt is required if no image is provided.");
-        }
-
-        if (params.image) {
-             request.image = {
-                imageBytes: params.image.data,
-                mimeType: params.image.mimeType
-             };
-        }
-
-        let operation = await ai.models.generateVideos(request);
-
-        onProgress("Video generation in progress. This may take a minute...");
-
-        // Polling
-        while (!operation.done) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            onProgress("Still rendering... " + new Date().toLocaleTimeString());
-            operation = await ai.operations.getVideosOperation({operation: operation});
-        }
-        
-        if (operation.error) {
-             throw new Error(`Video generation failed: ${operation.error.message}`);
-        }
-
-        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-        if (!downloadLink) {
-            throw new Error("No video URI in response.");
-        }
-
-        onProgress("Downloading video...");
-        
-        const videoResponse = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-        const videoBlob = await videoResponse.blob();
-        return URL.createObjectURL(videoBlob);
-
-    } catch (error: any) {
-        console.error("Video generation failed:", error);
-        if (error.message && error.message.includes("Requested entity was not found")) {
-             // Reset key selection state if possible or just alert user
-             if ((window as any).aistudio) {
-                 await (window as any).aistudio.openSelectKey();
-                 throw new Error("API Key invalid or not selected. Please try again.");
-             }
-        }
-        throw error;
     }
 }

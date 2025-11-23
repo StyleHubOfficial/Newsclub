@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 
 export const generateAppDescriptionPDF = () => {
@@ -82,150 +81,131 @@ export const generateAppDescriptionPDF = () => {
 
     addTitle("Gemini Hi-Tech News Hub: Comprehensive Specification");
     
-    addText("This document provides a complete 'A to Z' specification for the Gemini Hi-Tech News Hub application. It describes the architecture, styling, components, and AI integration details required to reconstruct the application exactly as it is.");
+    addText("This document provides a complete 'A to Z' specification for the Gemini Hi-Tech News Hub application. It includes exact configurations, styles, and AI service definitions required to recreate the app perfectly.");
 
     addSection("1. Configuration & Environment");
-    addText("The application uses a specific API Key for Google Gemini services. This key must be hardcoded or configured in the build environment.");
-    addCode('API KEY: AIzaSyAaYWax27TqfuuG0m-lyFYe62XPT72w5Ms\n\nEnvironment: Browser-based React Application (Vite)\nPermissions: Microphone (requestFramePermissions in metadata.json)');
+    addText("The application requires a specific API Key to access Google Gemini services. This key is hardcoded in the Vite configuration.");
+    addCode('API KEY: AIzaSyAaYWax27TqfuuG0m-lyFYe62XPT72w5Ms\n\nFramework: React 19 (via Vite)\nLanguage: TypeScript\nStyling: Tailwind CSS (CDN)\nIcons: Custom SVG Components');
 
-    addSection("2. Design System (Tailwind CSS)");
-    addText("The application uses a 'Cyberpunk' aesthetic defined in index.html via Tailwind configuration.");
-    addSubSection("Color Palette");
-    addText("• Background (brand-bg): #020617 (Deep Blue/Black)");
-    addText("• Surface (brand-surface): #0f172a (Slate Blue)");
-    addText("• Primary (brand-primary): #0ea5e9 (Cyan)");
-    addText("• Secondary (brand-secondary): #6366f1 (Indigo)");
-    addText("• Accent (brand-accent): #e11d48 (Rose/Red)");
-    addText("• Text (brand-text): #e2e8f0 (Light Gray)");
-    addSubSection("Typography");
-    addText("• Headlines: 'Orbitron' (Google Fonts) - Futuristic, wide.");
-    addText("• Body: 'Roboto' (Google Fonts) - Clean, standard.");
-    addSubSection("Animations");
-    addText("• fade-in: Simple opacity transition.");
-    addText("• slide-up: Translates Y from 20px to 0.");
-    addText("• pulse-glow: Box shadow oscillation between Primary and Secondary colors.");
-
-    addSection("3. Application Architecture (App.tsx)");
-    addText("The root component manages the global state and layout.");
-    addSubSection("State Management");
-    addCode(`const [selectedArticle, setSelectedArticle] = useState(null);
-const [isChatOpen, setChatOpen] = useState(false);
-const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
-const [isAudioGenOpen, setAudioGenOpen] = useState(false);
-const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'reels'
-const [savedArticles, setSavedArticles] = useState(Set); // Persisted to localStorage`);
-    addSubSection("Core Layout");
-    addText("1. Header (Sticky top)");
-    addText("2. Main Content Area (Grid or Reels view)");
-    addText("3. Floating Action Buttons (Bottom Right): Audio Studio, Live Agent, ChatBot.");
-    addText("4. Modals (Rendered conditionally): ArticleModal, SearchResultsModal, PersonalizationModal, AudioGenerationModal, LiveAgent.");
-
-    addSection("4. Component Specifications");
-
-    addSubSection("4.1 Header.tsx");
-    addText("A sticky glass-morphism bar.");
-    addText("• Left: Logo 'G-NEWS' (Orbitron).");
-    addText("• Center/Right Controls:");
-    addText("  - Settings Icon: Opens PersonalizationModal.");
-    addText("  - Bookmark Icon: Toggles 'Show Saved Only'.");
-    addText("  - Grid/Reels Icon: Toggles viewMode.");
-    addText("  - Document Icon: Triggers this PDF export.");
-    addText("• Search Bar: Input field that calls `searchWithGoogle`. Displays spinner when searching.");
-
-    addSubSection("4.2 NewsCard.tsx (Grid Item)");
-    addText("• Structure: Image top (h-56), Content bottom.");
-    addText("• Image Overlay: Gradient black-to-transparent. Category badge (Primary color). Save button (top right).");
-    addText("• Content: Title (Orbitron), Summary (Roboto).");
-    addText("• Behavior: Hover scales up slightly and glows. Clicking opens ArticleModal.");
-
-    addSubSection("4.3 ReelsView.tsx & ReelCard.tsx");
-    addText("• Layout: Full-screen height (calc(100vh - 68px)). CSS Scroll Snap (snap-y snap-mandatory).");
-    addText("• Card Style: Background image covers entire screen. Gradient overlay. Text anchored at bottom left. Large typography.");
-
-    addSubSection("4.4 ArticleModal.tsx");
-    addText("Detailed view of an article.");
-    addText("• Header: Title and Close button.");
-    addText("• Tabs System:");
-    addText("  1. Full Text: Displays raw article content.");
-    addText("  2. Summary: Calls `getFastSummary` (Bullet points).");
-    addText("  3. Analysis: Calls `getDeepAnalysis` (Thinking model).");
-    addText("  4. AI Topic: Custom text input for generation.");
-    addText("  5. Data: Renders `InteractiveChart` if data exists.");
-    addText("• Footer: Language selector (English, Hindi, Hinglish), Share menu, Save toggle, and 'Read Aloud' button.");
-    addText("• Audio Player: When 'Read Aloud' is active, shows AudioVisualizer canvas, volume slider, and playback rate controls.");
-
-    addSubSection("4.5 ChatBot.tsx");
-    addText("Floating fixed chat window.");
-    addText("• Messages: List of user/bot bubbles. Supports markdown text and images.");
-    addText("• Input Area: Text input + Send button. Toggle button for 'Image Mode'.");
-    addText("• AI Logic: Uses `streamChatResponse` (gemini-2.5-flash) for text, `generateImageFromPrompt` (gemini-2.5-flash-image) for images.");
-
-    addSubSection("4.6 LiveAgent.tsx");
-    addText("Real-time voice interface.");
-    addText("• Visuals: Center modal. Large AudioVisualizer. Status indicators (Listening, Thinking, Speaking).");
-    addText("• Transcript: Shows scrolling history of User vs Cygnus (AI).");
-    addText("• Tech: Uses `ai.live.connect` with WebSocket. Handles raw PCM audio encoding/decoding.");
-
-    addSubSection("4.7 AudioGenerationModal.tsx");
-    addText("Dedicated studio for audio.");
-    addText("• Modes: Text-to-Speech, Article Broadcast, AI Conversation.");
-    addText("• Logic: Generates multi-speaker scripts using `generateNewsBroadcastSpeech` then synthesizing audio via `gemini-2.5-flash-preview-tts`.");
-
-    addSection("5. Service Layer (geminiService.ts)");
-    addText("This layer handles all interactions with the Google GenAI SDK.");
+    addSection("2. Visual Identity & Design System");
+    addText("The UI follows a 'Cyberpunk/Futuristic' aesthetic with a dark mode base.");
     
-    addCode(`
-// 1. Initialization
-const ai = new GoogleGenAI({ apiKey: "AIzaSyAaYWax27TqfuuG0m-lyFYe62XPT72w5Ms" });
+    addSubSection("Color Palette (Tailwind)");
+    addText("• Background: #020617 (brand-bg) - Deep space blue.");
+    addText("• Surface: #0f172a (brand-surface) - Slate for cards/modals.");
+    addText("• Primary: #0ea5e9 (brand-primary) - Cyan/Sky blue for active states.");
+    addText("• Secondary: #6366f1 (brand-secondary) - Indigo for accents.");
+    addText("• Accent: #e11d48 (brand-accent) - Rose/Red for alerts/recording.");
+    addText("• Text: #e2e8f0 (brand-text) - Light gray for readability.");
+    
+    addSubSection("Typography");
+    addText("• Headings: 'Orbitron' (Google Fonts) - Geometric, sci-fi feel.");
+    addText("• Body: 'Roboto' (Google Fonts) - Clean legibility.");
 
-// 2. Short Summary
-// Model: gemini-flash-lite-latest
-// Task: 2-3 sentence summary.
+    addSection("3. UI Interface Description (A-Z)");
+    
+    addSubSection("App Layout (App.tsx)");
+    addText("The root container is a flex-col taking full screen height (h-screen).");
+    addText("- Header: Sticky at top.");
+    addText("- Main Content: Flexible area showing either 'Grid View' or 'Reels View'.");
+    addText("- Floating Action Buttons (FAB): Fixed at bottom-right (z-50).");
+    addText("  1. Audio Studio (SoundWaveIcon): Opens AudioGenerationModal.");
+    addText("  2. Live Agent (MicIcon): Opens LiveAgent modal (pulses when idle).");
+    addText("  3. ChatBot (BoltIcon): Toggles ChatBot popup.");
 
-// 3. Deep Analysis
-// Model: gemini-2.5-pro
-// Config: { thinkingConfig: { thinkingBudget: 32768 } }
-// Task: Detailed analysis with headers.
+    addSubSection("Header Component");
+    addText("Glassmorphism effect (backdrop-blur). Contains:");
+    addText("- Branding: 'G-NEWS' with color accents.");
+    addText("- Controls Row:");
+    addText("  - Settings (Gear): Personalization.");
+    addText("  - Bookmark (Flag): Toggle saved articles.");
+    addText("  - View Toggle (Grid/Film): Switch between Grid and Reels.");
+    addText("  - PDF Export (Doc): Downloads this spec.");
+    addText("- Search Bar: Full width max-md. Rounded full. Spinner appears on right when searching.");
 
-// 4. Search Grounding
-// Model: gemini-2.5-flash
-// Tool: { googleSearch: {} }
-// Returns: Text answer + source URLs.
+    addSubSection("Main Feed (NewsCard.tsx)");
+    addText("Displayed in a responsive grid.");
+    addText("- Image: Top section, cover fit. Overlay gradient.");
+    addText("- Category Badge: Top-left over image.");
+    addText("- Save Button: Top-right over image.");
+    addText("- Text Content: Title (Orbitron) and AI-generated summary (Roboto).");
+    addText("- Animations: Hover lifts card (-translate-y-1) and glows border.");
 
-// 5. Image Generation
-// Model: gemini-2.5-flash-image
-// Config: { responseModalities: [Modality.IMAGE] }
+    addSubSection("Reels View (ReelCard.tsx)");
+    addText("Snap-scrolling vertical feed (TikTok style).");
+    addText("- Background: Full screen image.");
+    addText("- Overlay: Dark gradient from bottom.");
+    addText("- Content: Title and Summary large text at bottom-left.");
+    addText("- 'Read More' button: Opens ArticleModal.");
 
-// 6. Live Interaction
-// Model: gemini-2.5-flash-native-audio-preview-09-2025
-// Config: SpeechConfig with voice 'Zephyr'.
+    addSubSection("Article Modal");
+    addText("Full-screen overlay with centered content card.");
+    addText("- Tabs: Full Text, Summary (Bullet points), Analysis (Deep dive), AI Topic (Custom), Data (Charts).");
+    addText("- Audio Player: Bottom sticky bar. Includes AudioVisualizer canvas, Volume slider, Playback Rate (1x, 1.5x, 2x).");
+    addText("- Share Menu: Popup with Twitter, Facebook, Email, Copy Link.");
+    addText("- Logic: Uses 'gemini-2.5-flash-preview-tts' for reading text.");
 
-// 7. Text-to-Speech (TTS)
-// Model: gemini-2.5-flash-preview-tts
-// Config: Multi-speaker (Orion=Kore, Celeste=Puck) or Single (Kore).
-`);
+    addSubSection("Live Agent Modal");
+    addText("Interface for real-time voice conversation.");
+    addText("- Center: Scrollable transcript (User vs Cygnus).");
+    addText("- Footer: Large AudioVisualizer. Status text (Listening/Thinking/Speaking).");
+    addText("- Tech: Connects via WebSocket to Gemini Live API.");
 
-    addSection("6. Data Structure");
-    addCode(`
-interface NewsArticle {
-    id: number;
-    title: string;
-    summary: string; // AI generated
-    content: string; // Full text
-    image: string; // URL
-    category: string;
-    source: string;
-    dataPoints?: { label: string, value: number }[]; // For charts
-}
+    addSubSection("Audio Studio Modal");
+    addText("Dedicated text-to-speech generation interface.");
+    addText("- Modes: Text Input, Article Selection, AI Conversation (Topic based).");
+    addText("- File Upload: Supports .txt file upload for topic generation.");
+    addText("- Output: Plays generated audio with visualization.");
 
-// Sample Categories: Cybernetics, Artificial Intelligence, Energy, Space.
-`);
+    addSubSection("ChatBot");
+    addText("Fixed widget bottom-right.");
+    addText("- Header: 'AI Assistant'.");
+    addText("- Body: Chat history bubbles.");
+    addText("- Input: Text field + Image Generation toggle.");
+    addText("- Logic: Streams text responses or generates images via 'gemini-2.5-flash-image'.");
 
-    addSection("7. Build & Deploy");
-    addText("• Build Tool: Vite");
-    addText("• Language: TypeScript");
-    addText("• Styling: Tailwind CSS (via CDN/Config in HTML)");
-    addText("• PDF Generation: jsPDF (Client-side)");
+    addSection("4. AI Services & Models");
+    addText("All AI calls are centralized in 'services/geminiService.ts'.");
+    
+    addSubSection("Text Tasks");
+    addCode(`// Summarization
+model: "gemini-flash-lite-latest"
+prompt: "Summarize ... in 2-3 concise sentences"
+
+// Deep Analysis
+model: "gemini-2.5-pro"
+config: { thinkingConfig: { thinkingBudget: 32768 } }
+
+// Search Grounding
+model: "gemini-2.5-flash"
+tools: [{ googleSearch: {} }]`);
+
+    addSubSection("Multimedia Tasks");
+    addCode(`// Image Generation
+model: "gemini-2.5-flash-image"
+
+// Text-to-Speech (TTS)
+model: "gemini-2.5-flash-preview-tts"
+voices: "Kore" (Male), "Puck" (Female) for dialogues.
+
+// Live Conversation
+model: "gemini-2.5-flash-native-audio-preview-09-2025"
+voice: "Zephyr"`);
+
+    addSection("5. Data Structures");
+    addCode(`interface NewsArticle {
+  id: number;
+  title: string;
+  summary: string;
+  content: string;
+  image: string;
+  category: string;
+  source: string;
+  dataPoints?: { label: string; value: number }[];
+}`);
+
+    addSection("6. Note on Video Generation");
+    addText("Video generation features have been explicitly removed from this version of the application as per user requirements.");
 
     doc.save("Gemini_News_Hub_Full_Spec.pdf");
 };
