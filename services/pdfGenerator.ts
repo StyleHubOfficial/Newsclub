@@ -173,7 +173,7 @@ model: "gemini-flash-lite-latest"
 prompt: "Summarize ... in 2-3 concise sentences"
 
 // Deep Analysis
-model: "gemini-2.5-pro"
+model: "gemini-3-pro-preview"
 config: { thinkingConfig: { thinkingBudget: 32768 } }
 
 // Search Grounding

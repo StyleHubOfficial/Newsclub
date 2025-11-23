@@ -57,7 +57,7 @@ export async function getDeepAnalysis(text: string): Promise<string> {
     try {
         const ai = getAiClient();
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-3-pro-preview',
             contents: `Provide a deep, insightful analysis of the following article. Consider the technological, ethical, and societal implications. Break it down into sections with clear headings:\n\n---\n${text}`,
             config: {
                 thinkingConfig: { thinkingBudget: 32768 },
