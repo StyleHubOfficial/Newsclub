@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
@@ -6,6 +5,7 @@ import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, Twitt
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import AudioVisualizer from './AudioVisualizer';
 import InteractiveChart from './InteractiveChart';
+import { HolographicScanner, ThinkingBubble } from './Loaders';
 
 type Language = 'English' | 'Hindi' | 'Hinglish';
 type ActiveTab = 'full' | 'summary' | 'analysis' | 'data' | 'custom';
@@ -125,7 +125,6 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         let textToRead = '';
         if (activeTab === 'custom') {
             if (!customTopic.trim()) {
-                // Ideally, show a small error message to the user
                 console.error("Custom topic is empty.");
                 return;
             }
@@ -170,7 +169,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         if (isLoading && !analysisResult && !isPlaying) {
             return (
                 <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-primary"></div>
+                    <HolographicScanner text="PROCESSING CONTENT" />
                 </div>
             );
         }
@@ -311,7 +310,8 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                <BookmarkIcon isSaved={isSaved} /> {isSaved ? 'Saved' : 'Save'}
                             </button>
                              <button onClick={handleTextToSpeech} disabled={(isLoading && !isPlaying) || activeTab === 'data'} className="px-4 py-2 rounded font-semibold text-sm bg-brand-accent text-white hover:bg-opacity-80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center">
-                                {isPlaying ? 'Stop' : <VolumeIcon />} {isPlaying ? 'Playing...' : (isLoading ? 'Generating...' : 'Read Aloud')}
+                                {isPlaying ? 'Stop' : <VolumeIcon />} 
+                                {isPlaying ? 'Playing...' : (isLoading ? <ThinkingBubble /> : 'Read Aloud')}
                             </button>
                         </div>
                     </div>

@@ -4,6 +4,7 @@ import { decode, decodeAudioData } from '../utils/audioUtils';
 import { NewsArticle } from '../types';
 import { CloseIcon, SparklesIcon, UploadIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
+import { QuantumSpinner } from './Loaders';
 
 interface AudioGenerationModalProps {
     articles: NewsArticle[];
@@ -12,7 +13,7 @@ interface AudioGenerationModalProps {
 
 type Mode = 'text' | 'article' | 'ai-conversation';
 type Language = 'English' | 'Hindi' | 'Hinglish';
-const progressMessages = ["Thinking... 💬", "Analyzing text...", "Synthesizing speech...", "Finalizing audio..."];
+const progressMessages = ["INITIALIZING NEURAL NET", "ANALYZING SYNTAX", "SYNTHESIZING AUDIO WAVES", "FINALIZING OUTPUT"];
 
 const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, onClose }) => {
     const [mode, setMode] = useState<Mode>('text');
@@ -189,54 +190,59 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                         </div>
                     </div>
 
-                    {mode === 'text' && (
-                        <textarea 
-                            value={textInput}
-                            onChange={e => setTextInput(e.target.value)}
-                            placeholder="Type or paste text here to generate a single-speaker narration..."
-                            className="w-full h-32 bg-brand-bg border-2 border-brand-secondary/50 rounded-lg p-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text"
-                        />
-                    )}
-                    {mode === 'article' && (
-                        <div>
-                             <select 
-                                value={selectedArticleId || ''} 
-                                onChange={e => setSelectedArticleId(Number(e.target.value))}
-                                className="w-full bg-brand-bg border-2 border-brand-secondary/50 rounded-full py-2 px-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text mb-2"
-                             >
-                                {articles.map(article => <option key={article.id} value={article.id}>{article.title}</option>)}
-                            </select>
-                            <p className="text-sm text-brand-text-muted h-10 overflow-hidden">{selectedArticle?.summary}</p>
+                    {status === 'generating' ? (
+                        <div className="flex flex-col items-center justify-center h-48 py-8 animate-fade-in">
+                            <QuantumSpinner text={progressMessage} />
                         </div>
-                    )}
-                    {mode === 'ai-conversation' && (
-                         <div className="relative">
-                            <textarea 
-                                value={aiTopicInput}
-                                onChange={e => setAiTopicInput(e.target.value)}
-                                placeholder="Describe a topic... The AI will generate a news-style conversation about it. You can also upload a .txt file."
-                                className="w-full h-32 bg-brand-bg border-2 border-brand-secondary/50 rounded-lg p-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text pr-28"
-                            />
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
-                            <button 
-                                onClick={() => fileInputRef.current?.click()} 
-                                className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-brand-bg border border-brand-secondary/50 rounded-full text-sm font-semibold text-brand-text-muted hover:bg-brand-surface hover:text-brand-text transition-colors"
-                            >
-                                <UploadIcon className="h-4 w-4" />
-                                Upload
-                            </button>
-                        </div>
+                    ) : (
+                        <>
+                            {mode === 'text' && (
+                                <textarea 
+                                    value={textInput}
+                                    onChange={e => setTextInput(e.target.value)}
+                                    placeholder="Type or paste text here to generate a single-speaker narration..."
+                                    className="w-full h-32 bg-brand-bg border-2 border-brand-secondary/50 rounded-lg p-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text"
+                                />
+                            )}
+                            {mode === 'article' && (
+                                <div>
+                                     <select 
+                                        value={selectedArticleId || ''} 
+                                        onChange={e => setSelectedArticleId(Number(e.target.value))}
+                                        className="w-full bg-brand-bg border-2 border-brand-secondary/50 rounded-full py-2 px-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text mb-2"
+                                     >
+                                        {articles.map(article => <option key={article.id} value={article.id}>{article.title}</option>)}
+                                    </select>
+                                    <p className="text-sm text-brand-text-muted h-10 overflow-hidden">{selectedArticle?.summary}</p>
+                                </div>
+                            )}
+                            {mode === 'ai-conversation' && (
+                                 <div className="relative">
+                                    <textarea 
+                                        value={aiTopicInput}
+                                        onChange={e => setAiTopicInput(e.target.value)}
+                                        placeholder="Describe a topic... The AI will generate a news-style conversation about it. You can also upload a .txt file."
+                                        className="w-full h-32 bg-brand-bg border-2 border-brand-secondary/50 rounded-lg p-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text pr-28"
+                                    />
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()} 
+                                        className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-brand-bg border border-brand-secondary/50 rounded-full text-sm font-semibold text-brand-text-muted hover:bg-brand-surface hover:text-brand-text transition-colors"
+                                    >
+                                        <UploadIcon className="h-4 w-4" />
+                                        Upload
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
-                <div className="px-6 pb-6 text-center min-h-[80px] flex flex-col justify-center">
+                <div className="px-6 pb-6 text-center min-h-[60px] flex flex-col justify-center">
                     {status === 'idle' && (
                         <button onClick={handleGenerate} className="bg-gradient-to-br from-brand-primary to-brand-secondary text-white font-bold py-3 px-8 rounded-full text-lg transform hover:scale-105 transition-transform duration-300 self-center">
                            Synthesize Audio
                         </button>
-                    )}
-                    {status === 'generating' && (
-                        <div className="animate-fade-in font-mono text-lg text-brand-text-muted">{progressMessage}</div>
                     )}
                     {status === 'error' && (
                         <div className="animate-fade-in text-brand-accent">

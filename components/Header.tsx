@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
-import { SearchIcon, SettingsIcon, GridIcon, ReelsIcon, BookmarkIcon, DocumentDownloadIcon } from './icons';
-import { generateAppDescriptionPDF } from '../services/pdfGenerator';
+import { SearchIcon, SettingsIcon, GridIcon, ReelsIcon, BookmarkIcon } from './icons';
 
 interface HeaderProps {
     onSearch: (query: string) => void;
@@ -47,9 +45,6 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
                     <button onClick={onToggleViewMode} className="p-2 text-brand-text-muted hover:text-brand-primary transition-colors rounded-full hover:bg-brand-bg" aria-label="Toggle View Mode">
                         {viewMode === 'grid' ? <ReelsIcon /> : <GridIcon />}
-                    </button>
-                    <button onClick={generateAppDescriptionPDF} className="p-2 text-brand-text-muted hover:text-brand-primary transition-colors rounded-full hover:bg-brand-bg" aria-label="Export App Spec PDF">
-                        <DocumentDownloadIcon />
                     </button>
                 </div>
                 <form onSubmit={handleSearch} className="w-full max-w-md">

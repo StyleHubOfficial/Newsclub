@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { SearchResult } from '../types';
 import { CloseIcon } from './icons';
+import { HolographicScanner } from './Loaders';
 
 interface SearchResultsModalProps {
     result: SearchResult;
@@ -22,7 +22,7 @@ const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ result, onClose
                 <div className="p-6 flex-grow overflow-y-auto">
                     {isLoading ? (
                         <div className="flex justify-center items-center h-full">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary"></div>
+                            <HolographicScanner text="SCANNING WEB DATA" />
                         </div>
                     ) : (
                         <div>

@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
-import type { SearchResult } from '../types';
+import type { SearchResult, NewsArticle } from '../types';
 
 function getAiClient() {
     let apiKey: string | undefined;
@@ -240,5 +241,45 @@ export async function generateSpeechFromText(text: string): Promise<string | nul
     } catch (error) {
         console.error("Single-speaker speech generation failed:", error);
         return null;
+    }
+}
+
+export async function generateFuturisticArticles(count: number = 4): Promise<Omit<NewsArticle, 'id' | 'isSummaryLoading'>[]> {
+    try {
+        const ai = getAiClient();
+        const prompt = `Generate ${count} distinct, creative, and futuristic sci-fi news articles.
+        Topics can include AI, Space Colonization, Cybernetics, Biotechnology, Quantum Computing, or Nanotech.
+        
+        Return the result as a strict JSON array of objects with the following keys:
+        - title: string
+        - summary: string (2 sentences)
+        - content: string (3-4 paragraphs)
+        - category: string (One word e.g. 'Cybernetics', 'Space')
+        - source: string (Fictional news source name)
+        
+        Do not use markdown formatting. Just raw JSON.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+            }
+        });
+        
+        const rawText = response.text;
+        if (!rawText) return [];
+
+        const articles = JSON.parse(rawText);
+        
+        // Add images and clean data
+        return articles.map((article: any, index: number) => ({
+            ...article,
+            image: `https://picsum.photos/seed/${Date.now() + index + Math.random()}/600/400`,
+        }));
+
+    } catch (error) {
+        console.error("Failed to generate AI articles:", error);
+        return [];
     }
 }

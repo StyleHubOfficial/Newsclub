@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -9,10 +8,13 @@ import SearchResultsModal from './components/SearchResultsModal';
 import PersonalizationModal from './components/PersonalizationModal';
 import ReelsView from './components/ReelsView';
 import AudioGenerationModal from './components/AudioGenerationModal';
-import { getShortSummary, searchWithGoogle } from './services/geminiService';
+import BottomNav from './components/BottomNav';
+import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
+import { NewsArticle } from './types';
+import { HolographicScanner } from './components/Loaders';
 
-const allArticles = [
+const initialArticles = [
     // Page 1
   {
     id: 1,
@@ -97,27 +99,22 @@ const allArticles = [
     source: 'Atomix Corp.'
   },
 ];
-const ARTICLES_PER_PAGE = 4;
-
-const allCategories = [...new Set(allArticles.map(a => a.category))];
-const allSources = [...new Set(allArticles.map(a => a.source))];
-
 
 const App = () => {
-    const [selectedArticle, setSelectedArticle] = useState(null);
+    const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
     const [isAudioGenOpen, setAudioGenOpen] = useState(false);
-    const [searchResults, setSearchResults] = useState(null);
+    const [searchResults, setSearchResults] = useState<any>(null);
     const [isSearching, setIsSearching] = useState(false);
-    const [articles, setArticles] = useState([]);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
+    const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
+    
+    // Pagination & Infinite Scroll
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
-    const [preferences, setPreferences] = useState({ categories: [], sources: [] });
-    const [viewMode, setViewMode] = useState('grid');
-    const [savedArticles, setSavedArticles] = useState(() => {
+    const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
+    const [viewMode, setViewMode] = useState<'grid' | 'reels'>('grid');
+    const [savedArticles, setSavedArticles] = useState<Set<number>>(() => {
         try {
             const saved = localStorage.getItem('savedArticles');
             return saved ? new Set(JSON.parse(saved)) : new Set();
@@ -127,13 +124,16 @@ const App = () => {
     });
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
-    const observer = useRef();
+    const observer = useRef<IntersectionObserver | null>(null);
+
+    const allCategories = [...new Set(articles.map(a => a.category))];
+    const allSources = [...new Set(articles.map(a => a.source))];
 
     useEffect(() => {
         localStorage.setItem('savedArticles', JSON.stringify(Array.from(savedArticles)));
     }, [savedArticles]);
 
-    const toggleSaveArticle = useCallback((articleId) => {
+    const toggleSaveArticle = useCallback((articleId: number) => {
         setSavedArticles(prev => {
             const newSet = new Set(prev);
             if (newSet.has(articleId)) {
@@ -145,46 +145,40 @@ const App = () => {
         });
     }, []);
 
-    const fetchArticles = useCallback(async (pageNum) => {
+    const fetchMoreArticles = useCallback(async () => {
+        if (isLoadingMore) return;
         setIsLoadingMore(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const startIndex = (pageNum - 1) * ARTICLES_PER_PAGE;
-        const endIndex = pageNum * ARTICLES_PER_PAGE;
-        const newArticles = allArticles.slice(startIndex, endIndex);
+        // Fetch new AI generated articles
+        try {
+            const newRawArticles = await generateFuturisticArticles(4);
+            
+            const newArticles: NewsArticle[] = newRawArticles.map((a, index) => ({
+                id: Date.now() + index, // Ensure unique ID
+                ...a,
+                isSummaryLoading: false // Already summarized by AI generator
+            }));
 
-        const articlesWithLoadingState = newArticles.map(article => ({ ...article, summary: '', isSummaryLoading: true }));
-        setArticles(prev => [...prev, ...articlesWithLoadingState]);
+            setArticles(prev => [...prev, ...newArticles]);
+        } catch (e) {
+            console.error("Failed to load more articles", e);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    }, [isLoadingMore]);
 
-        newArticles.forEach(async (article) => {
-            const summary = await getShortSummary(article.content);
-            setArticles(prev => prev.map(a => a.id === article.id ? { ...a, summary, isSummaryLoading: false } : a));
-        });
-        
-        setHasMore(endIndex < allArticles.length);
-        setIsLoadingMore(false);
-    }, []);
-
-    useEffect(() => {
-        fetchArticles(1);
-    }, [fetchArticles]);
-
-    const lastArticleElementRef = useCallback((node) => {
+    const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
         if (isLoadingMore || showSavedOnly) return;
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && hasMore) {
-                setPage(prevPage => {
-                    const nextPage = prevPage + 1;
-                    fetchArticles(nextPage);
-                    return nextPage;
-                });
+            if (entries[0].isIntersecting) {
+                fetchMoreArticles();
             }
         });
         if (node) observer.current.observe(node);
-    }, [isLoadingMore, hasMore, fetchArticles, showSavedOnly]);
+    }, [isLoadingMore, showSavedOnly, fetchMoreArticles]);
 
-    const handleCardClick = (article) => {
+    const handleCardClick = (article: NewsArticle) => {
         setSelectedArticle(article);
     };
 
@@ -196,7 +190,7 @@ const App = () => {
         setSearchResults(null);
     };
 
-    const handleSearch = useCallback(async (query) => {
+    const handleSearch = useCallback(async (query: string) => {
         if (!query.trim()) return;
         setIsSearching(true);
         setSearchResults(null);
@@ -211,7 +205,7 @@ const App = () => {
         }
     }, []);
 
-    const handleSavePreferences = (newPreferences) => {
+    const handleSavePreferences = (newPreferences: {categories: string[], sources: string[]}) => {
         setPreferences(newPreferences);
     };
 
@@ -222,7 +216,7 @@ const App = () => {
     });
 
     const displayedArticles = showSavedOnly
-        ? allArticles.filter(a => savedArticles.has(a.id))
+        ? articles.filter(a => savedArticles.has(a.id))
         : baseFilteredArticles;
 
     return (
@@ -236,15 +230,19 @@ const App = () => {
                 showSavedOnly={showSavedOnly}
                 onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
             />
+            
+             {/* Main Content Area - Padding bottom added for mobile nav */}
              {viewMode === 'reels' ? (
-                <ReelsView 
-                    articles={displayedArticles} 
-                    onCardClick={handleCardClick}
-                    onToggleSave={toggleSaveArticle}
-                    savedArticles={savedArticles}
-                />
+                <div className="flex-grow pb-20 md:pb-0 h-full overflow-hidden">
+                     <ReelsView 
+                        articles={displayedArticles} 
+                        onCardClick={handleCardClick}
+                        onToggleSave={toggleSaveArticle}
+                        savedArticles={savedArticles}
+                    />
+                </div>
             ) : (
-                <main className="flex-grow overflow-y-auto">
+                <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
                     <div className="container mx-auto px-4 py-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                             {displayedArticles.length > 0 ? displayedArticles.map((article, index) => (
@@ -266,8 +264,8 @@ const App = () => {
                             )}
                         </div>
                         {isLoadingMore && !showSavedOnly && (
-                            <div className="flex justify-center items-center py-8">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-primary"></div>
+                            <div className="flex justify-center items-center py-12">
+                                <HolographicScanner text="GENERATING NEW INTEL" />
                             </div>
                         )}
                     </div>
@@ -292,9 +290,10 @@ const App = () => {
                     onClose={() => setPersonalizationModalOpen(false)}
                 />
             )}
-            {isAudioGenOpen && <AudioGenerationModal articles={allArticles} onClose={() => setAudioGenOpen(false)} />}
+            {isAudioGenOpen && <AudioGenerationModal articles={articles} onClose={() => setAudioGenOpen(false)} />}
             
-            <div className="fixed bottom-6 right-6 flex flex-col items-center gap-4 z-50">
+            {/* Desktop FABs - Hidden on Mobile */}
+            <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
                  <button
                     onClick={() => setAudioGenOpen(true)}
                     className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300"
@@ -317,6 +316,15 @@ const App = () => {
                     <BoltIcon />
                 </button>
             </div>
+
+            {/* Mobile Bottom Navigation - Hidden on Desktop */}
+            <BottomNav 
+                viewMode={viewMode}
+                onChangeView={setViewMode}
+                onOpenAudio={() => setAudioGenOpen(true)}
+                onOpenLive={() => setLiveAgentOpen(true)}
+                onOpenChat={() => setChatOpen(true)}
+            />
 
             <ChatBot 
                 isOpen={isChatOpen} 
