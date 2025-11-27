@@ -1,8 +1,10 @@
+
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
 import type { SearchResult } from '../types';
 
+// The API key is injected by Vite at build time via 'define' in vite.config.ts
 if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
+    console.warn("API Key might be missing. AI features may fail.");
 }
 
 function getAiClient() {
@@ -27,8 +29,9 @@ function getChatInstance(): Chat {
 export async function getShortSummary(text: string): Promise<string> {
     try {
         const ai = getAiClient();
+        // Using gemini-2.5-flash for basic text tasks ensures high reliability
         const response = await ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash',
             contents: `Summarize the following article in 2-3 concise sentences, highlighting the key information:\n\n---\n${text}`,
         });
         return response.text || "No summary available.";
@@ -43,7 +46,7 @@ export async function getFastSummary(text: string): Promise<string> {
     try {
         const ai = getAiClient();
         const response = await ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash',
             contents: `Summarize the following article in 3 concise bullet points:\n\n---\n${text}`,
         });
         return response.text || "No summary available.";

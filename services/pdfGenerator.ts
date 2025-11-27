@@ -1,4 +1,5 @@
-import { jsPDF } from "jspdf";
+
+import jsPDF from "jspdf";
 
 export const generateAppDescriptionPDF = () => {
     const doc = new jsPDF({
@@ -169,7 +170,7 @@ export const generateAppDescriptionPDF = () => {
     
     addSubSection("Text Tasks");
     addCode(`// Summarization
-model: "gemini-flash-lite-latest"
+model: "gemini-2.5-flash"
 prompt: "Summarize ... in 2-3 concise sentences"
 
 // Deep Analysis
