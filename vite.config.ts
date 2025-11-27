@@ -1,4 +1,3 @@
-
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -13,7 +12,7 @@ export default defineConfig(({ mode }) => {
     base: './', 
     define: {
       // Hardcoded API Key as per user request
-      'process.env.API_KEY': JSON.stringify("AIzaSyAaYWax27TqfuuG0m-lyFYe62XPT72w5Ms"),
+      'process.env.API_KEY': JSON.stringify("AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY"),
     },
     build: {
       outDir: 'dist',

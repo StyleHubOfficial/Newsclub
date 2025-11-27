@@ -70,9 +70,9 @@ export const generateAppDescriptionPDF = () => {
         
         // Background for code
         doc.setFillColor(240, 240, 240);
-        doc.rect(margin, y - 5, pageWidth - margin * 2, lines.length * 11 + 10, 'F');
+        doc.rect(margin, y - 8, pageWidth - margin * 2, lines.length * 11 + 10, 'F');
         
-        doc.text(lines, margin + 5, y + 5);
+        doc.text(lines, margin + 5, y);
         y += lines.length * 11 + 15;
         doc.setTextColor(0, 0, 0);
     };
@@ -84,8 +84,8 @@ export const generateAppDescriptionPDF = () => {
     addText("This document provides a complete 'A to Z' specification for the Gemini Hi-Tech News Hub application. It includes exact configurations, styles, and AI service definitions required to recreate the app perfectly.");
 
     addSection("1. Configuration & Environment");
-    addText("The application requires a specific API Key to access Google Gemini services. This key is hardcoded in the Vite configuration.");
-    addCode('API KEY: AIzaSyAaYWax27TqfuuG0m-lyFYe62XPT72w5Ms\n\nFramework: React 19 (via Vite)\nLanguage: TypeScript\nStyling: Tailwind CSS (CDN)\nIcons: Custom SVG Components');
+    addText("The application requires a specific API Key to access Google Gemini services. This key is hardcoded in the Vite configuration for demo purposes.");
+    addCode('API KEY: AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY\n\nFramework: React 19 (via Vite)\nLanguage: TypeScript\nStyling: Tailwind CSS (CDN)\nIcons: Custom SVG Components');
 
     addSection("2. Visual Identity & Design System");
     addText("The UI follows a 'Cyberpunk/Futuristic' aesthetic with a dark mode base.");
