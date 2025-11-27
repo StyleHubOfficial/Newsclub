@@ -1,14 +1,32 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
 import type { SearchResult } from '../types';
 
-// The API key is injected by Vite at build time via 'define' in vite.config.ts
-if (!process.env.API_KEY) {
-    console.warn("API Key might be missing. AI features may fail.");
-}
-
 function getAiClient() {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    let apiKey: string | undefined;
+
+    // 1. Safe extraction of the key from process.env (Local/Node fallback)
+    try {
+        apiKey = process.env.API_KEY;
+    } catch (e) {
+        // process is not defined in the browser environment
+    }
+
+    // 2. Check for Vite environment variable (Vercel support)
+    if (!apiKey && typeof import.meta !== 'undefined' && import.meta.env) {
+        apiKey = import.meta.env.VITE_API_KEY;
+    }
+
+    // 3. Hardcoded fallback (Ensures app works immediately if env vars aren't set yet)
+    if (!apiKey) {
+        apiKey = "AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY";
+    }
+
+    // 4. Validation
+    if (!apiKey) {
+        throw new Error("API Key is missing. On Vercel, set the environment variable as 'VITE_API_KEY'.");
+    }
+
+    return new GoogleGenAI({ apiKey });
 }
 
 let chatInstance: Chat | null = null;
