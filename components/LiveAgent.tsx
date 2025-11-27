@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -38,11 +37,25 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
         outputAudioContextRef.current?.close();
     }, []);
 
+    const getApiKey = () => {
+        let key = '';
+        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+            key = import.meta.env.VITE_API_KEY;
+        } else if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_KEY) {
+            key = process.env.NEXT_PUBLIC_API_KEY;
+        } else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+            key = process.env.API_KEY;
+        }
+        return key || "AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY";
+    };
+
     useEffect(() => {
         const startSession = async () => {
             try {
-                if (!process.env.API_KEY) throw new Error("API_KEY not set");
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                const apiKey = getApiKey();
+                if (!apiKey) throw new Error("API_KEY not found. Please set VITE_API_KEY.");
+                
+                const ai = new GoogleGenAI({ apiKey });
                 
                 setStatus('Requesting microphone...');
                 streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });

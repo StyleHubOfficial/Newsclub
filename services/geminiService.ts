@@ -4,24 +4,31 @@ import type { SearchResult } from '../types';
 function getAiClient() {
     let apiKey: string | undefined;
 
-    // 1. Safe extraction of the key from process.env (Local/Node fallback)
-    try {
-        apiKey = process.env.API_KEY;
-    } catch (e) {
-        // process is not defined in the browser environment
-    }
-
-    // 2. Check for Vite environment variable (Vercel support)
-    if (!apiKey && typeof import.meta !== 'undefined' && import.meta.env) {
+    // 1. Check for Vite environment variable (Vercel support)
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
         apiKey = import.meta.env.VITE_API_KEY;
     }
 
-    // 3. Hardcoded fallback (Ensures app works immediately if env vars aren't set yet)
+    // 2. Check for Next.js / Vercel Public variable
+    if (!apiKey && typeof process !== 'undefined' && process.env) {
+        apiKey = process.env.NEXT_PUBLIC_API_KEY;
+    }
+
+    // 3. Safe extraction of the key from process.env (Local/Node fallback)
+    if (!apiKey) {
+        try {
+            apiKey = process.env.API_KEY;
+        } catch (e) {
+            // process is not defined in the browser environment
+        }
+    }
+
+    // 4. Hardcoded fallback (Ensures app works immediately if env vars aren't set yet)
     if (!apiKey) {
         apiKey = "AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY";
     }
 
-    // 4. Validation
+    // 5. Validation
     if (!apiKey) {
         throw new Error("API Key is missing. On Vercel, set the environment variable as 'VITE_API_KEY'.");
     }
