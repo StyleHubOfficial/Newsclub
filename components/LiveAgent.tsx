@@ -39,14 +39,15 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
 
     const getApiKey = () => {
         let key = '';
-        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
-            key = import.meta.env.VITE_API_KEY;
+        // Cast import.meta to any to avoid TS error: Property 'env' does not exist on type 'ImportMeta'
+        if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) {
+            key = (import.meta as any).env.VITE_API_KEY;
         } else if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_KEY) {
             key = process.env.NEXT_PUBLIC_API_KEY;
         } else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
             key = process.env.API_KEY;
         }
-        return key || "AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY";
+        return key || "AIzaSyAXqu3I_s-MRopBvD90nrGpsR3czpki5AY";
     };
 
     useEffect(() => {

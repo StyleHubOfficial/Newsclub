@@ -5,8 +5,9 @@ function getAiClient() {
     let apiKey: string | undefined;
 
     // 1. Check for Vite environment variable (Vercel support)
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
-        apiKey = import.meta.env.VITE_API_KEY;
+    // Cast import.meta to any to avoid TS error: Property 'env' does not exist on type 'ImportMeta'
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) {
+        apiKey = (import.meta as any).env.VITE_API_KEY;
     }
 
     // 2. Check for Next.js / Vercel Public variable
@@ -25,7 +26,7 @@ function getAiClient() {
 
     // 4. Hardcoded fallback (Ensures app works immediately if env vars aren't set yet)
     if (!apiKey) {
-        apiKey = "AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY";
+        apiKey = "AIzaSyAXqu3I_s-MRopBvD90nrGpsR3czpki5AY";
     }
 
     // 5. Validation

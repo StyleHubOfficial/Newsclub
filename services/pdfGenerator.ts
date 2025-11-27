@@ -86,7 +86,7 @@ export const generateAppDescriptionPDF = () => {
 
     addSection("1. Configuration & Environment");
     addText("The application requires a specific API Key to access Google Gemini services. This key is hardcoded in the Vite configuration for demo purposes.");
-    addCode('API KEY: AIzaSyDK05MRQw7TzLytLbLFUGiBOBPHjGec1bY\n\nFramework: React 19 (via Vite)\nLanguage: TypeScript\nStyling: Tailwind CSS (CDN)\nIcons: Custom SVG Components');
+    addCode('API KEY: AIzaSyAXqu3I_s-MRopBvD90nrGpsR3czpki5AY\n\nFramework: React 19 (via Vite)\nLanguage: TypeScript\nStyling: Tailwind CSS (CDN)\nIcons: Custom SVG Components');
 
     addSection("2. Visual Identity & Design System");
     addText("The UI follows a 'Cyberpunk/Futuristic' aesthetic with a dark mode base.");
