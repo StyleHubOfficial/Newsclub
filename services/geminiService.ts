@@ -210,7 +210,7 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
         const msg = error.message || '';
 
         if (msg.includes('403')) userMessage = "ACCESS DENIED: API Key invalid or lacks permissions.";
-        else if (msg.includes('429')) userMessage = "SYSTEM OVERLOAD: Usage quota exceeded. Try later.";
+        else if (msg.includes('429')) userMessage = "SYSTEM OVERLOAD: Daily usage limit exceeded. Quota typically resets at midnight Pacific Time (PT).";
         else if (msg.includes('SAFETY') || msg.includes('blocked')) userMessage = "SAFETY PROTOCOL: Request blocked by content filters.";
         else if (msg.includes('Model returned text')) userMessage = "GENERATION ERROR: Model failed to render visual data.";
         else userMessage = `SYSTEM ERROR: ${msg.substring(0, 50)}`;

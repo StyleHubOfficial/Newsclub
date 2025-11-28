@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
@@ -44,6 +45,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const pauseTimeRef = useRef<number>(0);
     
     const shareButtonRef = useRef<HTMLButtonElement>(null);
+    const langButtonRef = useRef<HTMLButtonElement>(null);
 
     const initAudioContext = () => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -270,7 +272,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex flex-col md:flex-row items-center justify-between p-3 border-b border-brand-primary/20 bg-brand-surface/50 backdrop-blur-md gap-4">
+                <div className="flex flex-col md:flex-row items-center justify-between p-3 border-b border-brand-primary/20 bg-brand-surface/50 backdrop-blur-md gap-4 relative z-20">
                     <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
                         <button 
                             onClick={() => setActiveTab('full')}
@@ -302,9 +304,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                         )}
                     </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <div className="flex items-center gap-3 w-full md:w-auto justify-end relative">
                          {/* Audio Controls */}
-                         <div className="relative flex items-center gap-2 bg-brand-bg rounded-lg p-1.5 border border-brand-primary/20 overflow-hidden">
+                         <div className="relative flex items-center gap-2 bg-brand-bg rounded-lg p-1.5 border border-brand-primary/20">
                             {isAudioLoading && (
                                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-bg z-10">
                                     <div className="h-full bg-brand-accent animate-scan"></div>
@@ -329,10 +331,10 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                     </button>
                                 </>
                             ) : (
-                                 <div className="relative">
+                                 <div className="relative" ref={langButtonRef as any}>
                                     <button 
                                         onClick={() => setLangOpen(!isLangOpen)}
-                                        className="text-xs font-orbitron text-brand-text-muted hover:text-brand-primary px-2 flex items-center gap-1"
+                                        className="text-xs font-orbitron text-brand-text-muted hover:text-brand-primary px-2 flex items-center gap-1 min-w-[3rem] justify-center"
                                         disabled={isPlaying}
                                     >
                                         {language === 'English' ? 'EN' : language === 'Hindi' ? 'HI' : 'HIN'}
@@ -340,12 +342,12 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                     </button>
                                     
                                     {isLangOpen && (
-                                        <div className="absolute top-full mt-2 right-0 bg-brand-surface border border-brand-primary/30 rounded shadow-xl z-50 flex flex-col w-24">
+                                        <div className="absolute top-full mt-2 right-0 bg-brand-bg border border-brand-primary/50 rounded shadow-[0_0_15px_rgba(0,0,0,0.8)] z-[100] flex flex-col w-32 overflow-hidden">
                                             {(['English', 'Hindi', 'Hinglish'] as Language[]).map(l => (
                                                 <button 
                                                     key={l}
                                                     onClick={() => { setLanguage(l); setLangOpen(false); }}
-                                                    className={`px-3 py-2 text-left text-xs hover:bg-brand-primary/20 transition-colors ${language === l ? 'text-brand-primary' : 'text-brand-text-muted'}`}
+                                                    className={`px-4 py-3 text-left text-xs font-bold hover:bg-brand-primary/20 transition-colors border-b border-white/5 last:border-0 ${language === l ? 'text-brand-primary' : 'text-brand-text-muted'}`}
                                                 >
                                                     {l}
                                                 </button>

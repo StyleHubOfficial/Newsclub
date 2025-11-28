@@ -250,19 +250,22 @@ const App = () => {
     // MAIN APP UI
     return (
         <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in">
-            <Header 
-                onSearch={handleSearch} 
-                isSearching={isSearching} 
-                onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
-                viewMode={viewMode}
-                onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'reels' : 'grid')}
-                showSavedOnly={showSavedOnly}
-                onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
-            />
+            {/* Show Header only if NOT in Reels view mode */}
+            {viewMode !== 'reels' && (
+                <Header 
+                    onSearch={handleSearch} 
+                    isSearching={isSearching} 
+                    onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    viewMode={viewMode}
+                    onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'reels' : 'grid')}
+                    showSavedOnly={showSavedOnly}
+                    onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
+                />
+            )}
             
              {/* Main Content Area */}
              {viewMode === 'reels' ? (
-                <div className="flex-grow pb-20 md:pb-0 h-full overflow-hidden relative">
+                <div className="fixed inset-0 z-50 bg-black">
                     <ErrorBoundary componentName="ReelsView">
                         <ReelsView 
                             articles={displayedArticles} 
@@ -271,6 +274,7 @@ const App = () => {
                             savedArticles={savedArticles}
                             onLoadMore={fetchMoreArticles}
                             isLoadingMore={isLoadingMore}
+                            onExitReels={() => setViewMode('grid')}
                         />
                     </ErrorBoundary>
                 </div>
@@ -331,38 +335,43 @@ const App = () => {
                 </ErrorBoundary>
             )}
             
-            {/* Desktop FABs */}
-            <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
-                 <button
-                    onClick={() => openTool('audio')}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Open Audio Synthesis"
-                >
-                    <SoundWaveIcon />
-                </button>
-                <button
-                    onClick={() => openTool('live')}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Open Live Agent"
-                >
-                    <MicIcon />
-                </button>
-                <button
-                    onClick={() => setChatOpen(prev => !prev ? true : false)}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Toggle Chat"
-                >
-                    <BoltIcon />
-                </button>
-            </div>
+            {/* Desktop FABs - Hide in reels mode */}
+            {viewMode !== 'reels' && (
+                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
+                     <button
+                        onClick={() => openTool('audio')}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Open Audio Synthesis"
+                    >
+                        <SoundWaveIcon />
+                    </button>
+                    <button
+                        onClick={() => openTool('live')}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Open Live Agent"
+                    >
+                        <MicIcon />
+                    </button>
+                    <button
+                        onClick={() => setChatOpen(prev => !prev ? true : false)}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Toggle Chat"
+                    >
+                        <BoltIcon />
+                    </button>
+                </div>
+            )}
 
-            <BottomNav 
-                viewMode={viewMode}
-                onChangeView={setViewMode}
-                onOpenAudio={() => openTool('audio')}
-                onOpenLive={() => openTool('live')}
-                onOpenChat={() => openTool('chat')}
-            />
+            {/* Bottom Nav - Hide in reels mode */}
+            {viewMode !== 'reels' && (
+                <BottomNav 
+                    viewMode={viewMode}
+                    onChangeView={setViewMode}
+                    onOpenAudio={() => openTool('audio')}
+                    onOpenLive={() => openTool('live')}
+                    onOpenChat={() => openTool('chat')}
+                />
+            )}
 
             <ErrorBoundary componentName="ChatBot">
                 <ChatBot 
