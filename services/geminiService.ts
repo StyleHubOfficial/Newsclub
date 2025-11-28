@@ -27,7 +27,7 @@ function getAiClient() {
 
     // 4. Validation
     if (!apiKey) {
-        throw new Error("API Key is missing. On Vercel, set the environment variable as 'VITE_API_KEY'.");
+        throw new Error("API Key is missing. Please set VITE_API_KEY in your environment.");
     }
 
     return new GoogleGenAI({ apiKey });
