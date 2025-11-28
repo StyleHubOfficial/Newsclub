@@ -1,4 +1,5 @@
-import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
+
+import { GoogleGenAI, Chat, GenerateContentResponse, Modality, Part } from "@google/genai";
 import type { SearchResult, NewsArticle } from '../types';
 
 function getAiClient() {
@@ -136,12 +137,19 @@ export async function searchWithGoogle(query: string): Promise<SearchResult> {
 }
 
 export async function streamChatResponse(
-    message: string,
+    message: string | Part[],
     onChunk: (chunk: string) => void
 ): Promise<void> {
     try {
         const chat = getChatInstance();
-        const responseStream = await chat.sendMessageStream({ message });
+        // Convert string message to object if necessary, or pass Part[] directly
+        const msgParam = typeof message === 'string' ? { message } : { message };
+        
+        // If message is Part[], we need to structure it for the SDK if needed, 
+        // but Chat.sendMessageStream usually takes a simple string or Array<string|Part>.
+        // The SDK typing for sendMessageStream takes (request: string | (string | Part)[] | SendMessageStreamRequest ...)
+        
+        const responseStream = await chat.sendMessageStream(message);
         for await (const chunk of responseStream) {
             if (chunk.text) {
                 onChunk(chunk.text);
@@ -224,7 +232,7 @@ export async function generateNewsBroadcastSpeech(
         return base64Audio || null;
     } catch (error) {
         console.error("Conversational speech generation failed:", error);
-        return null;
+        throw error; // Re-throw to handle in UI
     }
 }
 
@@ -247,7 +255,7 @@ export async function generateSpeechFromText(text: string): Promise<string | nul
         return base64Audio || null;
     } catch (error) {
         console.error("Single-speaker speech generation failed:", error);
-        return null;
+        throw error;
     }
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -140,6 +141,23 @@ const App = () => {
 
     const observer = useRef<IntersectionObserver | null>(null);
 
+    // Helper to ensure mutual exclusivity
+    const openTool = (tool: 'chat' | 'live' | 'audio') => {
+        setChatOpen(tool === 'chat');
+        setLiveAgentOpen(tool === 'live');
+        setAudioGenOpen(tool === 'audio');
+        setSelectedArticle(null); // Close article if open
+        setPersonalizationModalOpen(false); // Close personalization
+    };
+
+    const closeAll = () => {
+        setChatOpen(false);
+        setLiveAgentOpen(false);
+        setAudioGenOpen(false);
+        setSelectedArticle(null);
+        setPersonalizationModalOpen(false);
+    };
+
     const allCategories = [...new Set(articles.map(a => a.category))];
     const allSources = [...new Set(articles.map(a => a.source))];
 
@@ -193,6 +211,7 @@ const App = () => {
     }, [isLoadingMore, showSavedOnly, fetchMoreArticles]);
 
     const handleCardClick = (article: NewsArticle) => {
+        closeAll(); // Ensure other things are closed
         setSelectedArticle(article);
     };
 
@@ -238,7 +257,7 @@ const App = () => {
             <Header 
                 onSearch={handleSearch} 
                 isSearching={isSearching} 
-                onPersonalizeClick={() => setPersonalizationModalOpen(true)}
+                onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
                 viewMode={viewMode}
                 onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'reels' : 'grid')}
                 showSavedOnly={showSavedOnly}
@@ -315,22 +334,22 @@ const App = () => {
             {/* Desktop FABs - Hidden on Mobile */}
             <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
                  <button
-                    onClick={() => setAudioGenOpen(true)}
-                    className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300"
+                    onClick={() => openTool('audio')}
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
                     aria-label="Open Audio Synthesis"
                 >
                     <SoundWaveIcon />
                 </button>
                 <button
-                    onClick={() => setLiveAgentOpen(true)}
-                    className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow"
+                    onClick={() => openTool('live')}
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
                     aria-label="Open Live Agent"
                 >
                     <MicIcon />
                 </button>
                 <button
-                    onClick={() => setChatOpen(prev => !prev)}
-                    className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300"
+                    onClick={() => setChatOpen(prev => !prev ? true : false)}
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
                     aria-label="Toggle Chat"
                 >
                     <BoltIcon />
@@ -341,9 +360,9 @@ const App = () => {
             <BottomNav 
                 viewMode={viewMode}
                 onChangeView={setViewMode}
-                onOpenAudio={() => setAudioGenOpen(true)}
-                onOpenLive={() => setLiveAgentOpen(true)}
-                onOpenChat={() => setChatOpen(true)}
+                onOpenAudio={() => openTool('audio')}
+                onOpenLive={() => openTool('live')}
+                onOpenChat={() => openTool('chat')}
             />
 
             <ChatBot 

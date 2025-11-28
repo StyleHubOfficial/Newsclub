@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
-import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, TwitterIcon, FacebookIcon, MailIcon, LinkIcon, BookmarkIcon } from './icons';
+import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, TwitterIcon, FacebookIcon, MailIcon, LinkIcon, BookmarkIcon, PlayIcon, PauseIcon } from './icons';
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import AudioVisualizer from './AudioVisualizer';
 import InteractiveChart from './InteractiveChart';
@@ -21,35 +22,30 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const [activeTab, setActiveTab] = useState<ActiveTab>('full');
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [isAudioLoading, setIsAudioLoading] = useState(false); // Specific state for audio
+    const [isAudioLoading, setIsAudioLoading] = useState(false);
     const [isShareOpen, setShareOpen] = useState(false);
     const [copyStatus, setCopyStatus] = useState('Copy Link');
     const [language, setLanguage] = useState<Language>('English');
+    const [error, setError] = useState<string | null>(null);
 
     // Audio Player State
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [playbackRate, setPlaybackRate] = useState(1);
-    
+    const [audioDuration, setAudioDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0); // Tracking time (visual only for now)
+
     const audioContextRef = useRef<AudioContext | null>(null);
     const sourceRef = useRef<AudioBufferSourceNode | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
     const analyserNodeRef = useRef<AnalyserNode | null>(null);
+    const audioBufferRef = useRef<AudioBuffer | null>(null);
+    const startTimeRef = useRef<number>(0);
+    const pauseTimeRef = useRef<number>(0); // Time when paused
     
     const shareButtonRef = useRef<HTMLButtonElement>(null);
 
-    const stopAudio = useCallback(() => {
-        if (sourceRef.current) {
-            sourceRef.current.onended = null;
-            sourceRef.current.stop();
-            sourceRef.current = null;
-        }
-        setIsPlaying(false);
-    }, []);
-
-    const playAudio = useCallback(async (base64Audio: string) => {
-        stopAudio();
-
+    const initAudioContext = () => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
             audioContextRef.current = new AudioContext({ sampleRate: 24000 });
@@ -58,45 +54,76 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
             gainNodeRef.current.connect(analyserNodeRef.current);
             analyserNodeRef.current.connect(audioContextRef.current.destination);
         }
-        
-        const ctx = audioContextRef.current;
-        const gainNode = gainNodeRef.current;
-        if (!ctx || !gainNode) return;
-        
-        try {
-            const audioBuffer = await decodeAudioData(decode(base64Audio), ctx, 24000, 1);
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(gainNode);
-            
-            gainNode.gain.value = volume;
-            source.playbackRate.value = playbackRate;
-            
-            source.onended = () => {
-                setIsPlaying(false);
-                sourceRef.current = null;
-            };
+    };
 
-            source.start(0);
-            sourceRef.current = source;
-            setIsPlaying(true);
-        } catch (error) {
-            console.error("Failed to play audio:", error);
+    const stopAudio = useCallback(() => {
+        if (sourceRef.current) {
+            try {
+                sourceRef.current.stop();
+            } catch (e) { /* ignore */ }
+            sourceRef.current.disconnect();
+            sourceRef.current = null;
+        }
+        setIsPlaying(false);
+        pauseTimeRef.current = 0;
+        setCurrentTime(0);
+    }, []);
+
+    const pauseAudio = useCallback(() => {
+        if (audioContextRef.current?.state === 'running') {
+            audioContextRef.current.suspend();
             setIsPlaying(false);
         }
-    }, [stopAudio, volume, playbackRate]);
-    
-    useEffect(() => {
-        if (gainNodeRef.current) gainNodeRef.current.gain.value = volume;
-    }, [volume]);
+    }, []);
 
-    useEffect(() => {
-        if (sourceRef.current) sourceRef.current.playbackRate.value = playbackRate;
-    }, [playbackRate]);
+    const resumeAudio = useCallback(() => {
+        if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+            setIsPlaying(true);
+        }
+    }, []);
+
+    const playAudioBuffer = useCallback((offset: number = 0) => {
+         if (!audioBufferRef.current || !audioContextRef.current || !gainNodeRef.current) return;
+
+         // If strictly resuming from suspension
+         if (audioContextRef.current.state === 'suspended') {
+             resumeAudio();
+             return;
+         }
+
+         // Stop previous source if exists (restart case)
+         if (sourceRef.current) {
+             try { sourceRef.current.stop(); } catch(e){}
+             sourceRef.current.disconnect();
+         }
+
+         const source = audioContextRef.current.createBufferSource();
+         source.buffer = audioBufferRef.current;
+         source.connect(gainNodeRef.current);
+         gainNodeRef.current.gain.value = volume;
+         source.playbackRate.value = playbackRate;
+
+         source.onended = () => {
+             // Only reset if it naturally ended, not manually stopped/paused via suspend
+             if (audioContextRef.current?.state === 'running') {
+                setIsPlaying(false);
+                setCurrentTime(0);
+                pauseTimeRef.current = 0;
+             }
+         };
+
+         source.start(0, offset);
+         startTimeRef.current = audioContextRef.current.currentTime - offset;
+         sourceRef.current = source;
+         setIsPlaying(true);
+    }, [volume, playbackRate, resumeAudio]);
+
 
     const handleGenerate = useCallback(async (type: 'summary' | 'analysis') => {
         setIsLoading(true);
         setAnalysisResult(null);
+        setError(null);
         try {
             const generator = type === 'summary' ? getFastSummary : getDeepAnalysis;
             const content = await generator(article.content);
@@ -104,12 +131,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                 title: type === 'summary' ? 'AI Summary' : 'AI Deep Analysis',
                 content: content
             });
-        } catch (error) {
-            console.error(`Failed to generate ${type}:`, error);
-            setAnalysisResult({
-                title: 'Error',
-                content: `Could not generate ${type}. Please try again later.`
-            });
+        } catch (err) {
+            console.error(`Failed to generate ${type}:`, err);
+            setError(`Could not generate ${type}. Please try again later.`);
         } finally {
             setIsLoading(false);
         }
@@ -117,9 +141,20 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
 
     const handleTextToSpeech = async () => {
         if (isPlaying) {
-            stopAudio();
+            pauseAudio();
             return;
         }
+        
+        // If we have buffer and paused/stopped, just resume or play
+        if (audioBufferRef.current) {
+            if (audioContextRef.current?.state === 'suspended') {
+                resumeAudio();
+            } else {
+                playAudioBuffer(0);
+            }
+            return;
+        }
+
         if (activeTab === 'data') return;
 
         let textToRead = '';
@@ -130,16 +165,34 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         }
 
         setIsAudioLoading(true);
+        setError(null);
         try {
+            initAudioContext();
             const audioData = await generateNewsBroadcastSpeech(textToRead, language);
-            if (audioData) {
-                playAudio(audioData);
+            if (audioData && audioContextRef.current) {
+                const buffer = await decodeAudioData(decode(audioData), audioContextRef.current, 24000, 1);
+                audioBufferRef.current = buffer;
+                setAudioDuration(buffer.duration);
+                playAudioBuffer(0);
+            } else {
+                setError("Failed to synthesize audio.");
             }
+        } catch (err) {
+             setError("Audio generation error. Check your connection or try again.");
+             console.error(err);
         } finally {
             setIsAudioLoading(false);
         }
     };
     
+    useEffect(() => {
+        if (gainNodeRef.current) gainNodeRef.current.gain.value = volume;
+    }, [volume]);
+
+    useEffect(() => {
+        if (sourceRef.current) sourceRef.current.playbackRate.value = playbackRate;
+    }, [playbackRate]);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -209,32 +262,60 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                         <CloseIcon />
                     </button>
                 </header>
+                
+                {error && (
+                    <div className="bg-brand-accent/20 border-l-4 border-brand-accent p-4 m-4 mb-0 text-brand-text">
+                        <p className="font-bold">Error</p>
+                        <p>{error}</p>
+                    </div>
+                )}
+
                 <div className="p-6 flex-grow overflow-y-auto">
                     {renderContent()}
                 </div>
                 
-                {isPlaying && (
-                    <div className="p-4 border-t border-brand-primary/20 bg-black/20 flex items-center gap-4 animate-fade-in flex-wrap">
-                        <div className="hidden sm:block">
-                             <AudioVisualizer analyserNode={analyserNodeRef.current} width={150} height={40} barColor="#0ea5e9" />
-                        </div>
-                        <div className="flex-grow flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold">VOL</span>
-                                <input 
-                                    type="range" 
-                                    min="0" max="1" step="0.01" 
-                                    value={volume} 
-                                    onChange={(e) => setVolume(Number(e.target.value))}
-                                    className="w-24 h-1 bg-brand-bg rounded-lg appearance-none cursor-pointer"
-                                />
+                {(isPlaying || audioBufferRef.current) && (
+                    <div className="p-4 border-t border-brand-primary/20 bg-black/40 backdrop-blur-md flex flex-col gap-4 animate-slide-up transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                            <span className="font-orbitron text-sm text-brand-primary tracking-widest">NEURAL AUDIO PLAYER</span>
+                            {/* Visualizer */}
+                             <div className="h-12 w-48 hidden sm:block">
+                                <AudioVisualizer analyserNode={analyserNodeRef.current} width={192} height={48} barColor="#00f3ff" />
                             </div>
-                             <div className="flex items-center gap-2 bg-brand-bg p-1 rounded-full">
-                                {[1, 1.5, 2].map(rate => (
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            {/* Controls */}
+                            <div className="flex items-center gap-4">
+                                <button 
+                                    onClick={() => isPlaying ? pauseAudio() : playAudioBuffer(0)}
+                                    className="w-12 h-12 rounded-full bg-brand-primary hover:bg-brand-secondary text-white flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.5)] transition-all"
+                                >
+                                    {isPlaying ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6 ml-1" />}
+                                </button>
+                                
+                                <div className="flex flex-col gap-1 w-32">
+                                    <div className="flex justify-between text-[10px] text-brand-text-muted font-orbitron">
+                                        <span>VOL</span>
+                                        <span>{Math.round(volume * 100)}%</span>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="0" max="1" step="0.01" 
+                                        value={volume} 
+                                        onChange={(e) => setVolume(Number(e.target.value))}
+                                        className="w-full h-1 bg-brand-bg rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                                    />
+                                </div>
+                            </div>
+                             
+                             {/* Speed Control */}
+                             <div className="flex items-center gap-2 bg-brand-bg/50 p-1.5 rounded-full border border-brand-primary/20">
+                                {[0.75, 1, 1.25, 1.5, 2].map(rate => (
                                     <button 
                                         key={rate} 
                                         onClick={() => setPlaybackRate(rate)}
-                                        className={`px-2 py-0.5 text-xs font-semibold rounded-full ${playbackRate === rate ? 'bg-brand-primary text-white' : 'text-brand-text-muted hover:bg-brand-primary/20'}`}
+                                        className={`px-2 py-1 text-[10px] font-orbitron font-bold rounded-full transition-all ${playbackRate === rate ? 'bg-brand-primary text-white shadow-[0_0_10px_rgba(14,165,233,0.6)]' : 'text-brand-text-muted hover:text-white'}`}
                                     >
                                        {rate}x
                                     </button>
@@ -295,9 +376,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                             <button onClick={() => onToggleSave(article.id)} className={`px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2 ${isSaved ? 'bg-brand-secondary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
                                <BookmarkIcon isSaved={isSaved} /> {isSaved ? 'Saved' : 'Save'}
                             </button>
-                             <button onClick={handleTextToSpeech} disabled={(isAudioLoading && !isPlaying) || activeTab === 'data'} className="px-4 py-2 rounded font-semibold text-sm bg-brand-accent text-white hover:bg-opacity-80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center shadow-[0_0_10px_rgba(225,29,72,0.4)]">
-                                {isPlaying ? 'Stop' : <VolumeIcon />} 
-                                {isPlaying ? 'Playing...' : (isAudioLoading ? <ThinkingBubble /> : 'Read Aloud')}
+                             <button onClick={handleTextToSpeech} disabled={(isAudioLoading && !isPlaying && !audioBufferRef.current) || activeTab === 'data'} className="px-4 py-2 rounded font-semibold text-sm bg-brand-accent text-white hover:bg-opacity-80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center shadow-[0_0_10px_rgba(225,29,72,0.4)]">
+                                {isPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />} 
+                                {isPlaying ? 'Pause' : (isAudioLoading ? <ThinkingBubble /> : (audioBufferRef.current ? 'Resume Broadcast' : 'Start Broadcast'))}
                             </button>
                         </div>
                     </div>
