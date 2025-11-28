@@ -3,8 +3,8 @@ import React from 'react';
 
 const ThreeDEarth: React.FC = () => {
     return (
-        // Adjusted width/height for mobile (w-48 h-48) vs desktop (w-96 h-96)
-        <div className="relative w-48 h-48 md:w-96 md:h-96 perspective-1000 animate-float my-8 md:my-0">
+        // Adjusted width/height for mobile (w-40 h-40) to save space
+        <div className="relative w-40 h-40 md:w-96 md:h-96 perspective-1000 animate-float my-4 md:my-0">
             {/* Outer Holographic Rings */}
             <div className="absolute inset-[-20%] border border-brand-primary/20 rounded-full animate-spin-slow" style={{ transform: 'rotateX(70deg)' }}></div>
             <div className="absolute inset-[-10%] border border-brand-secondary/30 rounded-full animate-spin-reverse" style={{ transform: 'rotateX(70deg) rotateY(10deg)' }}></div>

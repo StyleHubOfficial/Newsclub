@@ -15,12 +15,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     useEffect(() => {
         const handleScroll = () => {
             const scrollPosition = window.scrollY;
-            const triggerHeight = window.innerHeight * 0.35; // Trigger after scrolling 35% of view
+            const triggerHeight = window.innerHeight * 0.25; // Trigger after scrolling 25%
 
-            // Optional: Uncomment this if you want AUTOMATIC entry on scroll
-            // if (scrollPosition > triggerHeight) {
-            //    onEnterApp();
-            // }
+            if (scrollPosition > triggerHeight) {
+               onEnterApp();
+            }
         };
 
         window.addEventListener('scroll', handleScroll);
@@ -34,7 +33,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-bg text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-white">
+        <div className="min-h-[100dvh] bg-brand-bg text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-white">
             
             {/* Background Parallax Elements */}
             <div className="fixed inset-0 pointer-events-none z-0">
@@ -44,56 +43,55 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </div>
 
             {/* SECTION A: HERO */}
-            {/* Changed flex direction for mobile to flex-col-reverse (Earth on top visually, or text on top) - Sticking to Text Top for clarity */}
-            <section className="relative min-h-screen flex flex-col md:flex-row items-center justify-center container mx-auto px-4 md:px-6 pt-12 pb-20 z-10">
+            {/* Compacted mobile layout: reduced padding, tighter spacing */}
+            <section className="relative min-h-[100dvh] flex flex-col md:flex-row items-center justify-center container mx-auto px-4 md:px-6 pt-safe-top pb-20 z-10 gap-6 md:gap-0">
                 
+                {/* Right Content - 3D Earth (Visually Top on Mobile) */}
+                <div className="w-full md:w-1/2 flex items-center justify-center relative order-1 md:order-2 animate-slide-in-right mt-12 md:mt-0">
+                    <ThreeDEarth />
+                </div>
+
                 {/* Left Content */}
-                <div className="w-full md:w-1/2 space-y-6 md:space-y-8 animate-slide-up relative z-20 text-center md:text-left mt-8 md:mt-0 order-2 md:order-1">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/5 backdrop-blur-md justify-center md:justify-start">
+                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start space-y-5 md:space-y-8 animate-slide-up relative z-20 text-center md:text-left order-2 md:order-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/5 backdrop-blur-md">
                         <span className="w-2 h-2 rounded-full bg-neon-cyan animate-ping"></span>
                         <span className="text-[10px] md:text-xs font-orbitron text-brand-primary tracking-widest">SYSTEM ONLINE v2.5</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-7xl font-syncopate font-bold leading-tight">
+                    <h1 className="text-3xl md:text-7xl font-syncopate font-bold leading-tight">
                         NEXT GEN <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-white to-neon-pink animate-text-shimmer">
                             INTELLIGENCE
                         </span>
                     </h1>
 
-                    <p className="text-sm md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-accent/50 md:pl-6 mx-auto md:mx-0">
-                         News Club is not just a news app. It's a sentient information hub. Voice, audio, and vision integrated into one seamless experience.
+                    <p className="text-xs md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-accent/50 md:pl-6 mx-auto md:mx-0">
+                         News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless experience.
                     </p>
 
-                    <div className="flex justify-center md:justify-start">
+                    <div className="flex justify-center md:justify-start transform scale-90 md:scale-100 origin-center md:origin-left">
                          <NeonSignature />
                     </div>
 
-                    <div className="flex flex-col md:flex-row gap-4 pt-4 items-center md:items-start">
+                    <div className="flex flex-col md:flex-row gap-4 pt-2 md:pt-4 items-center md:items-start w-full md:w-auto">
                         <button 
                             onClick={onEnterApp}
-                            className="group relative px-8 py-4 bg-brand-primary/20 overflow-hidden rounded-full border border-brand-primary text-brand-text font-orbitron tracking-widest transition-all hover:bg-brand-primary/40 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] w-full md:w-auto"
+                            className="group relative px-8 py-3 md:py-4 bg-brand-primary/20 backdrop-blur-md overflow-hidden rounded-full border border-brand-primary text-brand-text font-orbitron tracking-widest transition-all hover:bg-brand-primary/40 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] w-full md:w-auto shadow-lg"
                         >
-                             <span className="relative flex items-center justify-center gap-3 font-bold">
+                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base">
                                 ENTER SYSTEM <BoltIcon />
                             </span>
                         </button>
                     </div>
                 </div>
 
-                {/* Right Content - 3D Earth */}
-                {/* Adjusted order to be visually balanced on mobile */}
-                <div className="w-full md:w-1/2 flex items-center justify-center relative order-1 md:order-2 animate-slide-in-right">
-                    <ThreeDEarth />
-                </div>
-
                 {/* Scroll Hint */}
                 <button 
                     onClick={scrollToFeatures}
-                    className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce cursor-pointer z-30"
+                    className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce cursor-pointer z-30 pointer-events-auto md:pointer-events-none"
                 >
-                    <span className="text-[10px] font-orbitron tracking-[0.3em]">SCROLL TO EXPLORE</span>
-                    <div className="w-px h-8 md:h-12 bg-gradient-to-b from-brand-primary to-transparent"></div>
+                    <span className="text-[10px] font-orbitron tracking-[0.3em]">SCROLL TO ENTER</span>
+                    <div className="w-px h-6 md:h-12 bg-gradient-to-b from-brand-primary to-transparent"></div>
                 </button>
             </section>
 
@@ -105,7 +103,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         <span className="text-brand-primary">///</span> ADVANCED MODULES
                     </h2>
                     
-                    {/* Improved mobile scrolling */}
                     <div className="flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory scrollbar-hide px-2">
                         {[
                             { title: 'Live Agent', icon: <MicIcon />, desc: 'Real-time voice conversation with neural intelligence.', color: 'from-blue-500 to-cyan-500' },

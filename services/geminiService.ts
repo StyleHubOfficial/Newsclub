@@ -145,10 +145,8 @@ export async function streamChatResponse(
         // We use the existing instance. If it needs reset, it should be done via resetChat()
         const chat = getChatInstance(); 
         
-        // Ensure message format is correct for the SDK
-        const contents = Array.isArray(message) ? message : [{ text: message }];
-        
-        const responseStream = await chat.sendMessageStream(contents);
+        // The SDK expects { message: string | Part[] }
+        const responseStream = await chat.sendMessageStream({ message });
         
         for await (const chunk of responseStream) {
             if (chunk.text) {
