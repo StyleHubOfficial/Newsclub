@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
-import { streamChatResponse, generateImageFromPrompt } from '../services/geminiService';
+import { streamChatResponse, generateImageFromPrompt, resetChat } from '../services/geminiService';
 import { CloseIcon, SendIcon, ImageIcon, MicIcon, StopIcon } from './icons';
 import { ThinkingBubble } from './Loaders';
 import { Part } from '@google/genai';
@@ -42,8 +43,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     
     useEffect(() => {
         if (isOpen) {
-             // Reset if needed, or keep history
-             if(messages.length === 0) {
+             // Reset chat session on open to ensure clean state
+             resetChat();
+             // Reset UI history if needed, or keep it. Here we keep it but ensure service is synced if we wanted persistent history.
+             // Actually, since we reset messages below on close logic, we might want to ensure a fresh start.
+             if(messages.length === 0 || messages[0].id !== 'initial') {
                  setMessages([ { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything or request a visual generation.', sender: 'bot' } ]);
              }
             setError(null);
@@ -190,7 +194,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed bottom-24 right-6 w-full max-w-md h-[60vh] z-40 animate-slide-up">
+        <div className="fixed bottom-24 right-0 left-0 md:left-auto md:right-6 w-full md:w-full max-w-md h-[60vh] z-40 animate-slide-up px-2 md:px-0">
             <div className="bg-brand-surface/95 backdrop-blur-md rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col h-full border border-brand-primary/30 overflow-hidden">
                 <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center bg-brand-bg/50">
                     <div className="flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SearchIcon, SettingsIcon, BookmarkIcon } from './icons';
 
@@ -31,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
                         <div className="absolute -inset-1 bg-gradient-to-r from-neon-cyan to-neon-pink rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-500 animate-pulse-glow"></div>
                         <div className="relative px-4 py-2 bg-brand-surface ring-1 ring-brand-primary/30 rounded-lg flex flex-col justify-center">
                             <span className="text-[10px] text-brand-text-muted font-orbitron tracking-widest uppercase leading-none mb-1">Created By</span>
-                            <span className="font-syncopate font-bold text-sm md:text-base bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-pink animate-text-shimmer drop-shadow-[0_0_5px_rgba(0,243,255,0.5)]">
+                            <span className="font-syncopate font-bold text-sm md:text-base bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-pink bg-[length:200%_auto] animate-hologram drop-shadow-[0_0_5px_rgba(0,243,255,0.5)]">
                                 Lakshya Bhamu
                             </span>
                         </div>

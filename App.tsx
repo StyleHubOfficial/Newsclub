@@ -11,6 +11,7 @@ import ReelsView from './components/ReelsView';
 import AudioGenerationModal from './components/AudioGenerationModal';
 import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
+import LandingPage from './components/LandingPage'; // Import Landing Page
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
 import { NewsArticle } from './types';
@@ -102,21 +103,10 @@ const initialArticles = [
   },
 ];
 
-const CreatorSignature = () => (
-    <div className="flex justify-center items-center py-8">
-        <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-neon-cyan to-neon-pink rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse-glow"></div>
-            <div className="relative px-6 py-3 bg-black ring-1 ring-gray-900/5 rounded-lg leading-none flex items-center space-x-4">
-                <span className="text-gray-400 text-xs font-orbitron tracking-widest uppercase">Designed & Developed by</span>
-                <span className="font-syncopate font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-pink animate-text-shimmer drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
-                    Lakshya Bhamu
-                </span>
-            </div>
-        </div>
-    </div>
-);
-
 const App = () => {
+    // New State for Landing Page
+    const [showLanding, setShowLanding] = useState(true);
+
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
@@ -252,8 +242,14 @@ const App = () => {
         ? articles.filter(a => savedArticles.has(a.id))
         : baseFilteredArticles;
 
+    // RENDER LANDING PAGE IF NOT ENTERED YET
+    if (showLanding) {
+        return <LandingPage onEnterApp={() => setShowLanding(false)} />;
+    }
+
+    // MAIN APP UI
     return (
-        <div className="h-full bg-brand-bg font-sans flex flex-col">
+        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in">
             <Header 
                 onSearch={handleSearch} 
                 isSearching={isSearching} 
@@ -277,14 +273,11 @@ const App = () => {
                             isLoadingMore={isLoadingMore}
                         />
                     </ErrorBoundary>
-                    <div className="absolute bottom-20 left-0 right-0 z-30 pointer-events-none md:hidden">
-                        <CreatorSignature />
-                    </div>
                 </div>
             ) : (
                 <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
                     <div className="container mx-auto px-4 py-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             {displayedArticles.length > 0 ? displayedArticles.map((article, index) => (
                                 <div key={article.id} ref={!showSavedOnly && index === displayedArticles.length - 1 ? lastArticleElementRef : null}>
                                     <NewsCard 
@@ -307,9 +300,6 @@ const App = () => {
                             <div className="flex justify-center items-center py-12">
                                 <HolographicScanner text="GENERATING NEW INTEL" />
                             </div>
-                        )}
-                        {!isLoadingMore && displayedArticles.length > 0 && (
-                            <CreatorSignature />
                         )}
                     </div>
                 </main>

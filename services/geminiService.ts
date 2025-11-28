@@ -6,7 +6,6 @@ function getAiClient() {
     let apiKey: string | undefined;
 
     // 1. Check for Vite environment variable (Vercel support)
-    // Cast import.meta to any to avoid TS error
     if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) {
         apiKey = (import.meta as any).env.VITE_API_KEY;
     }
@@ -35,8 +34,8 @@ function getAiClient() {
 
 let chatInstance: Chat | null = null;
 
-function getChatInstance(): Chat {
-    if (!chatInstance) {
+function getChatInstance(forceReset: boolean = false): Chat {
+    if (forceReset || !chatInstance) {
         const ai = getAiClient();
         chatInstance = ai.chats.create({
             model: 'gemini-2.5-flash',
@@ -46,6 +45,11 @@ function getChatInstance(): Chat {
         });
     }
     return chatInstance;
+}
+
+// Function to force a new chat session (useful when UI resets)
+export function resetChat() {
+    getChatInstance(true);
 }
 
 export async function getShortSummary(text: string): Promise<string> {
@@ -138,8 +142,14 @@ export async function streamChatResponse(
     onChunk: (chunk: string) => void
 ): Promise<void> {
     try {
-        const chat = getChatInstance();
-        const responseStream = await chat.sendMessageStream(message);
+        // We use the existing instance. If it needs reset, it should be done via resetChat()
+        const chat = getChatInstance(); 
+        
+        // Ensure message format is correct for the SDK
+        const contents = Array.isArray(message) ? message : [{ text: message }];
+        
+        const responseStream = await chat.sendMessageStream(contents);
+        
         for await (const chunk of responseStream) {
             if (chunk.text) {
                 onChunk(chunk.text);
@@ -147,7 +157,7 @@ export async function streamChatResponse(
         }
     } catch (error) {
         console.error("Chat streaming failed:", error);
-        onChunk("Sorry, an error occurred. Please try again.");
+        onChunk("Sorry, an error occurred. Please try again or refresh the chat.");
     }
 }
 
@@ -160,7 +170,6 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
             contents: {
                 parts: [{ text: prompt }],
             },
-            // Do not set invalid configs like responseMimeType here
         });
 
         // Iterate through all parts to find the image.
