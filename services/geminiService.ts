@@ -162,13 +162,26 @@ export async function streamChatResponse(
 export async function generateImageFromPrompt(prompt: string): Promise<string> {
     try {
         const ai = getAiClient();
-        // Specific model configuration for gemini-2.5-flash-image
+        
+        // Using correct model and configuration for standard image generation
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', 
             contents: {
                 parts: [{ text: prompt }],
             },
+            config: {
+                // Ensure default aspect ratio and size are set for better compatibility
+                imageConfig: {
+                    aspectRatio: "1:1",
+                    imageSize: "1K"
+                }
+            }
         });
+
+        // Check for safety blocks or refusal
+        if (response.candidates && response.candidates[0].finishReason === 'SAFETY') {
+            throw new Error("Image generation was blocked by safety filters.");
+        }
 
         // Iterate through all parts to find the image.
         if (response.candidates && response.candidates[0].content && response.candidates[0].content.parts) {
@@ -181,15 +194,28 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
             }
         }
         
+        // If we got text back instead of an image (model explanation or refusal)
         const textResponse = response.text;
         if (textResponse) {
-             throw new Error(`Model returned text instead of image: ${textResponse.substring(0, 100)}...`);
+             throw new Error(`Model returned text: ${textResponse.substring(0, 150)}...`);
         }
 
-        throw new Error("No image data found in response candidates.");
-    } catch (error) {
+        throw new Error("No image data found in response.");
+
+    } catch (error: any) {
         console.error("Image generation failed:", error);
-        throw error;
+        
+        // Systematic Error Formatting
+        let userMessage = "Image generation system failure.";
+        const msg = error.message || '';
+
+        if (msg.includes('403')) userMessage = "ACCESS DENIED: API Key invalid or lacks permissions.";
+        else if (msg.includes('429')) userMessage = "SYSTEM OVERLOAD: Usage quota exceeded. Try later.";
+        else if (msg.includes('SAFETY') || msg.includes('blocked')) userMessage = "SAFETY PROTOCOL: Request blocked by content filters.";
+        else if (msg.includes('Model returned text')) userMessage = "GENERATION ERROR: Model failed to render visual data.";
+        else userMessage = `SYSTEM ERROR: ${msg.substring(0, 50)}`;
+
+        throw new Error(userMessage);
     }
 }
 

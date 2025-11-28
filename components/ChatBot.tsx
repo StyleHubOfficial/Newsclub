@@ -45,8 +45,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
         if (isOpen) {
              // Reset chat session on open to ensure clean state
              resetChat();
-             // Reset UI history if needed, or keep it. Here we keep it but ensure service is synced if we wanted persistent history.
-             // Actually, since we reset messages below on close logic, we might want to ensure a fresh start.
              if(messages.length === 0 || messages[0].id !== 'initial') {
                  setMessages([ { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything or request a visual generation.', sender: 'bot' } ]);
              }
@@ -127,7 +125,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
         } catch (err) {
              setMessages(prev => prev.map(msg => 
                 msg.id === botMessageId 
-                    ? { ...msg, text: "Sorry, I couldn't process the audio.", isLoading: false } 
+                    ? { ...msg, text: "Sorry, I couldn't process the audio.", isLoading: false, isError: true } 
                     : msg
             ));
         }
@@ -166,7 +164,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
         } catch(error) {
              setMessages(prev => prev.map(msg => 
                 msg.id === botMessageId 
-                    ? { ...msg, text: error instanceof Error ? error.message : "Image generation failed.", isLoading: false } 
+                    ? { 
+                        ...msg, 
+                        text: error instanceof Error ? error.message : "Image generation failed.", 
+                        isLoading: false,
+                        isError: true 
+                      } 
                     : msg
             ));
         }
@@ -219,12 +222,25 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                         <div key={msg.id} className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.sender === 'bot' && <div className="pt-1"><BotAvatar /></div>}
                             <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${
-                                msg.sender === 'user' 
-                                    ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white rounded-br-none shadow-lg' 
-                                    : 'bg-brand-bg/80 border border-brand-primary/20 text-brand-text rounded-bl-none shadow'
+                                msg.isError 
+                                    ? 'bg-red-900/40 border border-red-500/50 text-red-200 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
+                                    : msg.sender === 'user' 
+                                        ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white rounded-br-none shadow-lg' 
+                                        : 'bg-brand-bg/80 border border-brand-primary/20 text-brand-text rounded-bl-none shadow'
                             }`}>
                                 {msg.isLoading && <ThinkingBubble />}
-                                {msg.text && <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</p>}
+                                
+                                {msg.isError && (
+                                    <div className="flex items-center gap-2 mb-1 border-b border-red-500/30 pb-1">
+                                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <span className="font-orbitron text-xs font-bold text-red-400">ERROR REPORT</span>
+                                    </div>
+                                )}
+                                
+                                {msg.text && <p className={`whitespace-pre-wrap text-sm leading-relaxed ${msg.isError ? 'font-mono text-xs' : ''}`}>{msg.text}</p>}
+                                
                                 {msg.imageUrl && (
                                     <div className="mt-2 relative group rounded-lg overflow-hidden border border-brand-primary/30">
                                         <img src={msg.imageUrl} alt="Generated" className="w-full h-auto" />

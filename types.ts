@@ -19,6 +19,7 @@ export interface ChatMessage {
     sender: 'user' | 'bot';
     isLoading?: boolean;
     imageUrl?: string;
+    isError?: boolean;
 }
 
 export interface SearchResult {
