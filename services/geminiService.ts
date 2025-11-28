@@ -25,12 +25,7 @@ function getAiClient() {
         }
     }
 
-    // 4. Hardcoded fallback (Ensures app works immediately if env vars aren't set yet)
-    if (!apiKey) {
-        apiKey = "AIzaSyAXqu3I_s-MRopBvD90nrGpsR3czpki5AY";
-    }
-
-    // 5. Validation
+    // 4. Validation
     if (!apiKey) {
         throw new Error("API Key is missing. On Vercel, set the environment variable as 'VITE_API_KEY'.");
     }

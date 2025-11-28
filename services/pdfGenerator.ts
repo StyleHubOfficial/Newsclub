@@ -1,4 +1,1 @@
-export const generateAppDescriptionPDF = () => {
-    // Feature removed per user request.
-    console.warn("PDF generation has been disabled.");
-};
+// This file is deprecated and its functionality has been removed.

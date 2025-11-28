@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -47,7 +48,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
         } else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
             key = process.env.API_KEY;
         }
-        return key || "AIzaSyAXqu3I_s-MRopBvD90nrGpsR3czpki5AY";
+        return key;
     };
 
     useEffect(() => {
