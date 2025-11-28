@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -29,6 +28,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
     const nextStartTimeRef = useRef(0);
     const sourcesRef = useRef(new Set<AudioBufferSourceNode>());
     const streamRef = useRef<MediaStream | null>(null);
+    const transcriptionEndRef = useRef<HTMLDivElement>(null);
 
     const cleanup = useCallback(() => {
         if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current);
@@ -40,6 +40,16 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
         audioContextRef.current?.close();
         outputAudioContextRef.current?.close();
     }, []);
+
+    const scrollToBottom = () => {
+        if (transcriptionEndRef.current) {
+            transcriptionEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [transcription, currentTurn]);
 
     const getApiKey = () => {
         let key = '';
@@ -61,10 +71,10 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
             
             const ai = new GoogleGenAI({ apiKey });
             
-            setStatus('Requesting microphone...');
+            setStatus('Requesting uplink...');
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            setStatus('Connecting...');
+            setStatus('Establishing Neural Link...');
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
             outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
             
@@ -77,7 +87,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 callbacks: {
                     onopen: () => {
-                        setStatus('Connected. Listening...');
+                        setStatus('LINK ESTABLISHED');
                         setIsListening(true);
                         setIsConnected(true);
                         if (!audioContextRef.current || !streamRef.current) return;
@@ -104,21 +114,21 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         }
                         
                          if (message.serverContent?.inputTranscription) {
-                            setStatus('Listening...');
+                            setStatus('RECEIVING INPUT');
                             setIsListening(true);
                             currentTurnDataRef.current.user += message.serverContent.inputTranscription.text;
                             setCurrentTurn({ ...currentTurnDataRef.current });
-                            // Simple debounce to guess when user stops
-                            thinkingTimeoutRef.current = window.setTimeout(() => { setStatus('Thinking...'); setIsListening(false); }, 1000);
+                            // Simple debounce
+                            thinkingTimeoutRef.current = window.setTimeout(() => { setStatus('PROCESSING...'); setIsListening(false); }, 1000);
                         }
                         if (message.serverContent?.outputTranscription) {
-                            setStatus('Speaking...');
+                            setStatus('TRANSMITTING');
                             setIsListening(false);
                             currentTurnDataRef.current.model += message.serverContent.outputTranscription.text;
                             setCurrentTurn({ ...currentTurnDataRef.current });
                         }
                          if (message.serverContent?.turnComplete) {
-                            setStatus('Listening...');
+                            setStatus('AWAITING INPUT');
                             setIsListening(true);
                             setTranscription(prev => [...prev, currentTurnDataRef.current]);
                             currentTurnDataRef.current = { user: '', model: '' };
@@ -144,7 +154,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                             }
                             sourcesRef.current.clear();
                             nextStartTimeRef.current = 0;
-                            setStatus('Interrupted. Listening...');
+                            setStatus('INTERRUPTED');
                             currentTurnDataRef.current.model = ''; 
                             setCurrentTurn({ ...currentTurnDataRef.current });
                             setIsListening(true);
@@ -152,13 +162,13 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                     },
                     onerror: (e: ErrorEvent) => {
                         console.error('Live session error:', e);
-                        setStatus('Connection Failed');
-                        setError('Connection to Gemini Live failed. Please try again.');
+                        setStatus('LINK FAILED');
+                        setError('Neural link severed. Retrying handshake recommended.');
                         setIsListening(false);
                         setIsConnected(false);
                     },
                     onclose: () => {
-                        setStatus('Disconnected');
+                        setStatus('DISCONNECTED');
                         setIsListening(false);
                         setIsConnected(false);
                     },
@@ -168,13 +178,13 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
                     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
-                    systemInstruction: 'You are Cygnus, a futuristic news assistant. You speak directly to the user. Keep answers short and witty.',
+                    systemInstruction: 'You are a professional, quick-witted news reporter. You speak clearly and concisely.',
                 },
             });
 
         } catch (err) {
             console.error('Failed to start Live Agent:', err);
-            setStatus('Error');
+            setStatus('SYSTEM FAILURE');
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
             setIsListening(false);
         }
@@ -189,35 +199,38 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
     }, []);
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-brand-surface w-full max-w-2xl h-[80vh] rounded-lg shadow-2xl border border-brand-primary/30 flex flex-col animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-brand-bg/95 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+            <div className="bg-brand-surface w-full max-w-2xl h-[80vh] rounded-xl shadow-[0_0_50px_rgba(14,165,233,0.3)] border border-brand-primary/40 flex flex-col animate-slide-up relative overflow-hidden backdrop-blur-xl" onClick={e => e.stopPropagation()}>
                 
                 {/* Header */}
-                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center flex-shrink-0 bg-brand-surface/50 backdrop-blur-md z-10">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                        <h2 className="font-orbitron text-xl text-brand-secondary">Live Agent Cygnus</h2>
+                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center flex-shrink-0 bg-black/40 z-10">
+                    <div className="flex items-center gap-3">
+                        <div className={`relative w-3 h-3 flex items-center justify-center`}>
+                             <div className={`absolute w-full h-full rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                             {isConnected && <div className="absolute w-full h-full rounded-full bg-green-500 animate-ping"></div>}
+                        </div>
+                        <h2 className="font-orbitron text-xl text-brand-primary tracking-widest">NEWS REPORTER <span className="text-brand-text-muted text-xs">LIVE</span></h2>
                     </div>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-accent transition-colors p-2 hover:bg-white/5 rounded-full">
                         <CloseIcon />
                     </button>
                 </header>
 
                 {/* Error Banner */}
                 {error && (
-                    <div className="bg-red-900/80 text-white p-3 text-center text-sm z-10">
-                        {error}
-                        <button onClick={startSession} className="ml-2 underline font-bold">Retry</button>
+                    <div className="bg-red-900/90 text-white p-3 text-center text-xs font-mono border-b border-red-500/50 z-10 flex justify-between items-center px-6">
+                        <span>ERROR: {error}</span>
+                        <button onClick={startSession} className="px-3 py-1 bg-red-800 rounded border border-red-500 hover:bg-red-700 transition-colors">RECONNECT</button>
                     </div>
                 )}
 
                 {/* Chat History */}
-                <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth">
+                <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent">
                     {/* Welcome Message */}
                     <div className="flex justify-start">
-                         <div className="max-w-[80%] bg-brand-bg/50 border border-brand-secondary/30 rounded-lg p-3 rounded-tl-none">
-                            <p className="text-brand-text-muted text-sm font-semibold mb-1">Cygnus</p>
-                            <p className="text-brand-text">Online. Speak naturally, I am listening.</p>
+                         <div className="max-w-[85%] bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4 backdrop-blur-sm">
+                            <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
+                            <p className="text-brand-text font-light">Live link established. I'm listening.</p>
                         </div>
                     </div>
 
@@ -225,17 +238,17 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         <div key={index} className="space-y-4">
                             {turn.user && (
                                 <div className="flex justify-end animate-fade-in">
-                                    <div className="max-w-[80%] bg-brand-primary/20 border border-brand-primary/30 rounded-lg p-3 rounded-tr-none">
-                                        <p className="text-brand-text-muted text-sm font-semibold mb-1 text-right">You</p>
-                                        <p className="text-white">{turn.user}</p>
+                                    <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-lg p-4 text-right">
+                                        <p className="text-brand-primary text-xs font-orbitron mb-2">YOU</p>
+                                        <p className="text-white font-light">{turn.user}</p>
                                     </div>
                                 </div>
                             )}
                             {turn.model && (
                                 <div className="flex justify-start animate-fade-in">
-                                    <div className="max-w-[80%] bg-brand-bg/50 border border-brand-secondary/30 rounded-lg p-3 rounded-tl-none">
-                                        <p className="text-brand-text-muted text-sm font-semibold mb-1">Cygnus</p>
-                                        <p className="text-brand-text">{turn.model}</p>
+                                    <div className="max-w-[85%] bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4">
+                                        <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
+                                        <p className="text-brand-text font-light">{turn.model}</p>
                                     </div>
                                 </div>
                             )}
@@ -247,46 +260,50 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                          <div className="space-y-4">
                             {currentTurn.user && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[80%] bg-brand-primary/10 border border-brand-primary/20 rounded-lg p-3 rounded-tr-none opacity-80">
-                                         <p className="text-brand-text-muted text-sm font-semibold mb-1 text-right">You</p>
-                                        <p className="text-white">{currentTurn.user}</p>
+                                    <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-lg p-4 text-right opacity-80">
+                                         <p className="text-brand-primary text-xs font-orbitron mb-2">RECEIVING...</p>
+                                        <p className="text-white font-light">{currentTurn.user}</p>
                                     </div>
                                 </div>
                             )}
                             {currentTurn.model && (
                                 <div className="flex justify-start animate-pulse">
-                                    <div className="max-w-[80%] bg-brand-bg/30 border border-brand-secondary/20 rounded-lg p-3 rounded-tl-none opacity-80">
-                                        <p className="text-brand-text-muted text-sm font-semibold mb-1">Cygnus</p>
-                                        <p className="text-brand-text">{currentTurn.model}</p>
+                                    <div className="max-w-[85%] bg-brand-bg/20 border-l-2 border-brand-secondary/50 rounded-r-lg p-4 opacity-80">
+                                        <p className="text-brand-secondary text-xs font-orbitron mb-2">TRANSMITTING...</p>
+                                        <p className="text-brand-text font-light">{currentTurn.model}</p>
                                     </div>
                                 </div>
                             )}
                         </div>
                     )}
                     
-                    {!isListening && status === 'Thinking...' && (
+                    {!isListening && status === 'PROCESSING...' && (
                         <div className="flex justify-start animate-fade-in">
-                             <div className="bg-brand-bg/50 border border-brand-secondary/30 rounded-lg p-4 rounded-tl-none">
+                             <div className="bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4">
                                 <ThinkingBubble />
                             </div>
                         </div>
                     )}
+                    <div ref={transcriptionEndRef} />
                 </div>
 
                 {/* Footer / Visualizer */}
-                <footer className="p-4 border-t border-brand-primary/20 bg-black/40 backdrop-blur-md flex-shrink-0">
-                     <div className="w-full h-24 flex items-center justify-center relative">
+                <footer className="p-0 bg-black/60 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative">
+                     <div className="w-full h-32 flex flex-col items-center justify-center relative">
+                        
                         {/* Status Overlay */}
-                        <div className="absolute top-0 left-0 right-0 text-center">
-                            <span className={`text-xs font-mono uppercase tracking-widest ${isListening ? 'text-brand-primary animate-pulse' : 'text-brand-text-muted'}`}>
+                        <div className="absolute top-2 left-0 right-0 text-center">
+                            <span className={`text-[10px] font-orbitron tracking-[0.3em] ${isListening ? 'text-brand-primary animate-pulse' : 'text-brand-text-muted'}`}>
                                 {status}
                             </span>
                         </div>
                         
-                       <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={60} />
+                       <div className="w-full opacity-80 mt-4 px-4">
+                           <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={80} width={600} />
+                       </div>
                        
                        {/* Microphone Icon Animation */}
-                       <div className={`absolute bottom-2 p-2 rounded-full border transition-all duration-500 ${isListening ? 'border-brand-primary bg-brand-primary/20 shadow-[0_0_15px_#0ea5e9]' : 'border-brand-text-muted/30 bg-transparent'}`}>
+                       <div className={`absolute bottom-4 p-3 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
                             <MicIcon className={`h-6 w-6 ${isListening ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
                        </div>
                     </div>

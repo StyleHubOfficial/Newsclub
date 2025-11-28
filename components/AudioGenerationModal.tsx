@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateSpeechFromText, generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
@@ -191,7 +190,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         <div className="fixed inset-0 bg-brand-bg/95 backdrop-blur-lg flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-black/50 w-full max-w-3xl rounded-lg shadow-2xl border border-brand-primary/30 flex flex-col animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
                 <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-brand-surface/50">
-                    <h2 className="font-orbitron text-xl text-brand-secondary">Audio Synthesis Agent</h2>
+                    <h2 className="font-orbitron text-xl text-brand-secondary">NEWS REPORTER</h2>
                     <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
                         <CloseIcon />
                     </button>

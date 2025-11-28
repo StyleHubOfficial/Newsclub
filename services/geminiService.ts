@@ -6,7 +6,7 @@ function getAiClient() {
     let apiKey: string | undefined;
 
     // 1. Check for Vite environment variable (Vercel support)
-    // Cast import.meta to any to avoid TS error: Property 'env' does not exist on type 'ImportMeta'
+    // Cast import.meta to any to avoid TS error
     if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) {
         apiKey = (import.meta as any).env.VITE_API_KEY;
     }
@@ -51,7 +51,6 @@ function getChatInstance(): Chat {
 export async function getShortSummary(text: string): Promise<string> {
     try {
         const ai = getAiClient();
-        // Using gemini-2.5-flash for basic text tasks ensures high reliability
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: `Summarize the following article in 2-3 concise sentences, highlighting the key information:\n\n---\n${text}`,
@@ -81,19 +80,17 @@ export async function getFastSummary(text: string): Promise<string> {
 export async function getDeepAnalysis(text: string): Promise<string> {
     const ai = getAiClient();
     try {
-        // Try using the pro model with thinking budget first
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Provide a deep, insightful analysis of the following article. Consider the technological, ethical, and societal implications. Break it down into sections with clear headings:\n\n---\n${text}`,
             config: {
-                thinkingConfig: { thinkingBudget: 16000 }, // Reduced budget slightly to be safer
+                thinkingConfig: { thinkingBudget: 16000 },
             }
         });
         return response.text || "Analysis unavailable.";
     } catch (error) {
         console.warn("Deep analysis with Pro model failed, falling back to Flash:", error);
         try {
-            // Fallback to Flash model if Pro fails
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: `Provide a detailed analysis of the following article, considering technological and ethical implications. Use clear headings:\n\n---\n${text}`,
@@ -142,13 +139,6 @@ export async function streamChatResponse(
 ): Promise<void> {
     try {
         const chat = getChatInstance();
-        // Convert string message to object if necessary, or pass Part[] directly
-        const msgParam = typeof message === 'string' ? { message } : { message };
-        
-        // If message is Part[], we need to structure it for the SDK if needed, 
-        // but Chat.sendMessageStream usually takes a simple string or Array<string|Part>.
-        // The SDK typing for sendMessageStream takes (request: string | (string | Part)[] | SendMessageStreamRequest ...)
-        
         const responseStream = await chat.sendMessageStream(message);
         for await (const chunk of responseStream) {
             if (chunk.text) {
@@ -164,28 +154,35 @@ export async function streamChatResponse(
 export async function generateImageFromPrompt(prompt: string): Promise<string> {
     try {
         const ai = getAiClient();
-        // Updated to remove responseModalities restriction which can sometimes cause issues
+        // Specific model configuration for gemini-2.5-flash-image
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', 
             contents: {
                 parts: [{ text: prompt }],
             },
+            // Do not set invalid configs like responseMimeType here
         });
 
-        // Robustly check for image data in all parts
+        // Iterate through all parts to find the image.
         if (response.candidates && response.candidates[0].content && response.candidates[0].content.parts) {
             for (const part of response.candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
                     const base64ImageBytes: string = part.inlineData.data;
-                    return `data:image/png;base64,${base64ImageBytes}`;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    return `data:${mimeType};base64,${base64ImageBytes}`;
                 }
             }
         }
         
-        throw new Error("No image data found in response.");
+        const textResponse = response.text;
+        if (textResponse) {
+             throw new Error(`Model returned text instead of image: ${textResponse.substring(0, 100)}...`);
+        }
+
+        throw new Error("No image data found in response candidates.");
     } catch (error) {
         console.error("Image generation failed:", error);
-        throw new Error("Could not generate the image. Please try a different prompt.");
+        throw error;
     }
 }
 
@@ -232,7 +229,7 @@ export async function generateNewsBroadcastSpeech(
         return base64Audio || null;
     } catch (error) {
         console.error("Conversational speech generation failed:", error);
-        throw error; // Re-throw to handle in UI
+        throw error;
     }
 }
 
@@ -246,7 +243,7 @@ export async function generateSpeechFromText(text: string): Promise<string | nul
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' }, // A standard male voice
+                        prebuiltVoiceConfig: { voiceName: 'Kore' },
                     },
                 },
             },
@@ -287,7 +284,6 @@ export async function generateFuturisticArticles(count: number = 4): Promise<Omi
 
         const articles = JSON.parse(rawText);
         
-        // Add images and clean data
         return articles.map((article: any, index: number) => ({
             ...article,
             image: `https://picsum.photos/seed/${Date.now() + index + Math.random()}/600/400`,

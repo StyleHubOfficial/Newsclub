@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HomeIcon, ReelsIcon, MicIcon, BoltIcon, SoundWaveIcon } from './icons';
 
@@ -36,7 +35,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
                 <div className={`p-2 rounded-full ${viewMode === 'reels' ? 'bg-brand-primary/10' : ''}`}>
                     <ReelsIcon />
                 </div>
-                 <span className="text-[10px] font-orbitron">Reels</span>
+                 <span className="text-[10px] font-orbitron">All News</span>
             </button>
 
             <button 
