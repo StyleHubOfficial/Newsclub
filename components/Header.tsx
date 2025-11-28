@@ -27,13 +27,13 @@ const Header: React.FC<HeaderProps> = ({
             <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
                      <div className="flex items-center gap-3">
-                        <h1 className="font-orbitron text-2xl font-bold text-brand-primary">
-                            <span className="text-brand-secondary">G</span>-NEWS
+                        <h1 className="font-orbitron text-2xl font-bold text-brand-primary tracking-widest">
+                            <span className="text-brand-secondary">NEWS</span> CLUB
                         </h1>
                         <div className="hidden md:flex items-center gap-3">
                              <div className="w-px h-6 bg-brand-text-muted/30"></div>
                              <span className="font-orbitron text-sm text-brand-text-muted tracking-wider">
-                                NEWS HUB
+                                APP
                             </span>
                         </div>
                     </div>
@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({
                         {viewMode === 'grid' ? <ReelsIcon /> : <GridIcon />}
                     </button>
                 </div>
-                <form onSubmit={handleSearch} className="w-full max-w-md">
+                <form onSubmit={handleSearch} className="w-full max-w-md hidden md:block">
                     <div className="relative">
                         <input
                             type="text"

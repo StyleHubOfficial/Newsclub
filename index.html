@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gemini Hi-Tech News Hub</title>
+    <title>News Club App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Roboto:wght@300;400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
@@ -16,6 +15,7 @@
             fontFamily: {
               sans: ['Roboto', 'sans-serif'],
               orbitron: ['Orbitron', 'sans-serif'],
+              syncopate: ['Syncopate', 'sans-serif'],
             },
             colors: {
               'brand-bg': '#020617',
@@ -25,6 +25,8 @@
               'brand-accent': '#e11d48',
               'brand-text': '#e2e8f0',
               'brand-text-muted': '#94a3b8',
+              'neon-cyan': '#00f3ff',
+              'neon-pink': '#ff00ff',
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out',
@@ -35,6 +37,8 @@
               'spin-slow': 'spin 3s linear infinite',
               'spin-reverse': 'spinReverse 2s linear infinite',
               'glitch': 'glitch 1s linear infinite',
+              'neon-flicker': 'flicker 1.5s infinite alternate',
+              'text-shimmer': 'textShimmer 2.5s ease-in-out infinite alternate',
             },
             keyframes: {
               fadeIn: {
@@ -67,6 +71,20 @@
                 '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
                 '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
                 '62%': { transform: 'translate(0,0) skew(5deg)' },
+              },
+              flicker: {
+                '0%, 19%, 21%, 23%, 25%, 54%, 56%, 100%': {
+                  opacity: 1,
+                  textShadow: '0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px #00f3ff, 0 0 80px #00f3ff, 0 0 90px #00f3ff, 0 0 100px #00f3ff, 0 0 150px #00f3ff'
+                },
+                '20%, 24%, 55%': {
+                  opacity: 0.5,
+                  textShadow: 'none'
+                }
+              },
+              textShimmer: {
+                '0%': { color: '#0ea5e9' },
+                '100%': { color: '#e11d48' }
               }
             }
           }
@@ -76,10 +94,10 @@
 <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }

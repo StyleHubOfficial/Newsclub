@@ -1,5 +1,5 @@
 {
-  "name": "Hi-Tech News Hub",
+  "name": "News Club App",
   "description": "A futuristic news application powered by Gemini. It offers AI-driven features like content analysis, chatbot assistance, text-to-speech, real-time voice conversations, and up-to-the-minute information via Google Search grounding.",
   "requestFramePermissions": [
     "microphone"

@@ -100,6 +100,20 @@ const initialArticles = [
   },
 ];
 
+const CreatorSignature = () => (
+    <div className="flex justify-center items-center py-8">
+        <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-neon-cyan to-neon-pink rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse-glow"></div>
+            <div className="relative px-6 py-3 bg-black ring-1 ring-gray-900/5 rounded-lg leading-none flex items-center space-x-4">
+                <span className="text-gray-400 text-xs font-orbitron tracking-widest uppercase">Designed & Developed by</span>
+                <span className="font-syncopate font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-pink animate-text-shimmer drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
+                    Lakshya Bhamu
+                </span>
+            </div>
+        </div>
+    </div>
+);
+
 const App = () => {
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -233,13 +247,16 @@ const App = () => {
             
              {/* Main Content Area - Padding bottom added for mobile nav */}
              {viewMode === 'reels' ? (
-                <div className="flex-grow pb-20 md:pb-0 h-full overflow-hidden">
+                <div className="flex-grow pb-20 md:pb-0 h-full overflow-hidden relative">
                      <ReelsView 
                         articles={displayedArticles} 
                         onCardClick={handleCardClick}
                         onToggleSave={toggleSaveArticle}
                         savedArticles={savedArticles}
                     />
+                    <div className="absolute bottom-20 left-0 right-0 z-30 pointer-events-none md:hidden">
+                        <CreatorSignature />
+                    </div>
                 </div>
             ) : (
                 <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
@@ -267,6 +284,9 @@ const App = () => {
                             <div className="flex justify-center items-center py-12">
                                 <HolographicScanner text="GENERATING NEW INTEL" />
                             </div>
+                        )}
+                        {!isLoadingMore && displayedArticles.length > 0 && (
+                            <CreatorSignature />
                         )}
                     </div>
                 </main>

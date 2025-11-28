@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
-import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, TwitterIcon, FacebookIcon, MailIcon, LinkIcon, BookmarkIcon, SparklesIcon } from './icons';
+import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, TwitterIcon, FacebookIcon, MailIcon, LinkIcon, BookmarkIcon } from './icons';
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import AudioVisualizer from './AudioVisualizer';
 import InteractiveChart from './InteractiveChart';
-import { HolographicScanner, ThinkingBubble } from './Loaders';
+import { HolographicScanner, ThinkingBubble, QuantumSpinner } from './Loaders';
 
 type Language = 'English' | 'Hindi' | 'Hinglish';
-type ActiveTab = 'full' | 'summary' | 'analysis' | 'data' | 'custom';
+type ActiveTab = 'full' | 'summary' | 'analysis' | 'data';
 
 interface ArticleModalProps {
     article: NewsArticle;
@@ -21,10 +21,10 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const [activeTab, setActiveTab] = useState<ActiveTab>('full');
     const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAudioLoading, setIsAudioLoading] = useState(false); // Specific state for audio
     const [isShareOpen, setShareOpen] = useState(false);
     const [copyStatus, setCopyStatus] = useState('Copy Link');
     const [language, setLanguage] = useState<Language>('English');
-    const [customTopic, setCustomTopic] = useState('');
 
     // Audio Player State
     const [isPlaying, setIsPlaying] = useState(false);
@@ -123,23 +123,20 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         if (activeTab === 'data') return;
 
         let textToRead = '';
-        if (activeTab === 'custom') {
-            if (!customTopic.trim()) {
-                console.error("Custom topic is empty.");
-                return;
-            }
-            textToRead = customTopic;
-        } else if (activeTab !== 'full' && analysisResult) {
+        if (activeTab !== 'full' && analysisResult) {
             textToRead = analysisResult.content;
         } else {
             textToRead = article.content;
         }
 
-        setIsLoading(true);
-        const audioData = await generateNewsBroadcastSpeech(textToRead, language);
-        setIsLoading(false);
-        if (audioData) {
-            playAudio(audioData);
+        setIsAudioLoading(true);
+        try {
+            const audioData = await generateNewsBroadcastSpeech(textToRead, language);
+            if (audioData) {
+                playAudio(audioData);
+            }
+        } finally {
+            setIsAudioLoading(false);
         }
     };
     
@@ -178,21 +175,6 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
             return <InteractiveChart data={article.dataPoints} title={article.visualizationTitle || 'Data Visualization'} />
         }
 
-        if (activeTab === 'custom') {
-            return (
-                <div>
-                    <h3 className="font-orbitron text-2xl mb-2 text-brand-primary">Generate from Topic</h3>
-                    <p className="text-brand-text-muted mb-4 text-sm">Describe a topic or paste text below. The AI will generate and read a news-style broadcast about it in your chosen language.</p>
-                    <textarea
-                        className="w-full h-48 bg-brand-bg border-2 border-brand-secondary/50 rounded-lg p-4 focus:outline-none focus:border-brand-primary transition-colors text-brand-text"
-                        value={customTopic}
-                        onChange={(e) => setCustomTopic(e.target.value)}
-                        placeholder="e.g., The latest advancements in quantum computing and their potential impact on cryptography..."
-                    />
-                </div>
-            );
-        }
-
         if (activeTab !== 'full' && analysisResult) {
             return (
                 <div>
@@ -215,10 +197,15 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+            {isAudioLoading && (
+                <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <QuantumSpinner text="SYNTHESIZING BROADCAST" />
+                </div>
+            )}
             <div className="bg-brand-surface w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl border border-brand-primary/30 flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
                 <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center">
-                    <h2 className="font-orbitron text-2xl text-brand-secondary">{article.title}</h2>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
+                    <h2 className="font-orbitron text-2xl text-brand-secondary truncate pr-4">{article.title}</h2>
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors flex-shrink-0">
                         <CloseIcon />
                     </button>
                 </header>
@@ -227,8 +214,10 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                 </div>
                 
                 {isPlaying && (
-                    <div className="p-4 border-t border-brand-primary/20 bg-black/20 flex items-center gap-4 animate-fade-in">
-                        <AudioVisualizer analyserNode={analyserNodeRef.current} width={150} height={40} barColor="#0ea5e9" />
+                    <div className="p-4 border-t border-brand-primary/20 bg-black/20 flex items-center gap-4 animate-fade-in flex-wrap">
+                        <div className="hidden sm:block">
+                             <AudioVisualizer analyserNode={analyserNodeRef.current} width={150} height={40} barColor="#0ea5e9" />
+                        </div>
                         <div className="flex-grow flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-semibold">VOL</span>
@@ -266,9 +255,6 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                         <button onClick={() => { setActiveTab('analysis'); handleGenerate('analysis'); }} className={`px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2 ${activeTab === 'analysis' ? 'bg-brand-primary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
                             <BrainIcon /> Analysis
                         </button>
-                        <button onClick={() => { setActiveTab('custom'); setAnalysisResult(null); }} className={`px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2 ${activeTab === 'custom' ? 'bg-brand-primary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
-                            <SparklesIcon /> AI Topic
-                        </button>
                         {article.dataPoints && (
                              <button onClick={() => { setActiveTab('data'); setAnalysisResult(null); }} className={`px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2 ${activeTab === 'data' ? 'bg-brand-primary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
                                 <ChartIcon /> Data
@@ -277,7 +263,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     </div>
                     <div className="flex flex-wrap gap-4 justify-between items-center">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold mr-2">Language:</span>
+                            <span className="text-sm font-semibold mr-2 hidden sm:inline">Language:</span>
                             {(['English', 'Hindi', 'Hinglish'] as Language[]).map(lang => (
                                  <button key={lang} onClick={() => setLanguage(lang)} className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${language === lang ? 'bg-brand-secondary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
                                     {lang}
@@ -309,9 +295,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                             <button onClick={() => onToggleSave(article.id)} className={`px-4 py-2 rounded font-semibold text-sm transition-colors flex items-center gap-2 ${isSaved ? 'bg-brand-secondary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
                                <BookmarkIcon isSaved={isSaved} /> {isSaved ? 'Saved' : 'Save'}
                             </button>
-                             <button onClick={handleTextToSpeech} disabled={(isLoading && !isPlaying) || activeTab === 'data'} className="px-4 py-2 rounded font-semibold text-sm bg-brand-accent text-white hover:bg-opacity-80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center">
+                             <button onClick={handleTextToSpeech} disabled={(isAudioLoading && !isPlaying) || activeTab === 'data'} className="px-4 py-2 rounded font-semibold text-sm bg-brand-accent text-white hover:bg-opacity-80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center shadow-[0_0_10px_rgba(225,29,72,0.4)]">
                                 {isPlaying ? 'Stop' : <VolumeIcon />} 
-                                {isPlaying ? 'Playing...' : (isLoading ? <ThinkingBubble /> : 'Read Aloud')}
+                                {isPlaying ? 'Playing...' : (isAudioLoading ? <ThinkingBubble /> : 'Read Aloud')}
                             </button>
                         </div>
                     </div>

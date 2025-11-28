@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality } from "@google/genai";
 import type { SearchResult, NewsArticle } from '../types';
 
@@ -79,19 +78,30 @@ export async function getFastSummary(text: string): Promise<string> {
 }
 
 export async function getDeepAnalysis(text: string): Promise<string> {
+    const ai = getAiClient();
     try {
-        const ai = getAiClient();
+        // Try using the pro model with thinking budget first
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Provide a deep, insightful analysis of the following article. Consider the technological, ethical, and societal implications. Break it down into sections with clear headings:\n\n---\n${text}`,
             config: {
-                thinkingConfig: { thinkingBudget: 32768 },
+                thinkingConfig: { thinkingBudget: 16000 }, // Reduced budget slightly to be safer
             }
         });
         return response.text || "Analysis unavailable.";
     } catch (error) {
-        console.error("Deep analysis generation failed:", error);
-        return "Sorry, I couldn't generate a deep analysis at this time.";
+        console.warn("Deep analysis with Pro model failed, falling back to Flash:", error);
+        try {
+            // Fallback to Flash model if Pro fails
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Provide a detailed analysis of the following article, considering technological and ethical implications. Use clear headings:\n\n---\n${text}`,
+            });
+            return response.text || "Analysis unavailable.";
+        } catch (fallbackError) {
+            console.error("Deep analysis fallback failed:", fallbackError);
+            return "Sorry, I couldn't generate a deep analysis at this time.";
+        }
     }
 }
 
@@ -146,22 +156,24 @@ export async function streamChatResponse(
 export async function generateImageFromPrompt(prompt: string): Promise<string> {
     try {
         const ai = getAiClient();
+        // Updated to remove responseModalities restriction which can sometimes cause issues
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-2.5-flash-image', 
             contents: {
                 parts: [{ text: prompt }],
             },
-            config: {
-                responseModalities: [Modality.IMAGE],
-            },
         });
 
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
-                return `data:image/png;base64,${base64ImageBytes}`;
+        // Robustly check for image data in all parts
+        if (response.candidates && response.candidates[0].content && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    const base64ImageBytes: string = part.inlineData.data;
+                    return `data:image/png;base64,${base64ImageBytes}`;
+                }
             }
         }
+        
         throw new Error("No image data found in response.");
     } catch (error) {
         console.error("Image generation failed:", error);
