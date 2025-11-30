@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateSpeechFromText, generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
@@ -70,35 +71,39 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     const playAudio = useCallback(() => {
         if (!audioBufferRef.current || !audioContextRef.current || !gainNodeRef.current) return;
 
-        if (audioContextRef.current.state === 'suspended') {
-            audioContextRef.current.resume();
+        const startPlayback = () => {
+            // Clean up previous source
+            if (sourceRef.current) {
+                try { sourceRef.current.stop(); } catch(e){}
+                sourceRef.current.disconnect();
+            }
+
+            const source = audioContextRef.current!.createBufferSource();
+            source.buffer = audioBufferRef.current;
+            source.connect(gainNodeRef.current!);
+            gainNodeRef.current!.gain.value = volume;
+            source.playbackRate.value = playbackRate;
+
+            source.onended = () => {
+                 // Only if naturally ended
+                 if (audioContextRef.current?.state === 'running') {
+                    setStatus('ready');
+                    sourceRef.current = null;
+                 }
+            };
+
+            source.start(0);
+            sourceRef.current = source;
             setStatus('playing');
-            return;
-        }
-
-        // Clean up previous source
-        if (sourceRef.current) {
-            try { sourceRef.current.stop(); } catch(e){}
-            sourceRef.current.disconnect();
-        }
-
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBufferRef.current;
-        source.connect(gainNodeRef.current);
-        gainNodeRef.current.gain.value = volume;
-        source.playbackRate.value = playbackRate;
-
-        source.onended = () => {
-             // Only if naturally ended
-             if (audioContextRef.current?.state === 'running') {
-                setStatus('ready');
-                sourceRef.current = null;
-             }
         };
 
-        source.start(0);
-        sourceRef.current = source;
-        setStatus('playing');
+        if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume().then(() => {
+                startPlayback();
+            });
+        } else {
+            startPlayback();
+        }
     }, [volume, playbackRate]);
 
     const pauseAudio = useCallback(() => {

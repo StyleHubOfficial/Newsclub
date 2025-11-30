@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -11,11 +10,15 @@ import ReelsView from './components/ReelsView';
 import AudioGenerationModal from './components/AudioGenerationModal';
 import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
-import LandingPage from './components/LandingPage'; // Import Landing Page
+import LandingPage from './components/LandingPage';
+import HomeView from './components/HomeView'; 
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
 import { NewsArticle } from './types';
 import { HolographicScanner } from './components/Loaders';
+import { auth } from './services/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -106,6 +109,7 @@ const initialArticles = [
 const App = () => {
     // New State for Landing Page
     const [showLanding, setShowLanding] = useState(true);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -120,17 +124,33 @@ const App = () => {
     const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
     const [viewMode, setViewMode] = useState<'grid' | 'reels'>('grid');
-    const [savedArticles, setSavedArticles] = useState<Set<number>>(() => {
-        try {
-            const saved = localStorage.getItem('savedArticles');
-            return saved ? new Set(JSON.parse(saved)) : new Set();
-        } catch {
-            return new Set();
-        }
-    });
+    
+    const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
     const observer = useRef<IntersectionObserver | null>(null);
+
+    // Auth & Data Sync
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            setCurrentUser(user);
+            if (user) {
+                // Load Cloud Data
+                const userData = await loadUserData(user.uid);
+                if (userData) {
+                    if (userData.savedArticles) setSavedArticles(new Set(userData.savedArticles));
+                    if (userData.preferences) setPreferences(userData.preferences);
+                }
+            } else {
+                // Load Local Data
+                try {
+                    const saved = localStorage.getItem('savedArticles');
+                    if (saved) setSavedArticles(new Set(JSON.parse(saved)));
+                } catch { setSavedArticles(new Set()); }
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Helper to ensure mutual exclusivity
     const openTool = (tool: 'chat' | 'live' | 'audio') => {
@@ -153,20 +173,25 @@ const App = () => {
     const allSources = [...new Set(articles.map(a => a.source))];
 
     useEffect(() => {
-        localStorage.setItem('savedArticles', JSON.stringify(Array.from(savedArticles)));
-    }, [savedArticles]);
+        if (!currentUser) {
+            localStorage.setItem('savedArticles', JSON.stringify(Array.from(savedArticles)));
+        }
+    }, [savedArticles, currentUser]);
 
-    const toggleSaveArticle = useCallback((articleId: number) => {
+    const toggleSaveArticle = useCallback(async (articleId: number) => {
+        const isSaving = !savedArticles.has(articleId);
+        
         setSavedArticles(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(articleId)) {
-                newSet.delete(articleId);
-            } else {
-                newSet.add(articleId);
-            }
+            if (newSet.has(articleId)) newSet.delete(articleId);
+            else newSet.add(articleId);
             return newSet;
         });
-    }, []);
+
+        if (currentUser) {
+            await toggleCloudSavedArticle(currentUser.uid, articleId, isSaving);
+        }
+    }, [savedArticles, currentUser]);
 
     const fetchMoreArticles = useCallback(async () => {
         if (isLoadingMore) return;
@@ -211,12 +236,12 @@ const App = () => {
     
     const handleCloseSearch = () => {
         setSearchResults(null);
+        setIsSearching(false);
     };
 
     const handleSearch = useCallback(async (query: string) => {
         if (!query.trim()) return;
         setIsSearching(true);
-        setSearchResults(null);
         try {
             const results = await searchWithGoogle(query);
             setSearchResults(results);
@@ -228,8 +253,11 @@ const App = () => {
         }
     }, []);
 
-    const handleSavePreferences = (newPreferences: {categories: string[], sources: string[]}) => {
+    const handleSavePreferences = async (newPreferences: {categories: string[], sources: string[]}) => {
         setPreferences(newPreferences);
+        if (currentUser) {
+            await saveUserPreferences(currentUser.uid, newPreferences);
+        }
     };
 
     const baseFilteredArticles = articles.filter(article => {
@@ -257,9 +285,10 @@ const App = () => {
                     isSearching={isSearching} 
                     onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
                     viewMode={viewMode}
-                    onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'reels' : 'grid')}
+                    onToggleViewMode={(mode) => setViewMode(mode)}
                     showSavedOnly={showSavedOnly}
                     onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
+                    onOpenChat={() => openTool('chat')}
                 />
             )}
             
@@ -280,28 +309,24 @@ const App = () => {
                 </div>
             ) : (
                 <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
-                    <div className="container mx-auto px-4 py-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                            {displayedArticles.length > 0 ? displayedArticles.map((article, index) => (
-                                <div key={article.id} ref={!showSavedOnly && index === displayedArticles.length - 1 ? lastArticleElementRef : null}>
-                                    <NewsCard 
-                                        article={article} 
-                                        onClick={handleCardClick} 
-                                        onToggleSave={toggleSaveArticle}
-                                        isSaved={savedArticles.has(article.id)}
-                                    />
-                                </div>
-                            )) : (
-                                <div className="col-span-full text-center text-brand-text-muted py-12">
-                                    <h3 className="text-2xl font-orbitron">No articles found.</h3>
-                                    <p className="mt-2">
-                                        {showSavedOnly ? "You haven't saved any articles yet." : "Try adjusting your selections in the personalization settings."}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                    <div className="container mx-auto">
+                        <HomeView 
+                            articles={displayedArticles}
+                            onArticleClick={handleCardClick}
+                            onToggleSave={toggleSaveArticle}
+                            savedArticles={savedArticles}
+                            onOpenChat={() => openTool('chat')}
+                            onOpenLive={() => openTool('live')}
+                            onOpenAudio={() => openTool('audio')}
+                            onViewReels={() => setViewMode('reels')}
+                            onSearch={handleSearch}
+                        />
+                        
+                        {/* Infinite Scroll Trigger */}
+                        <div ref={lastArticleElementRef} className="h-10 w-full"></div>
+
                         {isLoadingMore && !showSavedOnly && (
-                            <div className="flex justify-center items-center py-12">
+                            <div className="flex justify-center items-center py-8">
                                 <HolographicScanner text="GENERATING NEW INTEL" />
                             </div>
                         )}
@@ -319,7 +344,14 @@ const App = () => {
                     />
                 </ErrorBoundary>
             )}
-            {searchResults && <SearchResultsModal result={searchResults} onClose={handleCloseSearch} isLoading={isSearching} />}
+            {/* Render SearchResultsModal if we have results OR if we are currently searching */}
+            {(searchResults || isSearching) && (
+                <SearchResultsModal 
+                    result={searchResults || { text: '', sources: [] }} 
+                    onClose={handleCloseSearch} 
+                    isLoading={isSearching} 
+                />
+            )}
             {isPersonalizationModalOpen && (
                 <PersonalizationModal
                     allCategories={allCategories}
@@ -367,9 +399,11 @@ const App = () => {
                 <BottomNav 
                     viewMode={viewMode}
                     onChangeView={setViewMode}
-                    onOpenAudio={() => openTool('audio')}
-                    onOpenLive={() => openTool('live')}
+                    onOpenExplore={() => {
+                        document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     onOpenChat={() => openTool('chat')}
+                    onOpenProfile={() => { closeAll(); setPersonalizationModalOpen(true); }}
                 />
             )}
 

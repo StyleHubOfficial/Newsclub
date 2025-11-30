@@ -164,16 +164,16 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
         const ai = getAiClient();
         
         // Using correct model and configuration for standard image generation
+        // Note: imageSize is NOT supported on gemini-2.5-flash-image, only on gemini-3-pro-image-preview
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', 
-            contents: {
+            contents: [{
                 parts: [{ text: prompt }],
-            },
+            }],
             config: {
-                // Ensure default aspect ratio and size are set for better compatibility
                 imageConfig: {
                     aspectRatio: "1:1",
-                    imageSize: "1K"
+                    // imageSize: "1K" // Removed as it causes 500 error on Flash Image
                 }
             }
         });
@@ -208,12 +208,14 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
         // Systematic Error Formatting
         let userMessage = "Image generation system failure.";
         const msg = error.message || '';
+        const status = error.status || 0;
 
-        if (msg.includes('403')) userMessage = "ACCESS DENIED: API Key invalid or lacks permissions.";
-        else if (msg.includes('429')) userMessage = "SYSTEM OVERLOAD: Daily usage limit exceeded. Quota typically resets at midnight Pacific Time (PT).";
+        if (msg.includes('403') || status === 403) userMessage = "ACCESS DENIED: API Key invalid or lacks permissions.";
+        else if (msg.includes('429') || status === 429) userMessage = "SYSTEM OVERLOAD: Daily usage limit exceeded. Quota typically resets at midnight Pacific Time (PT).";
+        else if (msg.includes('500') || status === 500) userMessage = "SERVER ERROR: AI Model temporarily unavailable. Please try again.";
         else if (msg.includes('SAFETY') || msg.includes('blocked')) userMessage = "SAFETY PROTOCOL: Request blocked by content filters.";
         else if (msg.includes('Model returned text')) userMessage = "GENERATION ERROR: Model failed to render visual data.";
-        else userMessage = `SYSTEM ERROR: ${msg.substring(0, 50)}`;
+        else userMessage = `SYSTEM ERROR: ${msg.substring(0, 60)}`;
 
         throw new Error(userMessage);
     }

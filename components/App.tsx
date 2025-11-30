@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -10,6 +11,8 @@ import ReelsView from './components/ReelsView';
 import AudioGenerationModal from './components/AudioGenerationModal';
 import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
+import LandingPage from './components/LandingPage';
+import HomeView from './components/HomeView'; // Import HomeView
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
 import { NewsArticle } from './types';
@@ -102,6 +105,9 @@ const initialArticles = [
 ];
 
 const App = () => {
+    // New State for Landing Page
+    const [showLanding, setShowLanding] = useState(true);
+
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
@@ -206,12 +212,15 @@ const App = () => {
     
     const handleCloseSearch = () => {
         setSearchResults(null);
+        setIsSearching(false);
     };
 
     const handleSearch = useCallback(async (query: string) => {
         if (!query.trim()) return;
         setIsSearching(true);
-        setSearchResults(null);
+        // Do not nullify searchResults immediately to avoid close-reopen flicker if re-searching
+        // But for fresh search, we can set a dummy object if needed, or just let isLoading handle it.
+        // Best approach: Keep modal open if isSearching is true.
         try {
             const results = await searchWithGoogle(query);
             setSearchResults(results);
@@ -237,21 +246,31 @@ const App = () => {
         ? articles.filter(a => savedArticles.has(a.id))
         : baseFilteredArticles;
 
+    // RENDER LANDING PAGE IF NOT ENTERED YET
+    if (showLanding) {
+        return <LandingPage onEnterApp={() => setShowLanding(false)} />;
+    }
+
+    // MAIN APP UI
     return (
-        <div className="h-full bg-brand-bg font-sans flex flex-col">
-            <Header 
-                onSearch={handleSearch} 
-                isSearching={isSearching} 
-                onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
-                viewMode={viewMode}
-                onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'reels' : 'grid')}
-                showSavedOnly={showSavedOnly}
-                onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
-            />
+        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in">
+            {/* Show Header only if NOT in Reels view mode */}
+            {viewMode !== 'reels' && (
+                <Header 
+                    onSearch={handleSearch} 
+                    isSearching={isSearching} 
+                    onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    viewMode={viewMode}
+                    onToggleViewMode={(mode) => setViewMode(mode)}
+                    showSavedOnly={showSavedOnly}
+                    onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
+                    onOpenChat={() => openTool('chat')}
+                />
+            )}
             
              {/* Main Content Area */}
              {viewMode === 'reels' ? (
-                <div className="flex-grow pb-20 md:pb-0 h-full overflow-hidden relative">
+                <div className="fixed inset-0 z-50 bg-black">
                     <ErrorBoundary componentName="ReelsView">
                         <ReelsView 
                             articles={displayedArticles} 
@@ -260,33 +279,30 @@ const App = () => {
                             savedArticles={savedArticles}
                             onLoadMore={fetchMoreArticles}
                             isLoadingMore={isLoadingMore}
+                            onExitReels={() => setViewMode('grid')}
                         />
                     </ErrorBoundary>
                 </div>
             ) : (
                 <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
-                    <div className="container mx-auto px-4 py-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-                            {displayedArticles.length > 0 ? displayedArticles.map((article, index) => (
-                                <div key={article.id} ref={!showSavedOnly && index === displayedArticles.length - 1 ? lastArticleElementRef : null}>
-                                    <NewsCard 
-                                        article={article} 
-                                        onClick={handleCardClick} 
-                                        onToggleSave={toggleSaveArticle}
-                                        isSaved={savedArticles.has(article.id)}
-                                    />
-                                </div>
-                            )) : (
-                                <div className="col-span-full text-center text-brand-text-muted py-12">
-                                    <h3 className="text-2xl font-orbitron">No articles found.</h3>
-                                    <p className="mt-2">
-                                        {showSavedOnly ? "You haven't saved any articles yet." : "Try adjusting your selections in the personalization settings."}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                    <div className="container mx-auto">
+                        <HomeView 
+                            articles={displayedArticles}
+                            onArticleClick={handleCardClick}
+                            onToggleSave={toggleSaveArticle}
+                            savedArticles={savedArticles}
+                            onOpenChat={() => openTool('chat')}
+                            onOpenLive={() => openTool('live')}
+                            onOpenAudio={() => openTool('audio')}
+                            onViewReels={() => setViewMode('reels')}
+                            onSearch={handleSearch}
+                        />
+                        
+                        {/* Infinite Scroll Trigger */}
+                        <div ref={lastArticleElementRef} className="h-10 w-full"></div>
+
                         {isLoadingMore && !showSavedOnly && (
-                            <div className="flex justify-center items-center py-12">
+                            <div className="flex justify-center items-center py-8">
                                 <HolographicScanner text="GENERATING NEW INTEL" />
                             </div>
                         )}
@@ -304,7 +320,14 @@ const App = () => {
                     />
                 </ErrorBoundary>
             )}
-            {searchResults && <SearchResultsModal result={searchResults} onClose={handleCloseSearch} isLoading={isSearching} />}
+            {/* Render SearchResultsModal if we have results OR if we are currently searching */}
+            {(searchResults || isSearching) && (
+                <SearchResultsModal 
+                    result={searchResults || { text: '', sources: [] }} 
+                    onClose={handleCloseSearch} 
+                    isLoading={isSearching} 
+                />
+            )}
             {isPersonalizationModalOpen && (
                 <PersonalizationModal
                     allCategories={allCategories}
@@ -320,38 +343,43 @@ const App = () => {
                 </ErrorBoundary>
             )}
             
-            {/* Desktop FABs */}
-            <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
-                 <button
-                    onClick={() => openTool('audio')}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Open Audio Synthesis"
-                >
-                    <SoundWaveIcon />
-                </button>
-                <button
-                    onClick={() => openTool('live')}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Open Live Agent"
-                >
-                    <MicIcon />
-                </button>
-                <button
-                    onClick={() => setChatOpen(prev => !prev ? true : false)}
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
-                    aria-label="Toggle Chat"
-                >
-                    <BoltIcon />
-                </button>
-            </div>
+            {/* Desktop FABs - Hide in reels mode */}
+            {viewMode !== 'reels' && (
+                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
+                     <button
+                        onClick={() => openTool('audio')}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Open Audio Synthesis"
+                    >
+                        <SoundWaveIcon />
+                    </button>
+                    <button
+                        onClick={() => openTool('live')}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Open Live Agent"
+                    >
+                        <MicIcon />
+                    </button>
+                    <button
+                        onClick={() => setChatOpen(prev => !prev ? true : false)}
+                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
+                        aria-label="Toggle Chat"
+                    >
+                        <BoltIcon />
+                    </button>
+                </div>
+            )}
 
-            <BottomNav 
-                viewMode={viewMode}
-                onChangeView={setViewMode}
-                onOpenAudio={() => openTool('audio')}
-                onOpenLive={() => openTool('live')}
-                onOpenChat={() => openTool('chat')}
-            />
+            {/* Bottom Nav - Hide in reels mode */}
+            {viewMode !== 'reels' && (
+                <BottomNav 
+                    viewMode={viewMode}
+                    onChangeView={setViewMode}
+                    onOpenAudio={() => openTool('audio')}
+                    onOpenLive={() => openTool('live')}
+                    onOpenChat={() => openTool('chat')}
+                />
+            )}
 
             <ErrorBoundary componentName="ChatBot">
                 <ChatBot 

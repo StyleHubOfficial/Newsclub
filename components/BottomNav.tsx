@@ -1,70 +1,78 @@
+
 import React from 'react';
-import { HomeIcon, ReelsIcon, MicIcon, BoltIcon, SoundWaveIcon } from './icons';
+import { HomeIcon, ReelsIcon, CompassIcon, BoltIcon, UserIcon } from './icons';
 
 interface BottomNavProps {
     viewMode: 'grid' | 'reels';
     onChangeView: (mode: 'grid' | 'reels') => void;
-    onOpenAudio: () => void;
-    onOpenLive: () => void;
+    onOpenExplore: () => void;
     onOpenChat: () => void;
+    onOpenProfile: () => void;
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ 
     viewMode, 
     onChangeView, 
-    onOpenAudio, 
-    onOpenLive, 
-    onOpenChat 
+    onOpenExplore,
+    onOpenChat,
+    onOpenProfile
 }) => {
+    // Helper to determine active state style
+    const getNavItemClass = (isActive: boolean) => 
+        `flex flex-col items-center justify-center gap-1.5 w-full py-2 transition-all duration-300 ${
+            isActive 
+            ? 'text-brand-primary' 
+            : 'text-brand-text-muted hover:text-brand-text'
+        }`;
+
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-20 bg-brand-surface/80 backdrop-blur-md border-t border-brand-primary/30 z-50 md:hidden pb-4 px-6 flex justify-between items-center animate-slide-up">
+        <div className="fixed bottom-0 left-0 right-0 h-20 bg-brand-surface/95 backdrop-blur-xl border-t border-brand-primary/20 rounded-t-2xl z-50 md:hidden flex justify-between items-center px-2 pb-2 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-slide-up">
+            
+            {/* 1. Home */}
             <button 
                 onClick={() => onChangeView('grid')}
-                className={`flex flex-col items-center gap-1 transition-colors ${viewMode === 'grid' ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'}`}
+                className={getNavItemClass(viewMode === 'grid')}
             >
-                <div className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-brand-primary/10' : ''}`}>
-                    <HomeIcon className="h-6 w-6" />
-                </div>
-                <span className="text-[10px] font-orbitron">Feed</span>
+                <HomeIcon className={`h-6 w-6 ${viewMode === 'grid' ? 'drop-shadow-[0_0_8px_rgba(14,165,233,0.8)]' : ''}`} />
+                <span className="text-[10px] font-orbitron font-medium tracking-wide">Home</span>
             </button>
 
+            {/* 2. Explore */}
+            <button 
+                onClick={onOpenExplore}
+                className={getNavItemClass(false)}
+            >
+                <CompassIcon className="h-6 w-6" />
+                <span className="text-[10px] font-orbitron font-medium tracking-wide">Explore</span>
+            </button>
+
+            {/* 3. News Reels */}
             <button 
                 onClick={() => onChangeView('reels')}
-                className={`flex flex-col items-center gap-1 transition-colors ${viewMode === 'reels' ? 'text-brand-primary' : 'text-brand-text-muted hover:text-brand-text'}`}
+                className={`${getNavItemClass(viewMode === 'reels')} relative`}
             >
-                <div className={`p-2 rounded-full ${viewMode === 'reels' ? 'bg-brand-primary/10' : ''}`}>
-                    <ReelsIcon />
+                <div className={`p-1 rounded-full transition-transform ${viewMode === 'reels' ? 'bg-brand-secondary/20 scale-110' : ''}`}>
+                    <ReelsIcon className={`h-6 w-6 ${viewMode === 'reels' ? 'text-brand-secondary drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]' : ''}`} />
                 </div>
-                 <span className="text-[10px] font-orbitron">All News</span>
+                <span className={`text-[10px] font-orbitron font-medium tracking-wide ${viewMode === 'reels' ? 'text-brand-secondary' : ''}`}>Reels</span>
             </button>
 
-            <button 
-                onClick={onOpenLive}
-                className="relative -top-6 bg-gradient-to-br from-brand-secondary to-brand-accent p-4 rounded-full shadow-lg border-4 border-brand-bg transform active:scale-95 transition-transform"
-                aria-label="Live Agent"
-            >
-                <MicIcon />
-                <div className="absolute inset-0 rounded-full animate-pulse-glow border border-white/20"></div>
-            </button>
-
-            <button 
-                onClick={onOpenAudio}
-                className="flex flex-col items-center gap-1 text-brand-text-muted hover:text-brand-text transition-colors"
-            >
-                <div className="p-2">
-                    <SoundWaveIcon className="h-6 w-6" />
-                </div>
-                 <span className="text-[10px] font-orbitron">Studio</span>
-            </button>
-
+            {/* 4. AI Chat */}
             <button 
                 onClick={onOpenChat}
-                className="flex flex-col items-center gap-1 text-brand-text-muted hover:text-brand-text transition-colors"
+                className={getNavItemClass(false)}
             >
-                <div className="p-2">
-                    <BoltIcon />
-                </div>
-                 <span className="text-[10px] font-orbitron">Chat</span>
+                <BoltIcon className="h-6 w-6" />
+                <span className="text-[10px] font-orbitron font-medium tracking-wide">AI Chat</span>
+            </button>
+
+             {/* 5. Profile */}
+             <button 
+                onClick={onOpenProfile}
+                className={getNavItemClass(false)}
+            >
+                <UserIcon className="h-6 w-6" />
+                <span className="text-[10px] font-orbitron font-medium tracking-wide">Profile</span>
             </button>
         </div>
     );
