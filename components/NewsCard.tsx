@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NewsArticle } from '../types';
 import { BookmarkIcon } from './icons';
@@ -26,9 +25,15 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
                 backdrop-blur-xl 
                 border border-white/10
                 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]
-                hover:shadow-[0_20px_50px_-12px_rgba(58,190,254,0.3)]
                 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]
-                transition-all duration-500 transform hover:-translate-y-2 hover:border-brand-primary/40
+                
+                /* Micro-Interactions */
+                animate-card-enter
+                transition-all duration-300 
+                hover:scale-[1.02] 
+                hover:shadow-[0_20px_50px_-12px_rgba(58,190,254,0.3)]
+                hover:border-brand-primary/40
+                
                 ${article.isSummaryLoading ? 'animate-pulse' : ''}
             `}
             onClick={() => onClick(article)}
@@ -36,6 +41,9 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
             {/* Holographic Overlay Effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
             
+            {/* Sheen Micro-Interaction */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-sheen pointer-events-none z-20 w-1/2 h-full skew-x-12"></div>
+
             {/* Corner Accents - Hi-Tech Brackets */}
             <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-white/20 rounded-tl-[20px] group-hover:border-brand-primary group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
             <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-white/20 rounded-br-[20px] group-hover:border-brand-accent group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
@@ -51,7 +59,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
                             className={`p-2.5 rounded-full transition-all backdrop-blur-xl border border-white/10 ${isSaved ? 'bg-brand-primary text-[#050505] shadow-[0_0_15px_#3ABEFE]' : 'bg-black/40 text-white hover:text-brand-primary hover:bg-black/60 hover:border-brand-primary/50'}`}
                             aria-label={isSaved ? "Unsave article" : "Save article"}
                         >
-                            <BookmarkIcon isSaved={isSaved} className="w-5 h-5" />
+                            <BookmarkIcon isSaved={isSaved} className="w-5 h-5 group-hover:animate-pulse-once" />
                         </button>
                     </div>
 

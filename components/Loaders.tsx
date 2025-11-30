@@ -64,3 +64,29 @@ export const ThinkingBubble: React.FC = () => {
         </div>
     );
 };
+
+export const HexagonLoader: React.FC<{ size?: 'sm' | 'md' | 'lg', text?: string }> = ({ size = 'md', text }) => {
+    const sizeClasses = {
+        sm: 'w-8 h-8',
+        md: 'w-16 h-16',
+        lg: 'w-32 h-32'
+    };
+    const dimensions = sizeClasses[size];
+
+    return (
+        <div className="flex flex-col items-center gap-4">
+            <div className={`relative ${dimensions} flex items-center justify-center`}>
+                 <svg className="w-full h-full animate-spin-slow text-brand-primary drop-shadow-[0_0_8px_rgba(58,190,254,0.8)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50 1, 95 25, 95 75, 50 99, 5 75, 5 25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <polygon points="50 15, 80 32, 80 68, 50 85, 20 68, 20 32" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-brand-secondary opacity-50" />
+                </svg>
+                <div className="absolute w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_10px_#28FFD3]"></div>
+            </div>
+            {text && (
+                 <div className="font-orbitron text-brand-primary animate-pulse tracking-widest text-xs uppercase">
+                    {text}
+                </div>
+            )}
+        </div>
+    );
+};

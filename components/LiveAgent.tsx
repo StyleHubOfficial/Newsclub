@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -201,9 +200,12 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            {/* Updated Glass Container */}
-            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-2xl h-[80vh] rounded-[22px] shadow-[0_0_50px_rgba(14,165,233,0.3)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Updated Glass Container with Page Enter Transition */}
+            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-2xl h-[80vh] rounded-[22px] shadow-[0_0_50px_rgba(14,165,233,0.3)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-page-enter relative overflow-hidden" onClick={e => e.stopPropagation()}>
                 
+                 {/* Horizontal Laser Sweep */}
+                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-primary to-transparent z-50 animate-scan-line"></div>
+
                 {/* Header */}
                 <header className="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0 bg-white/5 z-10">
                     <div className="flex items-center gap-3">

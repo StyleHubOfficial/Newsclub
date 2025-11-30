@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -279,7 +278,7 @@ const App = () => {
 
     // MAIN APP UI
     return (
-        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in relative">
+        <div className="h-full bg-brand-bg font-sans flex flex-col relative overflow-hidden">
             <ParticleBackground />
             
             {/* Show Header only if NOT in Reels view mode */}
@@ -296,9 +295,11 @@ const App = () => {
                 />
             )}
             
-             {/* Main Content Area */}
+             {/* Main Content Area with Page Transition */}
              {viewMode === 'reels' ? (
-                <div className="fixed inset-0 z-50 bg-black">
+                <div key="reels" className="fixed inset-0 z-50 bg-black animate-page-enter">
+                     {/* Glow Trail Effect */}
+                     <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
                     <ErrorBoundary componentName="ReelsView">
                         <ReelsView 
                             articles={displayedArticles} 
@@ -312,7 +313,10 @@ const App = () => {
                     </ErrorBoundary>
                 </div>
             ) : (
-                <main className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10">
+                <main key="grid" className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter">
+                    {/* Glow Trail Effect */}
+                    <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
+                    
                     <div className="container mx-auto">
                         <HomeView 
                             articles={displayedArticles}

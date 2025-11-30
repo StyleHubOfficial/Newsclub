@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon } from './icons';
 import { loginWithGoogle, logoutUser, auth } from '../services/firebase';
@@ -65,13 +64,13 @@ const Header: React.FC<HeaderProps> = ({
 
     // Helper for button styles
     const navButtonStyle = (isActive: boolean, activeColorClass: string, activeShadowClass: string) => `
-        flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border
+        flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border overflow-hidden relative
         font-orbitron text-[10px] font-bold tracking-wider
         ${isActive 
             ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${activeColorClass}/30 shadow-[0_0_15px_${activeShadowClass}]` 
             : 'border-transparent text-brand-text-muted hover:text-white hover:bg-white/5 hover:border-white/10 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]'
         }
-        active:scale-95
+        active:scale-95 active:animate-ripple
     `;
 
     return (
@@ -158,12 +157,12 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="flex items-center gap-3">
                         
                         {/* Feedback Button */}
-                        <button className="p-2 text-brand-text-muted hover:text-brand-accent transition-colors hidden sm:block hover:bg-white/5 rounded-full" title="Feedback">
+                        <button className="p-2 text-brand-text-muted hover:text-brand-accent transition-colors hidden sm:block hover:bg-white/5 rounded-full relative overflow-hidden active:animate-ripple" title="Feedback">
                              <MessageSquareIcon className="h-5 w-5" />
                         </button>
 
                         {/* Mobile Search Icon */}
-                        <button onClick={toggleSearch} className="md:hidden p-2 text-brand-text-muted hover:text-brand-accent transition-colors hover:bg-white/5 rounded-full">
+                        <button onClick={toggleSearch} className="md:hidden p-2 text-brand-text-muted hover:text-brand-accent transition-colors hover:bg-white/5 rounded-full relative overflow-hidden active:animate-ripple">
                             <CompassIcon className="h-6 w-6" />
                         </button>
 
@@ -172,7 +171,7 @@ const Header: React.FC<HeaderProps> = ({
                              <div className="flex items-center gap-3 pl-3 border-l border-white/10">
                                  <button 
                                     onClick={onPersonalizeClick}
-                                    className="w-9 h-9 rounded-full overflow-hidden border border-brand-primary/30 hover:border-brand-primary hover:shadow-[0_0_15px_#3ABEFE] transition-all"
+                                    className="w-9 h-9 rounded-full overflow-hidden border border-brand-primary/30 hover:border-brand-primary hover:shadow-[0_0_15px_#3ABEFE] transition-all relative active:scale-95"
                                 >
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
@@ -187,7 +186,7 @@ const Header: React.FC<HeaderProps> = ({
                         ) : (
                              <button 
                                 onClick={handleLogin}
-                                className="flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-brand-primary/50 text-brand-primary font-orbitron text-[10px] font-bold tracking-wider hover:bg-brand-primary hover:text-[#050505] transition-all duration-300 shadow-[0_0_10px_rgba(58,190,254,0.1)] hover:shadow-[0_0_20px_rgba(58,190,254,0.6)] backdrop-blur-sm active:scale-95"
+                                className="flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-brand-primary/50 text-brand-primary font-orbitron text-[10px] font-bold tracking-wider hover:bg-brand-primary hover:text-[#050505] transition-all duration-300 shadow-[0_0_10px_rgba(58,190,254,0.1)] hover:shadow-[0_0_20px_rgba(58,190,254,0.6)] backdrop-blur-sm active:scale-95 active:animate-ripple relative overflow-hidden"
                             >
                                 <UserIcon className="h-4 w-4" />
                                 <span>LOGIN</span>

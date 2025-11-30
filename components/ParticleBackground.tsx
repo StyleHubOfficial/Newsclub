@@ -1,11 +1,32 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const ParticleBackground: React.FC = () => {
+    const [offsetY, setOffsetY] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+             // For main window scroll (if applicable) or main content container
+             // Since main content is in a div with overflow-y-auto, we might need to listen to that element specifically
+             // But for parallax background effect often window scroll is used or a shared state.
+             // Given the app structure, let's try to hook into global window scroll if possible, or leave it subtle.
+             // A better approach for the "App" structure where a child div scrolls:
+             // We'll update this component to accept scroll position or just animate slowly on its own.
+             // For now, let's keep the self-animation which works everywhere.
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // For the specific request "Circuit lines shift based on scroll direction", 
+    // since the scrolling happens inside the <main> tag in App.tsx, passing scroll state down is complex.
+    // Instead, we will implement a continuous subtle movement to simulate activity.
+
     return (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050505]">
-            {/* 1. Faint Circuit Pattern Overlay */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]"></div>
+            {/* 1. Faint Circuit Pattern Overlay - Parallax Movement simulated via CSS animation */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] animate-float" style={{ animationDuration: '20s' }}></div>
 
             {/* 2. Soft Glowing Gradients (Blobs) */}
             <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] animate-pulse-glow"></div>

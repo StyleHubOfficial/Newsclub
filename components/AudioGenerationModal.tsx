@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import { NewsArticle } from '../types';
 import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
-import { QuantumSpinner } from './Loaders';
+import { HexagonLoader } from './Loaders';
 
 interface AudioGenerationModalProps {
     articles: NewsArticle[];
@@ -31,22 +30,20 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     const [volume, setVolume] = useState(1);
     const [playbackRate, setPlaybackRate] = useState(1);
     
-    // Audio Context Refs (Stable across renders, instant access)
+    // Audio Context Refs
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserNodeRef = useRef<AnalyserNode | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
     const sourceRef = useRef<AudioBufferSourceNode | null>(null);
     
-    // State purely to trigger re-renders for the visualizer
     const [analyserForVisualizer, setAnalyserForVisualizer] = useState<AnalyserNode | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const initAudioContext = () => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
              const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-             // No fixed sample rate to avoid hardware mismatch silencing
-             const ctx = new AudioContext();
+             const ctx = new AudioContext(); // Use default sample rate
              
              const gain = ctx.createGain();
              const analyser = ctx.createAnalyser();
@@ -58,7 +55,6 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
              gainNodeRef.current = gain;
              analyserNodeRef.current = analyser;
              
-             // Update state so Visualizer component gets the node
              setAnalyserForVisualizer(analyser);
         }
         return audioContextRef.current;
@@ -83,58 +79,62 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
             }
         }
     }, [stopAudio]);
-    
-    const playAudio = useCallback(() => {
-        const ctx = audioContextRef.current;
-        const gain = gainNodeRef.current;
-        const buffer = audioBufferRef.current;
 
-        if (!buffer || !ctx || !gain) {
-            console.error("Cannot play: missing audio resources");
-            return;
-        }
-
-        const startPlayback = () => {
-            // Clean up previous source
-            if (sourceRef.current) {
-                try { sourceRef.current.stop(); } catch(e){}
-                sourceRef.current.disconnect();
-            }
-
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(gain);
-            
-            gain.gain.value = volume;
-            source.playbackRate.value = playbackRate;
-
-            source.onended = () => {
-                 if (ctx.state === 'running') {
-                    setStatus('ready');
-                    sourceRef.current = null;
-                 }
-            };
-
-            source.start(0);
-            sourceRef.current = source;
-            setStatus('playing');
-        };
-
-        if (ctx.state === 'suspended') {
-            ctx.resume().then(() => {
-                startPlayback();
-            });
-        } else {
-            startPlayback();
-        }
-    }, [volume, playbackRate]);
-
-    const pauseAudio = useCallback(() => {
-        if (audioContextRef.current?.state === 'running') {
-            audioContextRef.current.suspend();
-            setStatus('paused');
+    // Resume Audio Context Helper
+    const resumeAudioContext = useCallback(async () => {
+        if (audioContextRef.current?.state === 'suspended') {
+            await audioContextRef.current.resume();
         }
     }, []);
+    
+    const playAudioBuffer = useCallback((offset: number = 0) => {
+         const ctx = audioContextRef.current;
+         const gain = gainNodeRef.current;
+         const buffer = audioBufferRef.current;
+
+         if (!buffer || !ctx || !gain) return;
+
+         if (sourceRef.current) {
+             try { sourceRef.current.stop(); } catch(e){}
+             sourceRef.current.disconnect();
+         }
+
+         const source = ctx.createBufferSource();
+         source.buffer = buffer;
+         source.connect(gain);
+         gain.gain.value = volume;
+         source.playbackRate.value = playbackRate;
+
+         source.onended = () => {
+             if (ctx.state === 'running') {
+                setStatus('ready');
+                sourceRef.current = null;
+             }
+         };
+
+         source.start(0, offset);
+         sourceRef.current = source;
+         setStatus('playing');
+    }, [volume, playbackRate]);
+
+    const handlePlayClick = useCallback(async () => {
+        if (status === 'playing') {
+             if (audioContextRef.current?.state === 'running') {
+                audioContextRef.current.suspend();
+                setStatus('paused');
+            }
+        } else {
+            // Resume or Start
+            await resumeAudioContext();
+            if (status === 'paused' && audioContextRef.current?.state === 'suspended') {
+                 audioContextRef.current.resume();
+                 setStatus('playing');
+            } else {
+                 playAudioBuffer(0);
+            }
+        }
+    }, [status, resumeAudioContext, playAudioBuffer]);
+
 
     useEffect(() => {
         if (gainNodeRef.current) gainNodeRef.current.gain.value = volume;
@@ -171,7 +171,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         stopAudio();
         audioBufferRef.current = null;
         
-        // 1. Initialize Context immediately (User Gesture)
+        // 1. Initialize Context on User Click (Crucial)
         const ctx = initAudioContext();
         if (ctx.state === 'suspended') {
             await ctx.resume();
@@ -188,7 +188,6 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         try {
             let inputText = '';
 
-            // Determine input based on mode
             if (mode === 'text') {
                 if (!textInput.trim()) throw new Error("Please enter some text to broadcast.");
                 inputText = textInput;
@@ -201,16 +200,15 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                 inputText = article.content;
             }
             
-            // 2. Fetch Audio Data
             const audioData = await generateNewsBroadcastSpeech(inputText, language);
             
             if (audioData) {
-                // 3. Decode Audio
+                // Decode using the utility compatible with ArticleModal
                 const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
                 audioBufferRef.current = buffer;
                 
                 setStatus('ready');
-                playAudio(); // Auto play after generation
+                playAudioBuffer(0); // Auto-play
             } else {
                 throw new Error("Audio generation failed to produce data.");
             }
@@ -223,7 +221,6 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     };
 
     const selectedArticle = articles.find(a => a.id === selectedArticleId);
-
     const modeButtonStyle = (isActive: boolean) => `
         px-4 py-2 rounded-full font-semibold transition-all duration-300 text-sm border
         ${isActive 
@@ -234,8 +231,9 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-lg flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Container */}
-            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-3xl rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-3xl rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-page-enter relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent z-50 animate-scan-line"></div>
+
                 <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-white/5">
                     <h2 className="font-orbitron text-xl text-brand-secondary">NEWS REPORTER</h2>
                     <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
@@ -263,7 +261,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
                     {status === 'generating' ? (
                         <div className="flex flex-col items-center justify-center h-48 py-8 animate-fade-in">
-                            <QuantumSpinner text={progressMessage} />
+                            <HexagonLoader text={progressMessage} />
                         </div>
                     ) : (
                         <>
@@ -334,7 +332,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                 border border-white/20
                                 shadow-[0_0_30px_rgba(99,102,241,0.5)] 
                                 hover:scale-105 hover:shadow-[0_0_50px_rgba(99,102,241,0.7)] 
-                                active:scale-95
+                                active:scale-95 active:animate-ripple
                                 transition-all duration-300
                             "
                         >
@@ -357,7 +355,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-3">
                                  <button 
-                                    onClick={status === 'playing' ? pauseAudio : playAudio}
+                                    onClick={handlePlayClick}
                                     className="w-12 h-12 rounded-full bg-brand-text text-brand-bg hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-95"
                                 >
                                     {status === 'playing' ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6 ml-1"/>}

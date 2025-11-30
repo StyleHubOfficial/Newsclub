@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
@@ -6,7 +5,7 @@ import { CloseIcon, ListIcon, BrainIcon, VolumeIcon, ChartIcon, ShareIcon, Twitt
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import AudioVisualizer from './AudioVisualizer';
 import InteractiveChart from './InteractiveChart';
-import { HolographicScanner, QuantumSpinner } from './Loaders';
+import { HexagonLoader, HolographicScanner } from './Loaders';
 
 type Language = 'English' | 'Hindi' | 'Hinglish';
 type ActiveTab = 'full' | 'summary' | 'analysis' | 'data';
@@ -231,18 +230,21 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     };
 
     const tabButtonStyle = (isActive: boolean, activeColorClass: string, borderColorClass: string) => `
-        px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-300
+        px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-300 relative
         ${isActive 
-            ? `bg-${activeColorClass}/20 text-${activeColorClass} border-${borderColorClass}/50 shadow-[0_0_10px_rgba(58,190,254,0.3)]` 
+            ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${borderColorClass}/50 shadow-[0_0_10px_rgba(58,190,254,0.3)] ring-1 ring-${activeColorClass}/30` 
             : 'border-transparent text-brand-text-muted hover:bg-white/5 hover:border-white/10 hover:text-white'}
         active:scale-95
     `;
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Modal Container */}
-            <div className="bg-[#050505]/60 w-full max-w-5xl max-h-[90vh] rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 flex flex-col animate-slide-up relative overflow-hidden backdrop-blur-2xl ring-1 ring-white/5" onClick={e => e.stopPropagation()}>
+            {/* Glass Modal Container with Page Enter Transition */}
+            <div className="bg-[#050505]/60 w-full max-w-5xl max-h-[90vh] rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 flex flex-col animate-page-enter relative overflow-hidden backdrop-blur-2xl ring-1 ring-white/5" onClick={e => e.stopPropagation()}>
                 
+                {/* Horizontal Laser Sweep */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-accent to-transparent z-50 animate-scan-line"></div>
+
                 {/* Header Image */}
                 <div className="h-40 md:h-56 relative flex-shrink-0 group">
                     <img src={article.image} alt={article.title} className="w-full h-full object-cover opacity-80 transition-transform duration-[2s] group-hover:scale-105" />
@@ -370,7 +372,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                 <div className="flex-grow p-4 md:p-6 overflow-y-auto scroll-smooth relative">
                     {isAudioLoading && (
                         <div className="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm z-30 flex items-center justify-center animate-fade-in">
-                             <QuantumSpinner text="SYNTHESIZING AUDIO" />
+                             <HexagonLoader text="SYNTHESIZING AUDIO" />
                         </div>
                     )}
 

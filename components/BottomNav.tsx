@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HomeIcon, ReelsIcon, CompassIcon, BoltIcon, UserIcon } from './icons';
 
@@ -43,10 +42,14 @@ const BottomNav: React.FC<BottomNavProps> = ({
                     onClick={() => onChangeView('grid')}
                     className={getNavItemClass(viewMode === 'grid')}
                 >
+                    {/* Active Pulse Ring */}
                     {viewMode === 'grid' && (
-                        <div className="absolute top-0 w-12 h-[2px] bg-brand-accent shadow-[0_0_15px_#28FFD3] animate-pulse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-10 h-10 rounded-full border border-brand-accent/50 shadow-[0_0_15px_rgba(40,255,211,0.3)] animate-pulse-glow"></div>
+                        </div>
                     )}
-                    <div className={`p-1 rounded-full transition-all ${viewMode === 'grid' ? 'bg-brand-accent/10 shadow-[0_0_15px_rgba(40,255,211,0.2)]' : ''}`}>
+                    
+                    <div className={`relative z-10 p-1 rounded-full transition-all ${viewMode === 'grid' ? 'bg-brand-accent/10' : ''}`}>
                          <HomeIcon className={`h-6 w-6 ${viewMode === 'grid' ? 'drop-shadow-[0_0_5px_rgba(40,255,211,0.8)]' : ''}`} />
                     </div>
                     <span className={`text-[9px] font-orbitron tracking-widest uppercase ${viewMode === 'grid' ? 'text-white' : ''}`}>Home</span>
@@ -59,7 +62,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
                     onClick={onOpenExplore}
                     className={getNavItemClass(false)}
                 >
-                    <CompassIcon className="h-6 w-6" />
+                    <CompassIcon className="h-6 w-6 group-active:scale-95 transition-transform" />
                     <span className="text-[9px] font-orbitron tracking-widest uppercase">Explore</span>
                 </button>
 
@@ -70,10 +73,13 @@ const BottomNav: React.FC<BottomNavProps> = ({
                     onClick={() => onChangeView('reels')}
                     className={getNavItemClass(viewMode === 'reels')}
                 >
+                     {/* Active Pulse Ring */}
                     {viewMode === 'reels' && (
-                         <div className="absolute top-0 w-12 h-[2px] bg-brand-secondary shadow-[0_0_15px_#7B2FFF] animate-pulse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-10 h-10 rounded-full border border-brand-secondary/50 shadow-[0_0_15px_rgba(123,47,255,0.3)] animate-pulse-glow"></div>
+                        </div>
                     )}
-                    <div className={`p-1 rounded-full transition-all ${viewMode === 'reels' ? 'bg-brand-secondary/10 shadow-[0_0_15px_rgba(123,47,255,0.2)]' : ''}`}>
+                    <div className={`relative z-10 p-1 rounded-full transition-all ${viewMode === 'reels' ? 'bg-brand-secondary/10' : ''}`}>
                         <ReelsIcon className={`h-6 w-6 ${viewMode === 'reels' ? 'text-brand-secondary drop-shadow-[0_0_5px_rgba(123,47,255,0.8)]' : ''}`} />
                     </div>
                     <span className={`text-[9px] font-orbitron tracking-widest uppercase ${viewMode === 'reels' ? 'text-white' : ''}`}>Reels</span>
@@ -86,7 +92,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
                     onClick={onOpenChat}
                     className={getNavItemClass(false)}
                 >
-                    <BoltIcon className="h-6 w-6" />
+                    <BoltIcon className="h-6 w-6 group-active:scale-95 transition-transform" />
                     <span className="text-[9px] font-orbitron tracking-widest uppercase">Chat</span>
                 </button>
 
@@ -97,7 +103,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
                     onClick={onOpenProfile}
                     className={getNavItemClass(false)}
                 >
-                    <UserIcon className="h-6 w-6" />
+                    <UserIcon className="h-6 w-6 group-active:scale-95 transition-transform" />
                     <span className="text-[9px] font-orbitron tracking-widest uppercase">Profile</span>
                 </button>
             </div>

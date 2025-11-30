@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
@@ -61,7 +60,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                     <div className="flex flex-col md:flex-row gap-4 pt-4 md:pt-6 items-center md:items-start w-full md:w-auto">
                         <button 
                             onClick={onEnterApp}
-                            className="group relative px-10 py-4 overflow-hidden rounded-full bg-white/5 border border-brand-primary/50 text-white font-orbitron tracking-[0.2em] transition-all duration-300 hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_40px_rgba(58,190,254,0.6)] active:scale-95 active:shadow-inner w-full md:w-auto backdrop-blur-md"
+                            className="
+                                group relative px-10 py-4 overflow-hidden rounded-full 
+                                bg-white/5 border border-brand-primary/50 text-white font-orbitron tracking-[0.2em] 
+                                transition-all duration-300 
+                                hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_40px_rgba(58,190,254,0.6)] 
+                                active:scale-95 active:shadow-inner w-full md:w-auto backdrop-blur-md
+                            "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
                                 ENTER SYSTEM <BoltIcon />
@@ -103,14 +108,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                                     border border-white/10 
                                     p-8 
                                     shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]
-                                    hover:border-brand-primary/30 
-                                    hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.6)] 
+                                    
+                                    /* Micro-Interactions */
+                                    animate-card-enter
                                     transition-all duration-300
+                                    hover:scale-[1.02]
+                                    hover:border-brand-primary/40 
+                                    hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.6)] 
                                 "
                             >
                                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${feature.color}`}></div>
                                 <div className="w-16 h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
-                                    <div className="text-white">
+                                    <div className="text-white group-hover:animate-pulse-once">
                                         {feature.icon}
                                     </div>
                                 </div>
@@ -165,11 +174,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         { title: 'Live Stream', text: 'Real-time WebSocket data.', positive: true },
                     ].map((item, idx) => (
                         <div key={idx} className={`
-                            p-8 rounded-[22px] backdrop-blur-md transition-all hover:-translate-y-1 border
+                            p-8 rounded-[22px] backdrop-blur-md transition-all border
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]
+                            
+                            /* Micro-Interactions */
+                            animate-card-enter
+                            hover:scale-[1.02]
+                            hover:-translate-y-1
+                            
                             ${item.positive 
-                                ? 'bg-gradient-to-br from-brand-primary/10 to-transparent border-brand-primary/30 shadow-[0_0_20px_rgba(58,190,254,0.05)]' 
-                                : 'bg-gradient-to-br from-white/5 to-transparent border-white/5 grayscale opacity-60'}
+                                ? 'bg-gradient-to-br from-brand-primary/10 to-transparent border-brand-primary/30 shadow-[0_0_20px_rgba(58,190,254,0.05)] hover:border-brand-primary/50' 
+                                : 'bg-gradient-to-br from-white/5 to-transparent border-white/5 grayscale opacity-60 hover:opacity-100 hover:border-white/20'}
                         `}>
                             <div className="flex justify-between items-start mb-4">
                                 <h4 className={`font-orbitron text-lg ${item.positive ? 'text-brand-primary' : 'text-gray-500'}`}>{item.title}</h4>
@@ -193,7 +208,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                     
                     <button 
                         onClick={onEnterApp}
-                        className="w-full md:w-auto px-12 py-5 bg-gradient-to-r from-brand-primary to-brand-accent text-[#050505] font-orbitron font-bold text-xl tracking-[0.2em] rounded-full shadow-[0_0_50px_rgba(58,190,254,0.6)] hover:shadow-[0_0_80px_rgba(58,190,254,0.8)] hover:scale-105 transition-all transform active:scale-95 border border-white/20"
+                        className="
+                            w-full md:w-auto px-12 py-5 rounded-full 
+                            bg-gradient-to-r from-brand-primary to-brand-accent text-[#050505] 
+                            font-orbitron font-bold text-xl tracking-[0.2em] 
+                            shadow-[0_0_50px_rgba(58,190,254,0.6)] 
+                            border border-white/20
+                            
+                            /* Micro-Interactions */
+                            transition-all duration-300 transform 
+                            hover:shadow-[0_0_80px_rgba(58,190,254,0.8)] 
+                            hover:scale-105 
+                            active:scale-95 
+                        "
                     >
                         LAUNCH APP
                     </button>

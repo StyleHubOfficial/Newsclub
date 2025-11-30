@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SearchResult } from '../types';
 import { CloseIcon, SearchIcon, LinkIcon } from './icons';
@@ -13,16 +12,19 @@ interface SearchResultsModalProps {
 const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ result, onClose, isLoading }) => {
     return (
         <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Container */}
+            {/* Glass Container with Page Enter Transition */}
             <div className="
                 bg-[#050505]/80 backdrop-blur-2xl 
                 w-full max-w-3xl max-h-[85vh] 
                 rounded-[22px] 
                 shadow-[0_0_60px_-10px_rgba(40,255,211,0.15)] 
                 border border-white/10 ring-1 ring-white/5 
-                flex flex-col animate-slide-up relative overflow-hidden
+                flex flex-col animate-page-enter relative overflow-hidden
             " onClick={(e) => e.stopPropagation()}>
                 
+                {/* Horizontal Laser Sweep */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-accent to-transparent z-50 animate-scan-line"></div>
+
                 {/* Header */}
                 <header className="p-5 border-b border-brand-accent/20 flex justify-between items-center bg-white/5 backdrop-blur-xl z-10">
                     <div className="flex items-center gap-3">
