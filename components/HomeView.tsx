@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
@@ -57,16 +58,16 @@ const HomeView: React.FC<HomeViewProps> = ({
         };
 
         return (
-            <RevealOnScroll animation="fade-up">
-                <div className="relative inline-block mb-8">
+            <RevealOnScroll animation="zoom-in">
+                <div className="relative inline-block mb-8 group">
                     <div className="flex items-center gap-3 relative z-10">
-                        {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}]`}>{icon}</div>}
-                        <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase">
+                        {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
+                        <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase animate-text-shimmer bg-[length:200%_auto]">
                             {children}
                         </h3>
                     </div>
                     {/* Neon Underline - Auto Draws on Reveal */}
-                    <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line`}></div>
+                    <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line origin-left`}></div>
                 </div>
             </RevealOnScroll>
         );
@@ -77,7 +78,7 @@ const HomeView: React.FC<HomeViewProps> = ({
             
             {/* SECTION A: HERO SECTION */}
             <section className="px-4 md:px-6 text-center space-y-5">
-                <RevealOnScroll animation="fade-up">
+                <RevealOnScroll animation="zoom-in">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-2 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse shadow-[0_0_5px_#28FFD3]"></span>
                         <span className="text-[10px] font-orbitron text-brand-text-muted tracking-widest uppercase">LIVE INTELLIGENCE FEED</span>
@@ -100,9 +101,20 @@ const HomeView: React.FC<HomeViewProps> = ({
                     <div className="pt-4">
                         <button 
                             onClick={() => document.getElementById('daily-feed')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="px-8 py-3 bg-white/5 border border-brand-primary/50 text-brand-primary rounded-full text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_0_20px_rgba(58,190,254,0.15)] hover:bg-brand-primary hover:text-[#050505] hover:shadow-[0_0_30px_rgba(58,190,254,0.6)] active:scale-95 active:shadow-inner active:animate-ripple backdrop-blur-md relative overflow-hidden"
+                            className="
+                                group relative px-8 py-3 rounded-full overflow-hidden
+                                bg-white/5 border border-brand-primary/50 text-brand-primary 
+                                font-orbitron text-xs font-bold uppercase tracking-[0.2em] 
+                                backdrop-blur-md
+                                transition-all duration-300 
+                                hover:bg-brand-primary/10 hover:border-brand-primary hover:text-white hover:shadow-[0_0_30px_rgba(58,190,254,0.6)] 
+                                hover:scale-105
+                                active:scale-95 active:shadow-inner active:animate-ripple
+                            "
                         >
-                            Start Reading
+                            <span className="relative z-10">Start Reading</span>
+                             {/* Inner Shine Effect */}
+                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                         </button>
                     </div>
                 </RevealOnScroll>
@@ -146,20 +158,24 @@ const HomeView: React.FC<HomeViewProps> = ({
                                     active:scale-95 active:animate-ripple
                                 "
                             >
+                                {/* Light Beam Micro-Interaction */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-sheen pointer-events-none z-0 skew-x-12"></div>
+
                                 <div className={`
                                     p-3 rounded-2xl 
                                     ${feature.bg} border border-white/5 
                                     transition-transform duration-500 
-                                    group-hover:scale-110
+                                    group-hover:scale-110 group-hover:rotate-12
                                     ${feature.color} group-hover:${feature.glow}
                                     shadow-inner
                                     drop-shadow-[0_0_5px_rgba(currentColor,0.5)]
+                                    relative z-10
                                 `}>
                                     <div className="group-hover:animate-pulse-once">
                                         {feature.icon}
                                     </div>
                                 </div>
-                                <span className="text-[9px] md:text-xs font-bold font-orbitron text-brand-text-muted group-hover:text-white text-center leading-tight tracking-wide">
+                                <span className="relative z-10 text-[9px] md:text-xs font-bold font-orbitron text-brand-text-muted group-hover:text-white text-center leading-tight tracking-wide">
                                     {feature.label}
                                 </span>
                             </button>
@@ -208,13 +224,16 @@ const HomeView: React.FC<HomeViewProps> = ({
                                 className="
                                     flex-shrink-0 px-6 py-3 
                                     rounded-full 
-                                    bg-gradient-to-r from-white/10 to-transparent
                                     border border-white/10 
+                                    bg-transparent
                                     text-xs font-bold font-orbitron text-brand-text-muted 
+                                    
+                                    /* Micro-Interactions */
+                                    transition-all duration-300
                                     hover:bg-brand-secondary/20 hover:text-white hover:border-brand-secondary/50 
-                                    hover:shadow-[0_0_20px_rgba(123,47,255,0.3)] 
+                                    hover:shadow-[0_0_20px_rgba(123,47,255,0.3)] hover:scale-105
                                     shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]
-                                    transition-all backdrop-blur-md active:scale-95 active:animate-ripple relative overflow-hidden
+                                    backdrop-blur-md active:scale-95 active:animate-ripple relative overflow-hidden
                                 "
                                 onClick={() => onSearch(topic)}
                             >

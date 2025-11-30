@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CloseIcon, SettingsIcon } from './icons';
 
@@ -86,7 +87,7 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
                                     className={`
                                         px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all border
                                         ${selectedCategories.includes(cat) 
-                                            ? 'bg-brand-primary text-[#050505] border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.5)] scale-105' 
+                                            ? 'bg-brand-primary text-[#050505] border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.5)] scale-105 ring-1 ring-brand-primary/50' 
                                             : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-brand-primary/30 hover:text-white'}
                                     `}
                                 >
@@ -110,7 +111,7 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
                                     className={`
                                         px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all border
                                         ${selectedSources.includes(src) 
-                                            ? 'bg-brand-secondary text-white border-brand-secondary shadow-[0_0_15px_rgba(123,47,255,0.5)] scale-105' 
+                                            ? 'bg-brand-secondary text-white border-brand-secondary shadow-[0_0_15px_rgba(123,47,255,0.5)] scale-105 ring-1 ring-brand-secondary/50' 
                                             : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-brand-secondary/30 hover:text-white'}
                                     `}
                                 >
@@ -124,15 +125,28 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
                 <footer className="p-5 border-t border-white/10 flex justify-end gap-4 bg-white/5 backdrop-blur-xl rounded-b-[22px]">
                      <button 
                         onClick={onClose} 
-                        className="px-6 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider border border-white/10 text-brand-text-muted hover:bg-white/10 hover:text-white transition-all"
+                        className="
+                            px-6 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider 
+                            border border-white/10 text-brand-text-muted 
+                            hover:bg-white/10 hover:text-white hover:border-white/30
+                            transition-all active:scale-95
+                        "
                     >
                         CANCEL
                     </button>
                     <button 
                         onClick={handleSave} 
-                        className="px-8 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider bg-gradient-to-r from-brand-secondary to-brand-primary text-white shadow-[0_0_20px_rgba(58,190,254,0.3)] hover:shadow-[0_0_30px_rgba(58,190,254,0.5)] border border-white/20 transition-all transform hover:scale-105 active:scale-95"
+                        className="
+                            group relative overflow-hidden
+                            px-8 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider 
+                            bg-white/5 border border-brand-secondary/50 text-white
+                            shadow-[0_0_20px_rgba(123,47,255,0.3)] 
+                            hover:shadow-[0_0_30px_rgba(123,47,255,0.5)] hover:border-brand-secondary
+                            transition-all transform hover:scale-105 active:scale-95
+                        "
                     >
-                        SAVE CONFIG
+                        <span className="relative z-10">SAVE CONFIG</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-secondary/30 to-transparent -translate-x-full group-hover:animate-sheen z-0"></div>
                     </button>
                 </footer>
             </div>

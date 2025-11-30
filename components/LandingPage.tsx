@@ -1,7 +1,9 @@
+
 import React, { useRef } from 'react';
 import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
 import NeonSignature from './NeonSignature';
+import RevealOnScroll from './RevealOnScroll';
 
 interface LandingPageProps {
     onEnterApp: () => void;
@@ -9,12 +11,6 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
-
-    const scrollToFeatures = () => {
-        if (featureSectionRef.current) {
-            featureSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
 
     return (
         <div className="min-h-[100dvh] bg-[#050505] text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-black">
@@ -65,13 +61,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                                 bg-white/5 border border-brand-primary/50 text-white font-orbitron tracking-[0.2em] 
                                 transition-all duration-300 
                                 hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_40px_rgba(58,190,254,0.6)] 
+                                hover:scale-105
                                 active:scale-95 active:shadow-inner w-full md:w-auto backdrop-blur-md
                             "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
                                 ENTER SYSTEM <BoltIcon />
                             </span>
-                            <div className="absolute inset-0 bg-brand-primary/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
+                            {/* Inner Shine Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                         </button>
                     </div>
                 </div>
@@ -81,14 +79,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             {/* SECTION B: FEATURE CAROUSEL */}
             <section ref={featureSectionRef} className="py-20 relative z-10 border-t border-white/5 bg-[#050505]/80 backdrop-blur-xl">
                 <div className="container mx-auto px-4 md:px-6 mb-8 text-center">
-                     <div className="relative inline-block mb-12">
-                        <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10">
-                            <span className="text-brand-secondary mr-3">///</span> Advanced Modules
-                        </h2>
-                        {/* Neon Underline & Light Beam Trail */}
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent shadow-[0_0_15px_#7B2FFF]"></div>
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
-                    </div>
+                    <RevealOnScroll animation="zoom-in">
+                        <div className="relative inline-block mb-12">
+                            <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10 animate-text-shimmer bg-[length:200%_auto]">
+                                <span className="text-brand-secondary mr-3">///</span> Advanced Modules
+                            </h2>
+                            {/* Neon Underline & Light Beam Trail */}
+                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent shadow-[0_0_15px_#7B2FFF] animate-draw-line"></div>
+                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
+                        </div>
+                    </RevealOnScroll>
                     
                     <div className="flex overflow-x-auto gap-5 md:gap-8 pb-8 snap-x snap-mandatory scrollbar-hide px-2">
                         {[
@@ -155,13 +155,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             {/* SECTION E: COMPARISON GRID */}
             <section className="py-20 container mx-auto px-4 md:px-6">
                  <div className="text-center mb-16 relative inline-block w-full">
-                    <div className="relative inline-block">
-                        <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10">
-                            <span className="text-brand-accent mr-3">///</span> Why News Club?
-                        </h2>
-                         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-transparent via-brand-accent to-transparent shadow-[0_0_15px_#28FFD3]"></div>
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
-                    </div>
+                    <RevealOnScroll animation="zoom-in">
+                        <div className="relative inline-block">
+                            <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10 animate-text-shimmer bg-[length:200%_auto]">
+                                <span className="text-brand-accent mr-3">///</span> Why News Club?
+                            </h2>
+                             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-transparent via-brand-accent to-transparent shadow-[0_0_15px_#28FFD3] animate-draw-line"></div>
+                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
+                        </div>
+                    </RevealOnScroll>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -209,20 +211,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                     <button 
                         onClick={onEnterApp}
                         className="
-                            w-full md:w-auto px-12 py-5 rounded-full 
-                            bg-gradient-to-r from-brand-primary to-brand-accent text-[#050505] 
-                            font-orbitron font-bold text-xl tracking-[0.2em] 
-                            shadow-[0_0_50px_rgba(58,190,254,0.6)] 
-                            border border-white/20
+                            group relative w-full md:w-auto px-12 py-5 rounded-full overflow-hidden
+                            bg-white/5 border border-brand-accent/50
+                            text-white font-orbitron font-bold text-xl tracking-[0.2em] 
+                            backdrop-blur-md
                             
                             /* Micro-Interactions */
                             transition-all duration-300 transform 
-                            hover:shadow-[0_0_80px_rgba(58,190,254,0.8)] 
+                            hover:bg-brand-accent/20 hover:border-brand-accent
+                            hover:shadow-[0_0_80px_rgba(40,255,211,0.6)] 
                             hover:scale-105 
-                            active:scale-95 
+                            active:scale-95 active:shadow-inner
                         "
                     >
-                        LAUNCH APP
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                            LAUNCH APP <BoltIcon />
+                        </span>
+                         {/* Inner Shine Effect */}
+                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                     </button>
                     
                     <div className="pt-16 opacity-80 hover:opacity-100 transition-opacity">

@@ -277,7 +277,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                         {mode === 'chat' && (
                             <button 
                                 onClick={isRecording ? stopRecording : startRecording} 
-                                className={`p-2 rounded-full transition-all duration-300 ${isRecording ? 'bg-brand-accent text-black animate-pulse shadow-[0_0_15px_#28FFD3]' : 'text-brand-text-muted hover:text-brand-primary hover:bg-white/5'}`}
+                                className={`
+                                    p-2 rounded-full transition-all duration-300 border
+                                    ${isRecording 
+                                        ? 'bg-brand-accent text-black animate-vibrate ring-2 ring-brand-accent shadow-[0_0_20px_#28FFD3] border-brand-accent' 
+                                        : 'bg-transparent border-transparent text-brand-text-muted hover:text-brand-accent hover:border-brand-accent/50 hover:bg-white/5'}
+                                `}
                                 title="Voice Input"
                             >
                                 {isRecording ? <StopIcon className="h-5 w-5" /> : <MicIcon className="h-5 w-5" />}
@@ -287,8 +292,15 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                         <button 
                             onClick={handleSend} 
                             disabled={isRecording || !input.trim()} 
-                            className="bg-gradient-to-br from-brand-primary to-blue-600 p-2.5 rounded-full text-white hover:shadow-[0_0_15px_rgba(58,190,254,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                            className="
+                                group relative overflow-hidden
+                                p-2.5 rounded-full text-white 
+                                bg-white/5 border border-brand-primary/50
+                                transition-all hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_15px_rgba(58,190,254,0.5)]
+                                active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
+                            "
                         >
+                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen z-0"></div>
                             <SendIcon />
                         </button>
                     </div>

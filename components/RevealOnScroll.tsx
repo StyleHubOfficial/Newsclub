@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 interface RevealOnScrollProps {
     children: React.ReactNode;
-    animation?: 'fade-up' | 'slide-right';
+    animation?: 'fade-up' | 'slide-right' | 'zoom-in';
     delay?: number;
     className?: string;
 }
@@ -26,8 +26,8 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
                 }
             },
             {
-                threshold: 0.1, // Trigger when 10% visible
-                rootMargin: '50px' // Start slightly before
+                threshold: 0.15, // Trigger when 15% visible for smoother reveal
+                rootMargin: '20px' 
             }
         );
 
@@ -39,11 +39,20 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
     }, []);
 
     const getAnimationClass = () => {
-        if (!isVisible) return 'opacity-0 translate-y-8'; // Start state
+        if (!isVisible) {
+            // Start states
+            switch (animation) {
+                case 'zoom-in': return 'opacity-0 scale-95';
+                case 'slide-right': return 'opacity-0 -translate-x-8';
+                default: return 'opacity-0 translate-y-8'; // fade-up
+            }
+        }
         
+        // End states (Animations)
         switch (animation) {
-            case 'fade-up': return 'animate-slide-up-fade opacity-100 translate-y-0';
+            case 'zoom-in': return 'animate-scale-in opacity-100 scale-100';
             case 'slide-right': return 'animate-slide-in-left-fade opacity-100 translate-x-0';
+            case 'fade-up': return 'animate-slide-up-fade opacity-100 translate-y-0';
             default: return 'animate-fade-in opacity-100';
         }
     };
@@ -51,7 +60,7 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
     return (
         <div 
             ref={ref} 
-            className={`transition-all duration-700 ease-out ${getAnimationClass()} ${className}`}
+            className={`transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${getAnimationClass()} ${className}`}
             style={{ transitionDelay: `${delay}ms` }}
         >
             {children}

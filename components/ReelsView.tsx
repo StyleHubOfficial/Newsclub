@@ -62,7 +62,7 @@ const ReelsView: React.FC<ReelsViewProps> = ({
                         onClick={onExitReels}
                         className="
                             p-3 rounded-full 
-                            bg-black/40 backdrop-blur-md 
+                            bg-white/5 backdrop-blur-md 
                             border border-white/20 
                             text-white 
                             shadow-[0_0_15px_rgba(0,0,0,0.5)]

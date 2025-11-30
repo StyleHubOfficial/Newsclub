@@ -67,12 +67,12 @@ const Header: React.FC<HeaderProps> = ({
         await logoutUser();
     };
 
-    // Helper for button styles
+    // Helper for button styles - Updated to Hi-Tech Glass Neon Spec
     const navButtonStyle = (isActive: boolean, activeColorClass: string, activeShadowClass: string) => `
         flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border overflow-hidden relative
         font-orbitron text-[10px] font-bold tracking-wider
         ${isActive 
-            ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${activeColorClass}/30 shadow-[0_0_15px_${activeShadowClass}]` 
+            ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${activeColorClass}/50 shadow-[0_0_15px_${activeShadowClass}]` 
             : 'border-transparent text-brand-text-muted hover:text-white hover:bg-white/5 hover:border-white/10 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]'
         }
         active:scale-95 active:animate-ripple
@@ -202,10 +202,19 @@ const Header: React.FC<HeaderProps> = ({
                         ) : (
                              <button 
                                 onClick={handleLogin}
-                                className="flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-brand-primary/50 text-brand-primary font-orbitron text-[10px] font-bold tracking-wider hover:bg-brand-primary hover:text-[#050505] transition-all duration-300 shadow-[0_0_10px_rgba(58,190,254,0.1)] hover:shadow-[0_0_20px_rgba(58,190,254,0.6)] backdrop-blur-sm active:scale-95 active:animate-ripple relative overflow-hidden"
+                                className="
+                                    group relative flex items-center justify-center gap-2 px-5 py-2 rounded-full overflow-hidden
+                                    bg-white/5 border border-brand-primary/50 
+                                    text-brand-primary font-orbitron text-[10px] font-bold tracking-wider 
+                                    transition-all duration-300 
+                                    hover:bg-brand-primary/10 hover:border-brand-primary hover:text-white hover:shadow-[0_0_20px_rgba(58,190,254,0.6)] 
+                                    backdrop-blur-sm active:scale-95 active:animate-ripple
+                                "
                             >
-                                <UserIcon className="h-4 w-4" />
-                                <span>LOGIN</span>
+                                <UserIcon className="h-4 w-4 relative z-10" />
+                                <span className="relative z-10">LOGIN</span>
+                                 {/* Inner Shine */}
+                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-primary/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                             </button>
                         )}
                     </div>

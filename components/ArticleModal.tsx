@@ -35,7 +35,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const [playbackRate, setPlaybackRate] = useState(1);
     const [audioReady, setAudioReady] = useState(false);
     
-    // VISUALIZER STATE (Critical for UI update)
+    // VISUALIZER STATE
     const [analyserForVisualizer, setAnalyserForVisualizer] = useState<AnalyserNode | null>(null);
 
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -113,7 +113,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
          const source = ctx.createBufferSource();
          source.buffer = buffer;
          
-         // Connect Source -> Gain (Chain becomes: Source -> Gain -> Analyser -> Destination)
+         // Connect Source -> Gain
          source.connect(gain);
          
          gain.gain.value = volume;
@@ -253,11 +253,12 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         );
     };
 
+    // Updated Tab Button Style
     const tabButtonStyle = (isActive: boolean, activeColorClass: string, borderColorClass: string) => `
         px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-all duration-300 relative
         ${isActive 
-            ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${borderColorClass}/50 shadow-[0_0_10px_rgba(58,190,254,0.3)] ring-1 ring-${activeColorClass}/30` 
-            : 'border-transparent text-brand-text-muted hover:bg-white/5 hover:border-white/10 hover:text-white'}
+            ? `bg-${activeColorClass}/10 text-${activeColorClass} border-${borderColorClass} shadow-[0_0_15px_${borderColorClass === 'brand-primary' ? '#3ABEFE' : borderColorClass === 'brand-secondary' ? '#7B2FFF' : '#28FFD3'}] ring-1 ring-${activeColorClass}/30` 
+            : 'border-white/10 bg-transparent text-brand-text-muted hover:bg-white/5 hover:border-white/30 hover:text-white'}
         active:scale-95
     `;
 
@@ -275,7 +276,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
                     <button 
                         onClick={onClose} 
-                        className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors backdrop-blur-md border border-white/10 z-10"
+                        className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors backdrop-blur-md border border-white/10 z-10 hover:border-white/30 active:scale-95"
                     >
                         <CloseIcon />
                     </button>
@@ -331,7 +332,12 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                             <button 
                                 onClick={handleTextToSpeech}
                                 disabled={isAudioLoading}
-                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 ${audioReady ? 'text-black bg-brand-accent shadow-[0_0_10px_#28FFD3]' : 'text-brand-text-muted hover:text-white hover:bg-white/5'} active:scale-95`}
+                                className={`
+                                    flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 active:scale-95
+                                    ${audioReady 
+                                        ? 'text-black bg-brand-accent shadow-[0_0_15px_#28FFD3] animate-pulse-glow font-bold' 
+                                        : 'text-brand-text-muted hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]'}
+                                `}
                             >
                                 <VolumeIcon />
                                 <span className="text-xs font-bold font-orbitron">{isAudioLoading ? 'GENERATING...' : 'AUDIO AGENT'}</span>
@@ -341,7 +347,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                  <div className="relative" ref={langButtonRef as any}>
                                     <button 
                                         onClick={() => setLangOpen(!isLangOpen)}
-                                        className="text-xs font-orbitron text-brand-text-muted hover:text-white px-3 py-1.5 flex items-center gap-1 min-w-[3rem] justify-center border-l border-white/10"
+                                        className="text-xs font-orbitron text-brand-text-muted hover:text-white px-3 py-1.5 flex items-center gap-1 min-w-[3rem] justify-center border-l border-white/10 hover:bg-white/5 transition-colors"
                                     >
                                         {language === 'English' ? 'EN' : language === 'Hindi' ? 'HI' : 'HIN'}
                                         <span className="text-[8px]">▼</span>
@@ -409,7 +415,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     {renderContent()}
                 </div>
                 
-                 {/* Full Audio Player Interface */}
+                 {/* Full Audio Player Interface - Hi-Tech Redesign */}
                  {(audioReady || isAudioLoading) && !isAudioLoading && (
                     <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up relative z-30">
                          <div className="flex justify-between items-center">
@@ -424,13 +430,21 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
 
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-3">
+                                 {/* Primary Circular Button */}
                                  <button 
                                     onClick={isPlaying ? pauseAudio : () => playAudioBuffer(0)}
-                                    className="w-12 h-12 rounded-full bg-brand-text text-brand-bg hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-95"
+                                    className="
+                                        w-12 h-12 rounded-full flex items-center justify-center transition-all 
+                                        bg-white text-black 
+                                        shadow-[0_0_20px_rgba(255,255,255,0.4)]
+                                        hover:scale-110 hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] 
+                                        active:scale-95
+                                    "
                                 >
                                     {isPlaying ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6 ml-1"/>}
                                 </button>
-                                <button onClick={stopAudio} className="p-3 rounded-full text-brand-text-muted hover:text-brand-accent hover:bg-white/5 transition-colors active:scale-95">
+                                {/* Secondary Circular Button */}
+                                <button onClick={stopAudio} className="p-3 rounded-full text-brand-text-muted hover:text-brand-accent hover:bg-white/5 transition-colors active:scale-95 border border-transparent hover:border-white/10 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]">
                                     <StopIcon className="w-6 h-6" />
                                 </button>
                              </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -215,7 +216,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         </div>
                         <h2 className="font-orbitron text-xl text-brand-primary tracking-widest">NEWS REPORTER <span className="text-brand-text-muted text-xs">LIVE</span></h2>
                     </div>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-accent transition-colors p-2 hover:bg-white/5 rounded-full">
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-accent transition-colors p-2 hover:bg-white/5 rounded-full border border-transparent hover:border-white/10">
                         <CloseIcon />
                     </button>
                 </header>
@@ -224,7 +225,12 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                 {error && (
                     <div className="bg-red-900/90 text-white p-3 text-center text-xs font-mono border-b border-red-500/50 z-10 flex justify-between items-center px-6">
                         <span>ERROR: {error}</span>
-                        <button onClick={startSession} className="px-3 py-1 bg-red-800 rounded border border-red-500 hover:bg-red-700 transition-colors">RECONNECT</button>
+                        <button 
+                            onClick={startSession} 
+                            className="px-3 py-1 bg-red-800 rounded border border-red-500 hover:bg-red-700 transition-colors font-orbitron text-[10px]"
+                        >
+                            RECONNECT
+                        </button>
                     </div>
                 )}
 
@@ -307,7 +313,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                        </div>
                        
                        {/* Microphone Icon Animation */}
-                       <div className={`absolute bottom-4 p-3 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
+                       <div className={`absolute bottom-4 p-4 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110 animate-vibrate' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
                             <MicIcon className={`h-6 w-6 ${isListening ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
                        </div>
                     </div>

@@ -159,21 +159,88 @@ export async function streamChatResponse(
     }
 }
 
+/**
+ * Adds a "NEWS CLUB" watermark to the bottom-right of an image.
+ */
+async function addWatermark(base64Image: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                resolve(base64Image); // Fallback if canvas fails
+                return;
+            }
+
+            // 1. Draw Original Image
+            ctx.drawImage(img, 0, 0);
+
+            // 2. Configure Watermark Text
+            const text = "NEWS CLUB";
+            // Responsive font size based on image width (approx 5%)
+            const fontSize = Math.floor(canvas.width * 0.05); 
+            ctx.font = `900 ${fontSize}px Orbitron, sans-serif`;
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            
+            const paddingX = canvas.width * 0.03;
+            const paddingY = canvas.height * 0.03;
+            const x = canvas.width - paddingX;
+            const y = canvas.height - paddingY;
+
+            // 3. Add Drop Shadow / Glow for visibility
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // 4. Create Gradient Fill (Electric Blue -> Neon Teal)
+            const gradient = ctx.createLinearGradient(x - ctx.measureText(text).width, y, x, y);
+            gradient.addColorStop(0, '#3ABEFE');
+            gradient.addColorStop(1, '#28FFD3');
+            ctx.fillStyle = gradient;
+
+            // 5. Draw Text
+            ctx.fillText(text, x, y);
+            
+            // 6. Optional: Subtle Stroke
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeText(text, x, y);
+
+            // Return as base64
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = (err) => {
+            console.error("Watermark failed, returning original", err);
+            resolve(base64Image);
+        };
+        img.src = base64Image;
+    });
+}
+
 export async function generateImageFromPrompt(prompt: string): Promise<string> {
     try {
         const ai = getAiClient();
         
-        // Using correct model and configuration for standard image generation
-        // Note: imageSize is NOT supported on gemini-2.5-flash-image, only on gemini-3-pro-image-preview
+        // Enhance prompt to ensure high quality and prevent model refusal on vague prompts
+        const enhancedPrompt = `High quality, photorealistic, cinematic lighting, futuristic style: ${prompt}`;
+
+        // Using gemini-2.5-flash-image for speed and stability
+        // REMOVED imageSize as it is not supported on flash models and causes 500 errors
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', 
             contents: [{
-                parts: [{ text: prompt }],
+                parts: [{ text: enhancedPrompt }],
             }],
             config: {
                 imageConfig: {
                     aspectRatio: "1:1",
-                    // imageSize: "1K" // Removed as it causes 500 error on Flash Image
                 }
             }
         });
@@ -189,7 +256,10 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
                 if (part.inlineData && part.inlineData.data) {
                     const base64ImageBytes: string = part.inlineData.data;
                     const mimeType = part.inlineData.mimeType || 'image/png';
-                    return `data:${mimeType};base64,${base64ImageBytes}`;
+                    const originalBase64 = `data:${mimeType};base64,${base64ImageBytes}`;
+                    
+                    // Apply Watermark
+                    return await addWatermark(originalBase64);
                 }
             }
         }
@@ -197,7 +267,7 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
         // If we got text back instead of an image (model explanation or refusal)
         const textResponse = response.text;
         if (textResponse) {
-             throw new Error(`Model returned text: ${textResponse.substring(0, 150)}...`);
+             throw new Error(`Model returned text instead of image: ${textResponse.substring(0, 100)}...`);
         }
 
         throw new Error("No image data found in response.");

@@ -250,10 +250,12 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
     // --- Render ---
     const selectedArticle = articles.find(a => a.id === selectedArticleId);
+    
+    // Updated Mode Toggle Style
     const modeButtonStyle = (isActive: boolean) => `
         px-4 py-2 rounded-full font-semibold transition-all duration-300 text-sm border
         ${isActive 
-            ? 'bg-brand-primary text-white border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.4)]' 
+            ? 'bg-brand-primary text-white border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.4)] ring-1 ring-brand-primary/30' 
             : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-white/20 hover:text-white'}
         active:scale-95
     `;
@@ -265,7 +267,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
                 <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-white/5">
                     <h2 className="font-orbitron text-xl text-brand-secondary">NEWS REPORTER</h2>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors p-2 hover:bg-white/5 rounded-full">
                         <CloseIcon />
                     </button>
                 </header>
@@ -281,7 +283,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                         </div>
                          <div className={`flex items-center gap-2 transition-opacity duration-300`}>
                             {(['English', 'Hindi', 'Hinglish'] as Language[]).map(lang => (
-                                <button key={lang} onClick={() => setLanguage(lang)} className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${language === lang ? 'bg-brand-secondary text-white border-brand-secondary' : 'bg-transparent text-brand-text-muted border-transparent hover:bg-white/5'}`}>
+                                <button key={lang} onClick={() => setLanguage(lang)} className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${language === lang ? 'bg-brand-secondary text-white border-brand-secondary shadow-sm' : 'bg-transparent text-brand-text-muted border-transparent hover:bg-white/5'}`}>
                                     {lang}
                                 </button>
                             ))}
@@ -330,7 +332,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
                                     <button 
                                         onClick={() => fileInputRef.current?.click()} 
-                                        className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-brand-bg/50 border border-brand-secondary/50 rounded-full text-sm font-semibold text-brand-text-muted hover:bg-brand-secondary/20 hover:text-white transition-colors"
+                                        className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-brand-bg/50 border border-brand-secondary/50 rounded-full text-sm font-semibold text-brand-text-muted hover:bg-brand-secondary/20 hover:text-white transition-colors hover:border-brand-secondary"
                                     >
                                         <UploadIcon className="h-4 w-4" />
                                         Upload
@@ -355,17 +357,19 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                         <button 
                             onClick={handleGenerate} 
                             className="
-                                self-center px-10 py-3 rounded-full 
-                                bg-gradient-to-br from-brand-primary to-brand-secondary 
+                                self-center group relative overflow-hidden px-10 py-3 rounded-full 
+                                bg-white/5 border border-brand-primary/50 
                                 text-white font-orbitron font-bold text-lg tracking-wide
-                                border border-white/20
-                                shadow-[0_0_30px_rgba(99,102,241,0.5)] 
-                                hover:scale-105 hover:shadow-[0_0_50px_rgba(99,102,241,0.7)] 
-                                active:scale-95 active:animate-ripple
+                                backdrop-blur-md
                                 transition-all duration-300
+                                hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_30px_rgba(58,190,254,0.5)] 
+                                hover:scale-105
+                                active:scale-95 active:shadow-inner active:animate-ripple
                             "
                         >
-                           Synthesize Audio
+                           <span className="relative z-10">Synthesize Audio</span>
+                           {/* Inner Shine */}
+                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                         </button>
                     )}
                 </div>
@@ -383,13 +387,19 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-3">
-                                 <button 
+                                <button 
                                     onClick={handlePlayPauseClick}
-                                    className="w-12 h-12 rounded-full bg-brand-text text-brand-bg hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-95"
+                                    className="
+                                        w-12 h-12 rounded-full flex items-center justify-center transition-all 
+                                        bg-white text-black 
+                                        shadow-[0_0_20px_rgba(255,255,255,0.4)]
+                                        hover:scale-110 hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] 
+                                        active:scale-95
+                                    "
                                 >
                                     {status === 'playing' ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6 ml-1"/>}
                                 </button>
-                                <button onClick={stopAudio} className="p-3 rounded-full text-brand-text-muted hover:text-brand-accent hover:bg-white/5 transition-colors active:scale-95">
+                                <button onClick={stopAudio} className="p-3 rounded-full text-brand-text-muted hover:text-brand-accent hover:bg-white/5 transition-colors active:scale-95 border border-transparent hover:border-white/10">
                                     <StopIcon className="w-6 h-6" />
                                 </button>
                              </div>
