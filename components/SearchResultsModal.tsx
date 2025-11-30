@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { SearchResult } from '../types';
-import { CloseIcon } from './icons';
+import { CloseIcon, SearchIcon, LinkIcon } from './icons';
 import { HolographicScanner } from './Loaders';
 
 interface SearchResultsModalProps {
@@ -11,35 +12,80 @@ interface SearchResultsModalProps {
 
 const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ result, onClose, isLoading }) => {
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-brand-surface w-full max-w-3xl max-h-[90vh] rounded-lg shadow-2xl border border-brand-primary/30 flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
-                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center">
-                    <h2 className="font-orbitron text-2xl text-brand-secondary">Search Results</h2>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
+        <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
+            {/* Glass Container */}
+            <div className="
+                bg-[#050505]/80 backdrop-blur-2xl 
+                w-full max-w-3xl max-h-[85vh] 
+                rounded-[22px] 
+                shadow-[0_0_60px_-10px_rgba(40,255,211,0.15)] 
+                border border-white/10 ring-1 ring-white/5 
+                flex flex-col animate-slide-up relative overflow-hidden
+            " onClick={(e) => e.stopPropagation()}>
+                
+                {/* Header */}
+                <header className="p-5 border-b border-brand-accent/20 flex justify-between items-center bg-white/5 backdrop-blur-xl z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-accent/10 rounded-full border border-brand-accent/30 text-brand-accent shadow-[0_0_10px_rgba(40,255,211,0.2)]">
+                            <SearchIcon className="w-5 h-5" />
+                        </div>
+                        <h2 className="font-orbitron text-xl text-white tracking-wider">
+                            GLOBAL <span className="text-brand-accent">INTELLIGENCE</span>
+                        </h2>
+                    </div>
+                    <button 
+                        onClick={onClose} 
+                        className="text-brand-text-muted hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full border border-transparent hover:border-white/10 active:scale-95"
+                    >
                         <CloseIcon />
                     </button>
                 </header>
-                <div className="p-6 flex-grow overflow-y-auto">
+
+                {/* Content */}
+                <div className="p-6 md:p-8 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-brand-accent/20 scrollbar-track-transparent">
                     {isLoading ? (
-                        <div className="flex justify-center items-center h-full">
-                            <HolographicScanner text="SCANNING WEB DATA" />
+                        <div className="flex flex-col justify-center items-center h-64 gap-4">
+                            <HolographicScanner text="SCANNING NEURAL WEB" />
                         </div>
                     ) : (
-                        <div>
-                            <div className="prose prose-invert max-w-none text-brand-text-muted mb-6" dangerouslySetInnerHTML={{ __html: result.text.replace(/\n/g, '<br />') }}></div>
+                        <div className="space-y-8">
+                            <div className="
+                                prose prose-invert max-w-none 
+                                prose-p:text-brand-text-muted prose-p:font-light prose-p:leading-relaxed 
+                                prose-headings:font-orbitron prose-headings:text-white
+                                prose-a:text-brand-accent prose-a:no-underline hover:prose-a:underline
+                                prose-strong:text-brand-primary prose-strong:font-normal
+                            " dangerouslySetInnerHTML={{ __html: result.text.replace(/\n/g, '<br />') }}></div>
                             
                             {result.sources && result.sources.length > 0 && (
-                                <div>
-                                    <h3 className="font-orbitron text-lg text-brand-primary mb-3">Sources:</h3>
-                                    <ul className="space-y-2">
+                                <div className="border-t border-white/10 pt-6">
+                                    <h3 className="font-orbitron text-xs font-bold text-brand-primary mb-4 tracking-[0.2em] uppercase flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse"></span>
+                                        Verified Sources
+                                    </h3>
+                                    <div className="grid gap-3">
                                         {result.sources.map((source, index) => (
-                                            <li key={index} className="truncate">
-                                                <a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-brand-secondary hover:underline underline-offset-2">
+                                            <a 
+                                                key={index} 
+                                                href={source.uri} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="
+                                                    flex items-center gap-3 p-3 rounded-xl
+                                                    bg-white/5 border border-white/5 
+                                                    hover:bg-white/10 hover:border-brand-accent/30 hover:shadow-[0_0_15px_rgba(40,255,211,0.1)]
+                                                    transition-all group
+                                                "
+                                            >
+                                                <div className="p-2 bg-black/40 rounded-lg text-brand-text-muted group-hover:text-brand-accent transition-colors">
+                                                    <LinkIcon className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-sm text-brand-text-muted group-hover:text-white truncate font-light tracking-wide transition-colors">
                                                     {source.title || source.uri}
-                                                </a>
-                                            </li>
+                                                </span>
+                                            </a>
                                         ))}
-                                    </ul>
+                                    </div>
                                 </div>
                             )}
                         </div>

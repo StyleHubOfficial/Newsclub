@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CloseIcon } from './icons';
+import { CloseIcon, SettingsIcon } from './icons';
 
 interface Preferences {
     categories: string[];
@@ -43,42 +43,94 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-brand-surface w-full max-w-2xl rounded-lg shadow-2xl border border-brand-primary/30 flex flex-col animate-slide-up" onClick={(e) => e.stopPropagation()}>
-                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center">
-                    <h2 className="font-orbitron text-2xl text-brand-secondary">Personalize Your Feed</h2>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors">
+        <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
+            {/* Glass Container */}
+            <div className="
+                bg-[#050505]/80 backdrop-blur-2xl 
+                w-full max-w-2xl 
+                rounded-[22px] 
+                shadow-[0_0_60px_-10px_rgba(123,47,255,0.15)] 
+                border border-white/10 ring-1 ring-white/5 
+                flex flex-col animate-slide-up relative
+            " onClick={(e) => e.stopPropagation()}>
+                
+                {/* Header */}
+                <header className="p-5 border-b border-brand-secondary/20 flex justify-between items-center bg-white/5 backdrop-blur-xl rounded-t-[22px]">
+                     <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-secondary/10 rounded-full border border-brand-secondary/30 text-brand-secondary shadow-[0_0_10px_rgba(123,47,255,0.2)]">
+                            <SettingsIcon className="w-5 h-5" />
+                        </div>
+                        <h2 className="font-orbitron text-xl text-white tracking-wider">
+                            FEED <span className="text-brand-secondary">CALIBRATION</span>
+                        </h2>
+                    </div>
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full border border-transparent hover:border-white/10 active:scale-95">
                         <CloseIcon />
                     </button>
                 </header>
-                <div className="p-6 flex-grow overflow-y-auto space-y-6">
+
+                <div className="p-6 md:p-8 flex-grow overflow-y-auto space-y-10">
+                    {/* Categories Section */}
                     <div>
-                        <h3 className="font-orbitron text-lg text-brand-primary mb-3">Categories</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <h3 className="font-orbitron text-xs text-brand-primary mb-6 tracking-[0.2em] uppercase flex items-center gap-2 border-b border-white/5 pb-2">
+                             <span className="w-1.5 h-1.5 bg-brand-primary rounded-full"></span>
+                             Topics of Interest
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
                             {allCategories.map(cat => (
-                                <button key={cat} onClick={() => handleCategoryToggle(cat)} className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${selectedCategories.includes(cat) ? 'bg-brand-primary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
+                                <button 
+                                    key={cat} 
+                                    onClick={() => handleCategoryToggle(cat)} 
+                                    className={`
+                                        px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all border
+                                        ${selectedCategories.includes(cat) 
+                                            ? 'bg-brand-primary text-[#050505] border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.5)] scale-105' 
+                                            : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-brand-primary/30 hover:text-white'}
+                                    `}
+                                >
                                     {cat}
                                 </button>
                             ))}
                         </div>
                     </div>
+                    
+                    {/* Sources Section */}
                      <div>
-                        <h3 className="font-orbitron text-lg text-brand-primary mb-3">Sources</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <h3 className="font-orbitron text-xs text-brand-secondary mb-6 tracking-[0.2em] uppercase flex items-center gap-2 border-b border-white/5 pb-2">
+                            <span className="w-1.5 h-1.5 bg-brand-secondary rounded-full"></span>
+                             Data Streams
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
                              {allSources.map(src => (
-                                <button key={src} onClick={() => handleSourceToggle(src)} className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${selectedSources.includes(src) ? 'bg-brand-primary text-white' : 'bg-brand-bg hover:bg-brand-primary/20'}`}>
+                                <button 
+                                    key={src} 
+                                    onClick={() => handleSourceToggle(src)} 
+                                    className={`
+                                        px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all border
+                                        ${selectedSources.includes(src) 
+                                            ? 'bg-brand-secondary text-white border-brand-secondary shadow-[0_0_15px_rgba(123,47,255,0.5)] scale-105' 
+                                            : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-brand-secondary/30 hover:text-white'}
+                                    `}
+                                >
                                     {src}
                                 </button>
                             ))}
                         </div>
                     </div>
                 </div>
-                <footer className="p-4 border-t border-brand-primary/20 flex justify-end gap-4">
-                     <button onClick={onClose} className="px-4 py-2 rounded font-semibold text-sm bg-brand-bg hover:bg-brand-primary/20">
-                        Cancel
+
+                <footer className="p-5 border-t border-white/10 flex justify-end gap-4 bg-white/5 backdrop-blur-xl rounded-b-[22px]">
+                     <button 
+                        onClick={onClose} 
+                        className="px-6 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider border border-white/10 text-brand-text-muted hover:bg-white/10 hover:text-white transition-all"
+                    >
+                        CANCEL
                     </button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded font-semibold text-sm bg-brand-secondary text-white hover:bg-opacity-80">
-                        Save Preferences
+                    <button 
+                        onClick={handleSave} 
+                        className="px-8 py-2.5 rounded-full font-orbitron text-xs font-bold tracking-wider bg-gradient-to-r from-brand-secondary to-brand-primary text-white shadow-[0_0_20px_rgba(58,190,254,0.3)] hover:shadow-[0_0_30px_rgba(58,190,254,0.5)] border border-white/20 transition-all transform hover:scale-105 active:scale-95"
+                    >
+                        SAVE CONFIG
                     </button>
                 </footer>
             </div>

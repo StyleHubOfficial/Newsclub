@@ -20,26 +20,27 @@
               signature: ['"Mr Dafoe"', 'cursive'],
             },
             colors: {
-              'brand-bg': '#020617',
-              'brand-surface': '#0f172a',
-              'brand-primary': '#0ea5e9',
-              'brand-secondary': '#6366f1',
-              'brand-accent': '#e11d48',
-              'brand-text': '#e2e8f0',
-              'brand-text-muted': '#94a3b8',
-              'neon-cyan': '#00f3ff',
-              'neon-pink': '#ff00ff',
-              'cyber-purple': '#bf00ff',
+              'brand-bg': '#050505', // Deep Black Glass
+              'brand-surface': '#0a0a0a', // Slightly lighter black
+              'brand-primary': '#3ABEFE', // Electric Blue
+              'brand-secondary': '#7B2FFF', // Cyber Purple
+              'brand-accent': '#28FFD3', // Neon Teal
+              'brand-text': '#FFFFFF', // Pure White
+              'brand-text-muted': '#C8C8C8', // Soft Grey
+              'neon-cyan': '#3ABEFE',
+              'neon-pink': '#7B2FFF',
+              'cyber-purple': '#7B2FFF',
             },
             backgroundImage: {
                'grid-pattern': "linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)",
+               'glass-gradient': "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%)",
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out',
               'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
               'slide-in-right': 'slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
               'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+              'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
               'pulse-border': 'pulseBorder 2s infinite ease-in-out',
               'scan': 'scan 2s linear infinite',
               'spin-slow': 'spin 10s linear infinite',
@@ -47,7 +48,7 @@
               'spin-reverse': 'spinReverse 5s linear infinite',
               'glitch': 'glitch 1s linear infinite',
               'neon-flicker': 'flicker 1.5s infinite alternate',
-              'text-shimmer': 'textShimmer 2.5s ease-in-out infinite alternate',
+              'text-shimmer': 'textShimmer 3s ease-in-out infinite alternate',
               'hologram': 'hologram 3s infinite linear',
               'float': 'float 6s ease-in-out infinite',
               'marquee': 'marquee 25s linear infinite',
@@ -70,12 +71,12 @@
                 '100%': { transform: 'scale(1)', opacity: 1 },
               },
               pulseGlow: {
-                '0%, 100%': { boxShadow: '0 0 10px #0ea5e9, 0 0 20px #0ea5e9' },
-                '50%': { boxShadow: '0 0 20px #6366f1, 0 0 30px #6366f1' },
+                '0%, 100%': { boxShadow: '0 0 10px rgba(58, 190, 254, 0.2), 0 0 20px rgba(58, 190, 254, 0.1)' },
+                '50%': { boxShadow: '0 0 20px rgba(123, 47, 255, 0.4), 0 0 30px rgba(123, 47, 255, 0.2)' },
               },
               pulseBorder: {
-                '0%, 100%': { borderColor: 'rgba(14, 165, 233, 0.4)' },
-                '50%': { borderColor: 'rgba(99, 102, 241, 0.8)' },
+                '0%, 100%': { borderColor: 'rgba(58, 190, 254, 0.2)' },
+                '50%': { borderColor: 'rgba(123, 47, 255, 0.6)' },
               },
               scan: {
                 '0%': { top: '0%', opacity: 0 },
@@ -99,7 +100,7 @@
               flicker: {
                 '0%, 19%, 21%, 23%, 25%, 54%, 56%, 100%': {
                   opacity: 1,
-                  textShadow: '0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px #00f3ff, 0 0 80px #00f3ff, 0 0 90px #00f3ff, 0 0 100px #00f3ff, 0 0 150px #00f3ff'
+                  textShadow: '0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px #3ABEFE, 0 0 80px #3ABEFE, 0 0 90px #3ABEFE'
                 },
                 '20%, 24%, 55%': {
                   opacity: 0.5,
@@ -107,8 +108,9 @@
                 }
               },
               textShimmer: {
-                '0%': { color: '#0ea5e9' },
-                '100%': { color: '#e11d48' }
+                '0%': { color: '#3ABEFE' },
+                '50%': { color: '#7B2FFF' },
+                '100%': { color: '#28FFD3' }
               },
               hologram: {
                 '0%': { backgroundPosition: '0% 50%' },
@@ -130,19 +132,20 @@
 <script type="importmap">
 {
   "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
   }
 }
 </script>
 </head>
-<body class="bg-brand-bg text-brand-text h-screen overflow-hidden">
+<body class="bg-brand-bg text-brand-text h-screen overflow-hidden selection:bg-brand-primary selection:text-brand-bg">
     <div id="root" class="h-full"></div>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>
+    

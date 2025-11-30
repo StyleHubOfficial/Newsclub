@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
 import NeonSignature from './NeonSignature';
@@ -11,21 +11,6 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
 
-    // Scroll-to-Enter Logic
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollPosition = window.scrollY;
-            const triggerHeight = window.innerHeight * 0.25; // Trigger after scrolling 25%
-
-            if (scrollPosition > triggerHeight) {
-               onEnterApp();
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [onEnterApp]);
-
     const scrollToFeatures = () => {
         if (featureSectionRef.current) {
             featureSectionRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -33,96 +18,104 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     };
 
     return (
-        <div className="min-h-[100dvh] bg-brand-bg text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-white">
+        <div className="min-h-[100dvh] bg-[#050505] text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-black">
             
-            {/* Background Parallax Elements */}
+            {/* Background Parallax Elements - Updated Colors */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]"></div>
-                <div className="absolute top-[-20%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand-primary/10 rounded-full blur-[80px] md:blur-[100px] animate-pulse-glow"></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-brand-secondary/10 rounded-full blur-[80px] md:blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]"></div>
+                <div className="absolute top-[-20%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand-primary/10 rounded-full blur-[100px] animate-pulse-glow"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-brand-secondary/10 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-[40%] left-[30%] w-[200px] h-[200px] bg-brand-accent/5 rounded-full blur-[80px] animate-float"></div>
             </div>
 
             {/* SECTION A: HERO */}
-            {/* Compacted mobile layout: reduced padding, tighter spacing */}
             <section className="relative min-h-[100dvh] flex flex-col md:flex-row items-center justify-center container mx-auto px-4 md:px-6 pt-safe-top pb-20 z-10 gap-6 md:gap-0">
                 
-                {/* Right Content - 3D Earth (Visually Top on Mobile) */}
+                {/* Right Content */}
                 <div className="w-full md:w-1/2 flex items-center justify-center relative order-1 md:order-2 animate-slide-in-right mt-12 md:mt-0">
                     <ThreeDEarth />
                 </div>
 
                 {/* Left Content */}
-                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start space-y-5 md:space-y-8 animate-slide-up relative z-20 text-center md:text-left order-2 md:order-1">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-primary/30 bg-brand-primary/5 backdrop-blur-md">
-                        <span className="w-2 h-2 rounded-full bg-neon-cyan animate-ping"></span>
-                        <span className="text-[10px] md:text-xs font-orbitron text-brand-primary tracking-widest">SYSTEM ONLINE v2.5</span>
+                <div className="w-full md:w-1/2 flex flex-col items-center md:items-start space-y-6 md:space-y-10 animate-slide-up relative z-20 text-center md:text-left order-2 md:order-1">
+                    <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-brand-accent/30 bg-brand-accent/5 backdrop-blur-md shadow-[0_0_15px_rgba(40,255,211,0.1)]">
+                        <span className="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span>
+                        <span className="text-[10px] md:text-xs font-orbitron text-brand-accent tracking-[0.2em]">SYSTEM ONLINE v3.0</span>
                     </div>
 
                     <h1 className="text-3xl md:text-7xl font-syncopate font-bold leading-tight">
                         NEXT GEN <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-white to-neon-pink animate-text-shimmer">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-white to-brand-secondary animate-text-shimmer drop-shadow-[0_0_10px_rgba(58,190,254,0.5)]">
                             INTELLIGENCE
                         </span>
                     </h1>
 
-                    <p className="text-xs md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-accent/50 md:pl-6 mx-auto md:mx-0">
-                         News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless experience.
+                    <p className="text-xs md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-primary/30 md:pl-6 mx-auto md:mx-0 font-light">
+                         News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless glass interface.
                     </p>
 
                     <div className="flex justify-center md:justify-start transform scale-90 md:scale-100 origin-center md:origin-left">
                          <NeonSignature />
                     </div>
 
-                    <div className="flex flex-col md:flex-row gap-4 pt-2 md:pt-4 items-center md:items-start w-full md:w-auto">
+                    <div className="flex flex-col md:flex-row gap-4 pt-4 md:pt-6 items-center md:items-start w-full md:w-auto">
                         <button 
                             onClick={onEnterApp}
-                            className="group relative px-8 py-3 md:py-4 bg-brand-primary/20 backdrop-blur-md overflow-hidden rounded-full border border-brand-primary text-brand-text font-orbitron tracking-widest transition-all hover:bg-brand-primary/40 hover:shadow-[0_0_30px_rgba(14,165,233,0.4)] w-full md:w-auto shadow-lg"
+                            className="group relative px-10 py-4 overflow-hidden rounded-full bg-white/5 border border-brand-primary/50 text-white font-orbitron tracking-[0.2em] transition-all duration-300 hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_40px_rgba(58,190,254,0.6)] active:scale-95 active:shadow-inner w-full md:w-auto backdrop-blur-md"
                         >
-                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base">
+                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
                                 ENTER SYSTEM <BoltIcon />
                             </span>
+                            <div className="absolute inset-0 bg-brand-primary/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
                         </button>
                     </div>
                 </div>
-
-                {/* Scroll Hint */}
-                <button 
-                    onClick={scrollToFeatures}
-                    className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce cursor-pointer z-30 pointer-events-auto md:pointer-events-none"
-                >
-                    <span className="text-[10px] font-orbitron tracking-[0.3em]">SCROLL TO ENTER</span>
-                    <div className="w-px h-6 md:h-12 bg-gradient-to-b from-brand-primary to-transparent"></div>
-                </button>
             </section>
 
 
             {/* SECTION B: FEATURE CAROUSEL */}
-            <section ref={featureSectionRef} className="py-16 md:py-20 relative z-10 border-t border-white/5 bg-black/20 backdrop-blur-sm">
-                <div className="container mx-auto px-4 md:px-6 mb-8">
-                     <h2 className="text-2xl md:text-4xl font-orbitron text-center mb-12">
-                        <span className="text-brand-primary">///</span> ADVANCED MODULES
-                    </h2>
+            <section ref={featureSectionRef} className="py-20 relative z-10 border-t border-white/5 bg-[#050505]/80 backdrop-blur-xl">
+                <div className="container mx-auto px-4 md:px-6 mb-8 text-center">
+                     <div className="relative inline-block mb-12">
+                        <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10">
+                            <span className="text-brand-secondary mr-3">///</span> Advanced Modules
+                        </h2>
+                        {/* Neon Underline & Light Beam Trail */}
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent shadow-[0_0_15px_#7B2FFF]"></div>
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
+                    </div>
                     
-                    <div className="flex overflow-x-auto gap-4 md:gap-8 pb-8 snap-x snap-mandatory scrollbar-hide px-2">
+                    <div className="flex overflow-x-auto gap-5 md:gap-8 pb-8 snap-x snap-mandatory scrollbar-hide px-2">
                         {[
-                            { title: 'Live Agent', icon: <MicIcon />, desc: 'Real-time voice conversation with neural intelligence.', color: 'from-blue-500 to-cyan-500' },
-                            { title: 'Audio Studio', icon: <SoundWaveIcon />, desc: 'Text-to-speech synthesis with multi-speaker capabilities.', color: 'from-purple-500 to-pink-500' },
-                            { title: 'Visual Gen', icon: <ImageIcon />, desc: 'Generate imagery from context using Neural Vision.', color: 'from-green-500 to-emerald-500' },
-                            { title: 'Deep Analysis', icon: <BrainIcon />, desc: 'Complex reasoning on articles to find hidden insights.', color: 'from-orange-500 to-red-500' },
-                            { title: 'Data Viz', icon: <ChartIcon />, desc: 'Interactive charts generated from news data points.', color: 'from-yellow-500 to-amber-500' }
+                            { title: 'Live Agent', icon: <MicIcon />, desc: 'Real-time voice conversation with neural intelligence.', color: 'from-brand-primary to-brand-accent' },
+                            { title: 'Audio Studio', icon: <SoundWaveIcon />, desc: 'Text-to-speech synthesis with multi-speaker capabilities.', color: 'from-brand-secondary to-pink-500' },
+                            { title: 'Visual Gen', icon: <ImageIcon />, desc: 'Generate imagery from context using Neural Vision.', color: 'from-brand-accent to-green-400' },
+                            { title: 'Deep Analysis', icon: <BrainIcon />, desc: 'Complex reasoning on articles to find hidden insights.', color: 'from-orange-500 to-brand-secondary' },
+                            { title: 'Data Viz', icon: <ChartIcon />, desc: 'Interactive charts generated from news data points.', color: 'from-yellow-400 to-brand-primary' }
                         ].map((feature, idx) => (
                             <div 
                                 key={idx}
-                                className="min-w-[260px] md:min-w-[300px] snap-center bg-brand-surface/60 border border-white/10 rounded-2xl p-6 md:p-8 hover:bg-brand-surface/80 transition-all duration-300 relative overflow-hidden flex-shrink-0"
+                                className="
+                                    min-w-[260px] md:min-w-[320px] snap-center flex-shrink-0 relative overflow-hidden group
+                                    rounded-[24px] 
+                                    bg-gradient-to-br from-white/10 via-[#0a0a0a]/50 to-transparent
+                                    backdrop-blur-md 
+                                    border border-white/10 
+                                    p-8 
+                                    shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]
+                                    hover:border-brand-primary/30 
+                                    hover:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.6)] 
+                                    transition-all duration-300
+                                "
                             >
                                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${feature.color}`}></div>
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-brand-bg border border-white/10 flex items-center justify-center mb-4 md:mb-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                                    <div className="text-brand-text">
+                                <div className="w-16 h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+                                    <div className="text-white">
                                         {feature.icon}
                                     </div>
                                 </div>
-                                <h3 className="text-lg md:text-xl font-orbitron font-bold mb-2 md:mb-3">{feature.title}</h3>
-                                <p className="text-brand-text-muted text-xs md:text-sm leading-relaxed">{feature.desc}</p>
+                                <h3 className="text-xl font-orbitron font-bold mb-3 text-white group-hover:text-brand-primary transition-colors">{feature.title}</h3>
+                                <p className="text-brand-text-muted text-sm leading-relaxed font-light">{feature.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -131,18 +124,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
 
             {/* SECTION D: AI POWER STRIP */}
-            <section className="py-8 md:py-12 bg-brand-primary/5 border-y border-brand-primary/20 overflow-hidden">
-                <div className="flex w-[300%] md:w-[200%] animate-marquee">
+            <section className="py-10 bg-brand-primary/5 border-y border-brand-primary/10 overflow-hidden relative">
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]"></div>
+                <div className="flex w-[300%] md:w-[200%] animate-marquee relative z-10">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="flex-1 flex justify-around items-center whitespace-nowrap px-4 md:px-10 gap-8">
-                            <span className="text-2xl md:text-6xl font-syncopate font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/20 to-transparent">
+                        <div key={i} className="flex-1 flex justify-around items-center whitespace-nowrap px-10 gap-12">
+                            <span className="text-3xl md:text-6xl font-syncopate font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/30 to-transparent">
                                 GENERATIVE AI
                             </span>
-                            <SoundWaveIcon className="w-8 h-8 md:w-12 md:h-12 text-brand-primary/30" />
-                            <span className="text-2xl md:text-6xl font-syncopate font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/20 to-transparent">
+                            <SoundWaveIcon className="w-8 h-8 md:w-16 md:h-16 text-brand-secondary/40" />
+                            <span className="text-3xl md:text-6xl font-syncopate font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/30 to-transparent">
                                 REAL-TIME
                             </span>
-                             <BoltIcon className="w-8 h-8 md:w-12 md:h-12 text-brand-accent/30" />
+                             <BoltIcon className="w-8 h-8 md:w-16 md:h-16 text-brand-accent/40" />
                         </div>
                     ))}
                 </div>
@@ -150,12 +144,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
 
 
             {/* SECTION E: COMPARISON GRID */}
-            <section className="py-16 md:py-20 container mx-auto px-4 md:px-6">
-                <h2 className="text-2xl md:text-4xl font-orbitron text-center mb-12">
-                    <span className="text-brand-accent">///</span> WHY NEWS CLUB?
-                </h2>
+            <section className="py-20 container mx-auto px-4 md:px-6">
+                 <div className="text-center mb-16 relative inline-block w-full">
+                    <div className="relative inline-block">
+                        <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10">
+                            <span className="text-brand-accent mr-3">///</span> Why News Club?
+                        </h2>
+                         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-full h-[2px] bg-gradient-to-r from-transparent via-brand-accent to-transparent shadow-[0_0_15px_#28FFD3]"></div>
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
+                    </div>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[
                         { title: 'Standard Apps', text: 'Static text, cluttered ads.', positive: false },
                         { title: 'News Club', text: 'AI Summaries, Zero Ads.', positive: true },
@@ -164,35 +164,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         { title: 'Updates', text: 'Manual refreshes.', positive: false },
                         { title: 'Live Stream', text: 'Real-time WebSocket data.', positive: true },
                     ].map((item, idx) => (
-                        <div key={idx} className={`p-4 md:p-6 border rounded-xl backdrop-blur-sm ${item.positive ? 'bg-brand-primary/5 border-brand-primary/30' : 'bg-red-900/5 border-red-500/20 grayscale opacity-70'}`}>
-                            <div className="flex justify-between items-start mb-2 md:mb-4">
-                                <h4 className={`font-orbitron text-sm md:text-lg ${item.positive ? 'text-brand-primary' : 'text-brand-text-muted'}`}>{item.title}</h4>
-                                {item.positive && <div className="text-brand-primary"><BoltIcon /></div>}
+                        <div key={idx} className={`
+                            p-8 rounded-[22px] backdrop-blur-md transition-all hover:-translate-y-1 border
+                            shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]
+                            ${item.positive 
+                                ? 'bg-gradient-to-br from-brand-primary/10 to-transparent border-brand-primary/30 shadow-[0_0_20px_rgba(58,190,254,0.05)]' 
+                                : 'bg-gradient-to-br from-white/5 to-transparent border-white/5 grayscale opacity-60'}
+                        `}>
+                            <div className="flex justify-between items-start mb-4">
+                                <h4 className={`font-orbitron text-lg ${item.positive ? 'text-brand-primary' : 'text-gray-500'}`}>{item.title}</h4>
+                                {item.positive && <div className="text-brand-accent drop-shadow-[0_0_5px_#28FFD3]"><BoltIcon /></div>}
                             </div>
-                            <p className="text-xs md:text-sm text-brand-text-muted">{item.text}</p>
+                            <p className="text-sm text-gray-400 font-light">{item.text}</p>
                         </div>
                     ))}
                 </div>
             </section>
 
             {/* SECTION G: CTA */}
-            <section className="py-24 relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/20 to-brand-bg z-0"></div>
-                <div className="relative z-10 text-center space-y-6 md:space-y-8 px-4">
-                     <div className="inline-block p-3 md:p-4 rounded-full bg-brand-bg border border-brand-primary shadow-[0_0_50px_#0ea5e9] animate-pulse-glow mb-2">
-                        <BoltIcon />
+            <section className="py-32 relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-primary/10 to-[#050505] z-0"></div>
+                <div className="relative z-10 text-center space-y-8 px-4">
+                     <div className="inline-block p-4 rounded-full bg-[#050505] border border-brand-accent shadow-[0_0_50px_#28FFD3] animate-pulse-glow mb-4">
+                        <BoltIcon className="w-8 h-8 text-white" />
                     </div>
-                    <h2 className="text-3xl md:text-6xl font-syncopate font-bold">READY?</h2>
-                    <p className="text-brand-text-muted max-w-xl mx-auto text-sm md:text-base">Access the full power of advanced neural networks combined with real-time global intelligence.</p>
+                    <h2 className="text-4xl md:text-7xl font-syncopate font-bold text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">READY?</h2>
+                    <p className="text-brand-text-muted max-w-xl mx-auto text-base font-light">Access the full power of advanced neural networks combined with real-time global intelligence.</p>
                     
                     <button 
                         onClick={onEnterApp}
-                        className="w-full md:w-auto px-10 py-5 bg-brand-primary text-white font-orbitron font-bold text-lg md:text-xl tracking-widest rounded-full shadow-[0_0_40px_rgba(14,165,233,0.6)] hover:shadow-[0_0_80px_rgba(14,165,233,0.8)] transition-all"
+                        className="w-full md:w-auto px-12 py-5 bg-gradient-to-r from-brand-primary to-brand-accent text-[#050505] font-orbitron font-bold text-xl tracking-[0.2em] rounded-full shadow-[0_0_50px_rgba(58,190,254,0.6)] hover:shadow-[0_0_80px_rgba(58,190,254,0.8)] hover:scale-105 transition-all transform active:scale-95 border border-white/20"
                     >
                         LAUNCH APP
                     </button>
                     
-                    <div className="pt-8 md:pt-12">
+                    <div className="pt-16 opacity-80 hover:opacity-100 transition-opacity">
                          <NeonSignature size="sm" />
                     </div>
                 </div>

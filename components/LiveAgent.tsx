@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
@@ -199,11 +200,12 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
     }, []);
 
     return (
-        <div className="fixed inset-0 bg-brand-bg/95 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-brand-surface w-full max-w-2xl h-[80vh] rounded-xl shadow-[0_0_50px_rgba(14,165,233,0.3)] border border-brand-primary/40 flex flex-col animate-slide-up relative overflow-hidden backdrop-blur-xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-[#050505]/95 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+            {/* Updated Glass Container */}
+            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-2xl h-[80vh] rounded-[22px] shadow-[0_0_50px_rgba(14,165,233,0.3)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
                 
                 {/* Header */}
-                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center flex-shrink-0 bg-black/40 z-10">
+                <header className="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0 bg-white/5 z-10">
                     <div className="flex items-center gap-3">
                         <div className={`relative w-3 h-3 flex items-center justify-center`}>
                              <div className={`absolute w-full h-full rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -228,7 +230,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                 <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent">
                     {/* Welcome Message */}
                     <div className="flex justify-start">
-                         <div className="max-w-[85%] bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4 backdrop-blur-sm">
+                         <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 backdrop-blur-sm shadow-lg">
                             <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
                             <p className="text-brand-text font-light">Live link established. I'm listening.</p>
                         </div>
@@ -238,7 +240,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         <div key={index} className="space-y-4">
                             {turn.user && (
                                 <div className="flex justify-end animate-fade-in">
-                                    <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-lg p-4 text-right">
+                                    <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-2xl rounded-tr-2xl p-4 text-right shadow-[0_0_15px_rgba(58,190,254,0.1)]">
                                         <p className="text-brand-primary text-xs font-orbitron mb-2">YOU</p>
                                         <p className="text-white font-light">{turn.user}</p>
                                     </div>
@@ -246,7 +248,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                             )}
                             {turn.model && (
                                 <div className="flex justify-start animate-fade-in">
-                                    <div className="max-w-[85%] bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4">
+                                    <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 shadow-lg">
                                         <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
                                         <p className="text-brand-text font-light">{turn.model}</p>
                                     </div>
@@ -260,7 +262,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                          <div className="space-y-4">
                             {currentTurn.user && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-lg p-4 text-right opacity-80">
+                                    <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-2xl rounded-tr-2xl p-4 text-right opacity-80">
                                          <p className="text-brand-primary text-xs font-orbitron mb-2">RECEIVING...</p>
                                         <p className="text-white font-light">{currentTurn.user}</p>
                                     </div>
@@ -268,7 +270,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                             )}
                             {currentTurn.model && (
                                 <div className="flex justify-start animate-pulse">
-                                    <div className="max-w-[85%] bg-brand-bg/20 border-l-2 border-brand-secondary/50 rounded-r-lg p-4 opacity-80">
+                                    <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary/50 rounded-r-2xl rounded-tl-2xl p-4 opacity-80">
                                         <p className="text-brand-secondary text-xs font-orbitron mb-2">TRANSMITTING...</p>
                                         <p className="text-brand-text font-light">{currentTurn.model}</p>
                                     </div>
@@ -279,7 +281,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                     
                     {!isListening && status === 'PROCESSING...' && (
                         <div className="flex justify-start animate-fade-in">
-                             <div className="bg-brand-bg/40 border-l-2 border-brand-secondary rounded-r-lg p-4">
+                             <div className="bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4">
                                 <ThinkingBubble />
                             </div>
                         </div>
@@ -288,7 +290,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                 </div>
 
                 {/* Footer / Visualizer */}
-                <footer className="p-0 bg-black/60 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative">
+                <footer className="p-0 bg-black/40 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative">
                      <div className="w-full h-32 flex flex-col items-center justify-center relative">
                         
                         {/* Status Overlay */}

@@ -1,34 +1,35 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HolographicScanner } from './Loaders';
 
-interface Props {
+interface ErrorBoundaryProps {
   children?: ReactNode;
   componentName?: string;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-    };
-  }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null,
+  };
 
-  static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`Uncaught error in ${this.props.componentName}:`, error, errorInfo);
   }
 
-  render() {
+  private handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  public render() {
     if (this.state.hasError) {
       return (
         <div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-6 bg-brand-surface/50 border border-brand-accent/30 rounded-lg backdrop-blur-sm animate-fade-in">
@@ -44,7 +45,7 @@ class ErrorBoundary extends React.Component<Props, State> {
           </div>
           <HolographicScanner text="ATTEMPTING RECOVERY" />
           <button
-            onClick={() => this.setState({ hasError: false, error: null })}
+            onClick={this.handleReset}
             className="mt-6 px-6 py-2 bg-brand-accent/20 hover:bg-brand-accent/40 border border-brand-accent text-brand-text font-orbitron text-sm rounded transition-all hover:shadow-[0_0_15px_rgba(225,29,72,0.4)]"
           >
             REBOOT MODULE

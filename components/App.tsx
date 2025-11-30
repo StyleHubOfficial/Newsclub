@@ -12,11 +12,15 @@ import AudioGenerationModal from './components/AudioGenerationModal';
 import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
-import HomeView from './components/HomeView'; // Import HomeView
+import HomeView from './components/HomeView'; 
+import ParticleBackground from './components/ParticleBackground';
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
 import { NewsArticle } from './types';
 import { HolographicScanner } from './components/Loaders';
+import { auth } from './services/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -107,6 +111,7 @@ const initialArticles = [
 const App = () => {
     // New State for Landing Page
     const [showLanding, setShowLanding] = useState(true);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -121,17 +126,33 @@ const App = () => {
     const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
     const [viewMode, setViewMode] = useState<'grid' | 'reels'>('grid');
-    const [savedArticles, setSavedArticles] = useState<Set<number>>(() => {
-        try {
-            const saved = localStorage.getItem('savedArticles');
-            return saved ? new Set(JSON.parse(saved)) : new Set();
-        } catch {
-            return new Set();
-        }
-    });
+    
+    const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
     const observer = useRef<IntersectionObserver | null>(null);
+
+    // Auth & Data Sync
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            setCurrentUser(user);
+            if (user) {
+                // Load Cloud Data
+                const userData = await loadUserData(user.uid);
+                if (userData) {
+                    if (userData.savedArticles) setSavedArticles(new Set(userData.savedArticles));
+                    if (userData.preferences) setPreferences(userData.preferences);
+                }
+            } else {
+                // Load Local Data
+                try {
+                    const saved = localStorage.getItem('savedArticles');
+                    if (saved) setSavedArticles(new Set(JSON.parse(saved)));
+                } catch { setSavedArticles(new Set()); }
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Helper to ensure mutual exclusivity
     const openTool = (tool: 'chat' | 'live' | 'audio') => {
@@ -154,20 +175,25 @@ const App = () => {
     const allSources = [...new Set(articles.map(a => a.source))];
 
     useEffect(() => {
-        localStorage.setItem('savedArticles', JSON.stringify(Array.from(savedArticles)));
-    }, [savedArticles]);
+        if (!currentUser) {
+            localStorage.setItem('savedArticles', JSON.stringify(Array.from(savedArticles)));
+        }
+    }, [savedArticles, currentUser]);
 
-    const toggleSaveArticle = useCallback((articleId: number) => {
+    const toggleSaveArticle = useCallback(async (articleId: number) => {
+        const isSaving = !savedArticles.has(articleId);
+        
         setSavedArticles(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(articleId)) {
-                newSet.delete(articleId);
-            } else {
-                newSet.add(articleId);
-            }
+            if (newSet.has(articleId)) newSet.delete(articleId);
+            else newSet.add(articleId);
             return newSet;
         });
-    }, []);
+
+        if (currentUser) {
+            await toggleCloudSavedArticle(currentUser.uid, articleId, isSaving);
+        }
+    }, [savedArticles, currentUser]);
 
     const fetchMoreArticles = useCallback(async () => {
         if (isLoadingMore) return;
@@ -218,9 +244,6 @@ const App = () => {
     const handleSearch = useCallback(async (query: string) => {
         if (!query.trim()) return;
         setIsSearching(true);
-        // Do not nullify searchResults immediately to avoid close-reopen flicker if re-searching
-        // But for fresh search, we can set a dummy object if needed, or just let isLoading handle it.
-        // Best approach: Keep modal open if isSearching is true.
         try {
             const results = await searchWithGoogle(query);
             setSearchResults(results);
@@ -232,8 +255,11 @@ const App = () => {
         }
     }, []);
 
-    const handleSavePreferences = (newPreferences: {categories: string[], sources: string[]}) => {
+    const handleSavePreferences = async (newPreferences: {categories: string[], sources: string[]}) => {
         setPreferences(newPreferences);
+        if (currentUser) {
+            await saveUserPreferences(currentUser.uid, newPreferences);
+        }
     };
 
     const baseFilteredArticles = articles.filter(article => {
@@ -253,7 +279,9 @@ const App = () => {
 
     // MAIN APP UI
     return (
-        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in">
+        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in relative">
+            <ParticleBackground />
+            
             {/* Show Header only if NOT in Reels view mode */}
             {viewMode !== 'reels' && (
                 <Header 
@@ -284,7 +312,7 @@ const App = () => {
                     </ErrorBoundary>
                 </div>
             ) : (
-                <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
+                <main className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10">
                     <div className="container mx-auto">
                         <HomeView 
                             articles={displayedArticles}
@@ -345,27 +373,48 @@ const App = () => {
             
             {/* Desktop FABs - Hide in reels mode */}
             {viewMode !== 'reels' && (
-                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
+                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-6 z-50">
                      <button
                         onClick={() => openTool('audio')}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-secondary/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(123,47,255,0.4)]
+                            hover:bg-brand-secondary hover:shadow-[0_0_30px_#7B2FFF] hover:scale-110 
+                            transition-all duration-300
+                            ${isAudioGenOpen ? 'ring-2 ring-white/50 bg-brand-secondary' : ''}
+                        `}
                         aria-label="Open Audio Synthesis"
                     >
-                        <SoundWaveIcon />
+                        <SoundWaveIcon className="w-8 h-8" />
                     </button>
                     <button
                         onClick={() => openTool('live')}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-accent/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(40,255,211,0.4)]
+                            hover:bg-brand-accent hover:text-black hover:shadow-[0_0_30px_#28FFD3] hover:scale-110 
+                            transition-all duration-300 animate-pulse-glow
+                            ${isLiveAgentOpen ? 'ring-2 ring-white/50 bg-brand-accent text-black' : ''}
+                        `}
                         aria-label="Open Live Agent"
                     >
-                        <MicIcon />
+                        <MicIcon className="w-8 h-8" />
                     </button>
                     <button
                         onClick={() => setChatOpen(prev => !prev ? true : false)}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-primary/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(58,190,254,0.4)]
+                            hover:bg-brand-primary hover:text-black hover:shadow-[0_0_30px_#3ABEFE] hover:scale-110 
+                            transition-all duration-300
+                            ${isChatOpen ? 'ring-2 ring-white/50 bg-brand-primary text-black' : ''}
+                        `}
                         aria-label="Toggle Chat"
                     >
-                        <BoltIcon />
+                        <BoltIcon className="w-8 h-8" />
                     </button>
                 </div>
             )}
@@ -375,9 +424,11 @@ const App = () => {
                 <BottomNav 
                     viewMode={viewMode}
                     onChangeView={setViewMode}
-                    onOpenAudio={() => openTool('audio')}
-                    onOpenLive={() => openTool('live')}
+                    onOpenExplore={() => {
+                        document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     onOpenChat={() => openTool('chat')}
+                    onOpenProfile={() => { closeAll(); setPersonalizationModalOpen(true); }}
                 />
             )}
 

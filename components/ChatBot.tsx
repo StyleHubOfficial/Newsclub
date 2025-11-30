@@ -12,8 +12,9 @@ interface ChatBotProps {
 }
 
 const BotAvatar = () => (
-    <div className="w-8 h-8 rounded-full bg-brand-surface border border-brand-primary flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_10px_#0ea5e9]">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-brand-primary animate-pulse-glow">
+    <div className="w-10 h-10 rounded-full bg-[#0a0a0a] border border-brand-primary flex items-center justify-center overflow-hidden shrink-0 shadow-[0_0_15px_#3ABEFE] relative group">
+        <div className="absolute inset-0 bg-brand-primary/20 animate-pulse rounded-full"></div>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-brand-primary relative z-10">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
             <path d="M7 13L10 16L17 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             <circle cx="9" cy="9" r="1" fill="currentColor" className="animate-ping" />
@@ -43,7 +44,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     
     useEffect(() => {
         if (isOpen) {
-             // Reset chat session on open to ensure clean state
              resetChat();
              if(messages.length === 0 || messages[0].id !== 'initial') {
                  setMessages([ { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything or request a visual generation.', sender: 'bot' } ]);
@@ -197,55 +197,54 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed bottom-24 right-0 left-0 md:left-auto md:right-6 w-full md:w-full max-w-md h-[60vh] z-40 animate-slide-up px-2 md:px-0">
-            <div className="bg-brand-surface/95 backdrop-blur-md rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col h-full border border-brand-primary/30 overflow-hidden">
-                <header className="p-4 border-b border-brand-primary/20 flex justify-between items-center bg-brand-bg/50">
-                    <div className="flex items-center gap-2">
+        <div className="fixed bottom-24 right-0 left-0 md:left-auto md:right-6 w-full md:w-[450px] h-[70vh] z-40 animate-slide-up px-3 md:px-0">
+            {/* Glass Panel */}
+            <div className="bg-[#050505]/80 backdrop-blur-2xl rounded-[22px] shadow-[0_0_80px_-20px_rgba(58,190,254,0.3)] flex flex-col h-full border border-white/10 overflow-hidden ring-1 ring-white/5">
+                <header className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <div className="flex items-center gap-3">
                         <BotAvatar />
                         <div>
-                            <h2 className="font-orbitron text-sm text-brand-text font-bold">NEWS REPORTER</h2>
-                            <div className="flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-pulse"></span>
-                                <span className="text-[10px] text-brand-text-muted uppercase">Online</span>
+                            <h2 className="font-orbitron text-sm text-brand-primary font-bold tracking-wider">NEWS REPORTER</h2>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-pulse shadow-[0_0_5px_#28FFD3]"></span>
+                                <span className="text-[9px] text-brand-text-muted uppercase tracking-widest">System Active</span>
                             </div>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors p-1 hover:bg-brand-primary/10 rounded">
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors p-2 hover:bg-white/5 rounded-full border border-transparent hover:border-white/10">
                         <CloseIcon />
                     </button>
                 </header>
                 
-                {error && <div className="bg-brand-accent/20 border-b border-brand-accent/50 text-brand-text text-xs p-2 text-center">{error}</div>}
+                {error && <div className="bg-red-900/40 border-b border-red-500/50 text-red-200 text-xs p-2 text-center font-mono">system_alert: {error}</div>}
 
                 <div className="flex-grow p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-brand-primary/20 scrollbar-track-transparent">
                     {messages.map(msg => (
                         <div key={msg.id} className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.sender === 'bot' && <div className="pt-1"><BotAvatar /></div>}
-                            <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                            <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl backdrop-blur-md border ${
                                 msg.isError 
-                                    ? 'bg-red-900/40 border border-red-500/50 text-red-200 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
+                                    ? 'bg-red-900/10 border-red-500/40 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
                                     : msg.sender === 'user' 
-                                        ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white rounded-br-none shadow-lg' 
-                                        : 'bg-brand-bg/80 border border-brand-primary/20 text-brand-text rounded-bl-none shadow'
+                                        ? 'bg-brand-primary/10 border-brand-primary/30 text-white rounded-br-none shadow-[0_0_20px_rgba(58,190,254,0.1)]' 
+                                        : 'bg-white/5 border-white/10 text-gray-200 rounded-bl-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
                             }`}>
                                 {msg.isLoading && <ThinkingBubble />}
                                 
                                 {msg.isError && (
-                                    <div className="flex items-center gap-2 mb-1 border-b border-red-500/30 pb-1">
-                                        <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <span className="font-orbitron text-xs font-bold text-red-400">ERROR REPORT</span>
+                                    <div className="flex items-center gap-2 mb-2 border-b border-red-500/30 pb-1">
+                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                                        <span className="font-orbitron text-[10px] font-bold text-red-400 tracking-widest">SYSTEM FAILURE</span>
                                     </div>
                                 )}
                                 
-                                {msg.text && <p className={`whitespace-pre-wrap text-sm leading-relaxed ${msg.isError ? 'font-mono text-xs' : ''}`}>{msg.text}</p>}
+                                {msg.text && <p className={`whitespace-pre-wrap text-sm leading-relaxed font-light ${msg.isError ? 'font-mono text-xs opacity-80' : ''}`}>{msg.text}</p>}
                                 
                                 {msg.imageUrl && (
-                                    <div className="mt-2 relative group rounded-lg overflow-hidden border border-brand-primary/30">
-                                        <img src={msg.imageUrl} alt="Generated" className="w-full h-auto" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                            <span className="text-xs text-brand-primary font-orbitron">GENERATED_ASSET</span>
+                                    <div className="mt-2 relative group rounded-xl overflow-hidden border border-brand-primary/40 shadow-[0_0_20px_rgba(58,190,254,0.2)]">
+                                        <img src={msg.imageUrl} alt="Generated" className="w-full h-auto transition-transform duration-700 group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                            <span className="text-[10px] text-brand-primary font-orbitron tracking-widest border border-brand-primary/50 px-2 py-1 rounded bg-black/50 backdrop-blur-md">GENERATED_ASSET</span>
                                         </div>
                                     </div>
                                 )}
@@ -255,11 +254,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                     <div ref={messagesEndRef} />
                 </div>
                 
-                <footer className="p-3 border-t border-brand-primary/20 bg-brand-bg/50">
-                    <div className="flex items-center gap-2 bg-brand-bg/80 border border-brand-primary/20 rounded-full p-1 pl-2 focus-within:border-brand-primary/60 transition-colors shadow-inner">
+                <footer className="p-3 border-t border-white/5 bg-white/5 backdrop-blur-lg">
+                    <div className="flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-full p-1.5 pl-3 focus-within:border-brand-primary/50 transition-colors shadow-inner">
                          <button 
                             onClick={() => setMode(m => m === 'image' ? 'chat' : 'image')} 
-                            className={`p-2 rounded-full transition-all duration-300 ${mode === 'image' ? 'bg-brand-secondary text-white shadow-[0_0_10px_#6366f1]' : 'text-brand-text-muted hover:text-brand-text'}`}
+                            className={`p-2 rounded-full transition-all duration-300 ${mode === 'image' ? 'bg-brand-secondary text-white shadow-[0_0_15px_#7B2FFF]' : 'text-brand-text-muted hover:text-brand-text hover:bg-white/5'}`}
                             title="Toggle Image Mode"
                         >
                             <ImageIcon className="h-5 w-5" />
@@ -272,13 +271,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder={getPlaceholder()}
                             disabled={isRecording}
-                            className="flex-grow bg-transparent border-none focus:ring-0 text-sm text-brand-text placeholder-brand-text-muted/50 px-2"
+                            className="flex-grow bg-transparent border-none focus:ring-0 text-sm text-brand-text placeholder-brand-text-muted/30 px-2 font-light tracking-wide"
                         />
 
                         {mode === 'chat' && (
                             <button 
                                 onClick={isRecording ? stopRecording : startRecording} 
-                                className={`p-2 rounded-full transition-all duration-300 ${isRecording ? 'bg-brand-accent text-white animate-pulse shadow-[0_0_10px_#e11d48]' : 'text-brand-text-muted hover:text-brand-primary'}`}
+                                className={`p-2 rounded-full transition-all duration-300 ${isRecording ? 'bg-brand-accent text-black animate-pulse shadow-[0_0_15px_#28FFD3]' : 'text-brand-text-muted hover:text-brand-primary hover:bg-white/5'}`}
                                 title="Voice Input"
                             >
                                 {isRecording ? <StopIcon className="h-5 w-5" /> : <MicIcon className="h-5 w-5" />}
@@ -288,7 +287,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                         <button 
                             onClick={handleSend} 
                             disabled={isRecording || !input.trim()} 
-                            className="bg-brand-primary p-2 rounded-full text-white hover:bg-brand-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                            className="bg-gradient-to-br from-brand-primary to-blue-600 p-2.5 rounded-full text-white hover:shadow-[0_0_15px_rgba(58,190,254,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                         >
                             <SendIcon />
                         </button>

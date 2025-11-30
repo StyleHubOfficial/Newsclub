@@ -55,12 +55,21 @@ const ReelsView: React.FC<ReelsViewProps> = ({
 
     return (
         <div className="relative h-screen w-full bg-black">
-            {/* Go Back / Exit Button */}
+            {/* Go Back / Exit Button - Adjusted for Mobile Notch/Status Bar */}
             {onExitReels && (
-                <div className="absolute top-6 left-6 z-50">
+                <div className="absolute top-10 md:top-6 left-6 z-50">
                     <button 
                         onClick={onExitReels}
-                        className="p-3 bg-black/40 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/10 hover:border-brand-primary transition-all duration-300 group"
+                        className="
+                            p-3 rounded-full 
+                            bg-black/40 backdrop-blur-md 
+                            border border-white/20 
+                            text-white 
+                            shadow-[0_0_15px_rgba(0,0,0,0.5)]
+                            hover:bg-brand-primary/10 hover:border-brand-primary hover:shadow-[0_0_20px_rgba(58,190,254,0.3)]
+                            active:scale-95
+                            transition-all duration-300 group
+                        "
                         aria-label="Exit Reels"
                     >
                         <div className="transform group-hover:-translate-x-1 transition-transform">
