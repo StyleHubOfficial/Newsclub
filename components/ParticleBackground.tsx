@@ -6,22 +6,12 @@ const ParticleBackground: React.FC = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-             // For main window scroll (if applicable) or main content container
-             // Since main content is in a div with overflow-y-auto, we might need to listen to that element specifically
-             // But for parallax background effect often window scroll is used or a shared state.
-             // Given the app structure, let's try to hook into global window scroll if possible, or leave it subtle.
-             // A better approach for the "App" structure where a child div scrolls:
-             // We'll update this component to accept scroll position or just animate slowly on its own.
-             // For now, let's keep the self-animation which works everywhere.
+             // Basic parallax stub if needed globally, but CSS animation handles most movement
         };
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    // For the specific request "Circuit lines shift based on scroll direction", 
-    // since the scrolling happens inside the <main> tag in App.tsx, passing scroll state down is complex.
-    // Instead, we will implement a continuous subtle movement to simulate activity.
 
     return (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050505]">

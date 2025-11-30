@@ -12,13 +12,10 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-    };
-  }
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null,
+  };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -49,9 +46,9 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <HolographicScanner text="ATTEMPTING RECOVERY" />
           <button
             onClick={this.handleReset}
-            className="mt-6 px-6 py-2 bg-brand-accent/20 hover:bg-brand-accent/40 border border-brand-accent text-brand-text font-orbitron text-sm rounded transition-all hover:shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+            className="mt-6 px-6 py-2 bg-brand-accent/20 border border-brand-accent text-brand-accent rounded hover:bg-brand-accent/40 transition-colors font-orbitron tracking-widest text-xs"
           >
-            REBOOT MODULE
+            REBOOT COMPONENT
           </button>
         </div>
       );
