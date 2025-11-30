@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HomeIcon, ReelsIcon, CompassIcon, BoltIcon, UserIcon } from './icons';
 
@@ -7,6 +8,7 @@ interface BottomNavProps {
     onOpenExplore: () => void;
     onOpenChat: () => void;
     onOpenProfile: () => void;
+    isScrolling?: boolean;
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ 
@@ -14,26 +16,44 @@ const BottomNav: React.FC<BottomNavProps> = ({
     onChangeView, 
     onOpenExplore,
     onOpenChat,
-    onOpenProfile
+    onOpenProfile,
+    isScrolling = false
 }) => {
     
     // Helper to determine active state style
     const getNavItemClass = (isActive: boolean) => 
         `flex flex-col items-center justify-center gap-1 w-full py-3 transition-all duration-300 relative group
          ${isActive 
-            ? 'text-brand-accent' 
-            : 'text-brand-text-muted/40 hover:text-white'
+            ? 'text-brand-accent scale-105' 
+            : 'text-brand-text-muted/40 hover:text-white hover:-translate-y-1'
         }`;
 
     const GlowingSeparator = () => (
-        <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+        <div className="w-[1px] h-6 bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
     );
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-[#050505]/95 backdrop-blur-xl border-t border-white/5 z-50 md:hidden animate-slide-up pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.9)]">
+        <div 
+            className={`
+                fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe
+                bg-[#050505]/95 backdrop-blur-xl border-t border-white/5
+                transition-all duration-300 ease-out
+                ${isScrolling 
+                    ? 'scale-95 opacity-90 translate-y-2' 
+                    : 'scale-100 opacity-100 translate-y-0 shadow-[0_-10px_50px_-10px_rgba(58,190,254,0.3)]'
+                }
+            `}
+        >
             
-            {/* Top Glow Line */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-brand-primary/40 to-transparent shadow-[0_0_10px_#3ABEFE]"></div>
+            {/* Top Glow Line - Intensifies on scroll stop */}
+            <div 
+                className={`
+                    absolute top-0 left-0 right-0 h-[1px] 
+                    bg-gradient-to-r from-transparent via-brand-primary/60 to-transparent 
+                    transition-all duration-500
+                    ${isScrolling ? 'shadow-none opacity-50' : 'shadow-[0_0_15px_#3ABEFE] opacity-100'}
+                `}
+            ></div>
 
             <div className="flex justify-between items-center px-2">
                 

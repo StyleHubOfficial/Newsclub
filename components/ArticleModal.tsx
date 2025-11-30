@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
@@ -33,6 +34,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const [volume, setVolume] = useState(1);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [audioReady, setAudioReady] = useState(false);
+    
+    // VISUALIZER STATE (Critical for UI update)
+    const [analyserForVisualizer, setAnalyserForVisualizer] = useState<AnalyserNode | null>(null);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const sourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -43,16 +47,27 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     const shareButtonRef = useRef<HTMLButtonElement>(null);
     const langButtonRef = useRef<HTMLButtonElement>(null);
 
-    const initAudioContext = () => {
+    const initAudioContext = useCallback(() => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            audioContextRef.current = new AudioContext();
-            gainNodeRef.current = audioContextRef.current.createGain();
-            analyserNodeRef.current = audioContextRef.current.createAnalyser();
-            gainNodeRef.current.connect(analyserNodeRef.current);
-            analyserNodeRef.current.connect(audioContextRef.current.destination);
+            const ctx = new AudioContext();
+            
+            const gain = ctx.createGain();
+            const analyser = ctx.createAnalyser();
+            
+            // Connect Gain -> Analyser -> Destination
+            gain.connect(analyser);
+            analyser.connect(ctx.destination);
+            
+            audioContextRef.current = ctx;
+            gainNodeRef.current = gain;
+            analyserNodeRef.current = analyser;
+            
+            // Update State to trigger Visualizer render
+            setAnalyserForVisualizer(analyser);
         }
-    };
+        return audioContextRef.current;
+    }, []);
 
     const stopAudio = useCallback(() => {
         if (sourceRef.current) {
@@ -72,19 +87,22 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         }
     }, []);
 
-    const resumeAudio = useCallback(() => {
+    const resumeAudio = useCallback(async () => {
         if (audioContextRef.current?.state === 'suspended') {
-            audioContextRef.current.resume();
+            await audioContextRef.current.resume();
             setIsPlaying(true);
         }
     }, []);
 
     const playAudioBuffer = useCallback((offset: number = 0) => {
-         if (!audioBufferRef.current || !audioContextRef.current || !gainNodeRef.current) return;
+         const ctx = audioContextRef.current;
+         const gain = gainNodeRef.current;
+         const buffer = audioBufferRef.current;
 
-         if (audioContextRef.current.state === 'suspended') {
-             resumeAudio();
-             return;
+         if (!buffer || !ctx || !gain) return;
+
+         if (ctx.state === 'suspended') {
+             ctx.resume();
          }
 
          if (sourceRef.current) {
@@ -92,14 +110,17 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
              sourceRef.current.disconnect();
          }
 
-         const source = audioContextRef.current.createBufferSource();
-         source.buffer = audioBufferRef.current;
-         source.connect(gainNodeRef.current);
-         gainNodeRef.current.gain.value = volume;
+         const source = ctx.createBufferSource();
+         source.buffer = buffer;
+         
+         // Connect Source -> Gain (Chain becomes: Source -> Gain -> Analyser -> Destination)
+         source.connect(gain);
+         
+         gain.gain.value = volume;
          source.playbackRate.value = playbackRate;
 
          source.onended = () => {
-             if (audioContextRef.current?.state === 'running') {
+             if (ctx.state === 'running') {
                 setIsPlaying(false);
              }
          };
@@ -107,7 +128,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
          source.start(0, offset);
          sourceRef.current = source;
          setIsPlaying(true);
-    }, [volume, playbackRate, resumeAudio]);
+    }, [volume, playbackRate]);
 
 
     const handleGenerate = useCallback(async (type: 'summary' | 'analysis') => {
@@ -131,6 +152,10 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
     }, [article.content]);
 
     const handleTextToSpeech = async () => {
+        // Init context immediately on user click
+        const ctx = initAudioContext();
+        if (ctx.state === 'suspended') await ctx.resume();
+
         if (audioReady && audioBufferRef.current) {
             if (isPlaying) pauseAudio();
             else playAudioBuffer(0);
@@ -151,10 +176,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         stopAudio();
         
         try {
-            initAudioContext();
             const audioData = await generateNewsBroadcastSpeech(textToRead, language);
-            if (audioData && audioContextRef.current) {
-                const buffer = await decodeAudioData(decode(audioData), audioContextRef.current, 24000, 1);
+            if (audioData) {
+                const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
                 audioBufferRef.current = buffer;
                 setAudioReady(true);
                 playAudioBuffer(0);
@@ -385,15 +409,16 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     {renderContent()}
                 </div>
                 
-                 {/* Full Audio Player Interface (Identical to Audio Studio) */}
+                 {/* Full Audio Player Interface */}
                  {(audioReady || isAudioLoading) && !isAudioLoading && (
                     <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up relative z-30">
                          <div className="flex justify-between items-center">
                             <span className="font-orbitron text-xs text-brand-text-muted tracking-widest uppercase">
                                 {isPlaying ? 'Now Playing' : 'Paused'}
                             </span>
+                            {/* Visualizer using the state node */}
                             <div className="h-10 w-full max-w-xs opacity-80">
-                                <AudioVisualizer analyserNode={analyserNodeRef.current} width={200} height={40} barColor="#e11d48" gap={3} />
+                                <AudioVisualizer analyserNode={analyserForVisualizer} width={200} height={40} barColor="#e11d48" gap={3} />
                             </div>
                         </div>
 

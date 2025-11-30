@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -12,6 +13,7 @@ import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import HomeView from './components/HomeView'; 
+import ParticleBackground from './components/ParticleBackground';
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
 import { NewsArticle } from './types';
@@ -127,6 +129,13 @@ const App = () => {
     
     const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
+
+    // Scroll Logic States
+    const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up');
+    const [isAtTop, setIsAtTop] = useState(true);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const lastScrollY = useRef(0);
+    const scrollTimeout = useRef<number | null>(null);
 
     const observer = useRef<IntersectionObserver | null>(null);
 
@@ -260,6 +269,31 @@ const App = () => {
         }
     };
 
+    const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+        const currentScrollY = e.currentTarget.scrollTop;
+        
+        // Determine Direction
+        if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+            setScrollDirection('down');
+        } else if (currentScrollY < lastScrollY.current) {
+            setScrollDirection('up');
+        }
+        
+        // Determine At Top
+        setIsAtTop(currentScrollY < 20);
+
+        // Determine Scrolling State
+        setIsScrolling(true);
+        if (scrollTimeout.current) {
+            window.clearTimeout(scrollTimeout.current);
+        }
+        scrollTimeout.current = window.setTimeout(() => {
+            setIsScrolling(false);
+        }, 150);
+
+        lastScrollY.current = currentScrollY;
+    };
+
     const baseFilteredArticles = articles.filter(article => {
         const categoryMatch = preferences.categories.length === 0 || preferences.categories.includes(article.category);
         const sourceMatch = preferences.sources.length === 0 || preferences.sources.includes(article.source);
@@ -277,7 +311,9 @@ const App = () => {
 
     // MAIN APP UI
     return (
-        <div className="h-full bg-brand-bg font-sans flex flex-col animate-fade-in">
+        <div className="h-full bg-brand-bg font-sans flex flex-col relative overflow-hidden">
+            <ParticleBackground />
+            
             {/* Show Header only if NOT in Reels view mode */}
             {viewMode !== 'reels' && (
                 <Header 
@@ -289,12 +325,16 @@ const App = () => {
                     showSavedOnly={showSavedOnly}
                     onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
                     onOpenChat={() => openTool('chat')}
+                    scrollDirection={scrollDirection}
+                    isAtTop={isAtTop}
                 />
             )}
             
-             {/* Main Content Area */}
+             {/* Main Content Area with Page Transition */}
              {viewMode === 'reels' ? (
-                <div className="fixed inset-0 z-50 bg-black">
+                <div key="reels" className="fixed inset-0 z-50 bg-black animate-page-enter">
+                     {/* Glow Trail Effect */}
+                     <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
                     <ErrorBoundary componentName="ReelsView">
                         <ReelsView 
                             articles={displayedArticles} 
@@ -308,7 +348,14 @@ const App = () => {
                     </ErrorBoundary>
                 </div>
             ) : (
-                <main className="flex-grow overflow-y-auto pb-24 md:pb-4">
+                <main 
+                    key="grid" 
+                    className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter pt-16"
+                    onScroll={handleMainScroll}
+                >
+                    {/* Glow Trail Effect */}
+                    <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
+                    
                     <div className="container mx-auto">
                         <HomeView 
                             articles={displayedArticles}
@@ -369,27 +416,48 @@ const App = () => {
             
             {/* Desktop FABs - Hide in reels mode */}
             {viewMode !== 'reels' && (
-                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-4 z-50">
+                <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-6 z-50">
                      <button
                         onClick={() => openTool('audio')}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isAudioGenOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-secondary/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(123,47,255,0.4)]
+                            hover:bg-brand-secondary hover:shadow-[0_0_30px_#7B2FFF] hover:scale-110 
+                            transition-all duration-300
+                            ${isAudioGenOpen ? 'ring-2 ring-white/50 bg-brand-secondary' : ''}
+                        `}
                         aria-label="Open Audio Synthesis"
                     >
-                        <SoundWaveIcon />
+                        <SoundWaveIcon className="w-8 h-8" />
                     </button>
                     <button
                         onClick={() => openTool('live')}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-secondary to-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 animate-pulse-glow ${isLiveAgentOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-accent/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(40,255,211,0.4)]
+                            hover:bg-brand-accent hover:text-black hover:shadow-[0_0_30px_#28FFD3] hover:scale-110 
+                            transition-all duration-300 animate-pulse-glow
+                            ${isLiveAgentOpen ? 'ring-2 ring-white/50 bg-brand-accent text-black' : ''}
+                        `}
                         aria-label="Open Live Agent"
                     >
-                        <MicIcon />
+                        <MicIcon className="w-8 h-8" />
                     </button>
                     <button
                         onClick={() => setChatOpen(prev => !prev ? true : false)}
-                        className={`w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform duration-300 ${isChatOpen ? 'ring-4 ring-white' : ''}`}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-primary/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(58,190,254,0.4)]
+                            hover:bg-brand-primary hover:text-black hover:shadow-[0_0_30px_#3ABEFE] hover:scale-110 
+                            transition-all duration-300
+                            ${isChatOpen ? 'ring-2 ring-white/50 bg-brand-primary text-black' : ''}
+                        `}
                         aria-label="Toggle Chat"
                     >
-                        <BoltIcon />
+                        <BoltIcon className="w-8 h-8" />
                     </button>
                 </div>
             )}
@@ -404,6 +472,7 @@ const App = () => {
                     }}
                     onOpenChat={() => openTool('chat')}
                     onOpenProfile={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    isScrolling={isScrolling}
                 />
             )}
 

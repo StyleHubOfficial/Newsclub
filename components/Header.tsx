@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon } from './icons';
 import { loginWithGoogle, logoutUser, auth } from '../services/firebase';
@@ -12,6 +13,8 @@ interface HeaderProps {
     showSavedOnly: boolean;
     onToggleShowSaved: () => void;
     onOpenChat: () => void;
+    scrollDirection?: 'up' | 'down';
+    isAtTop?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -20,7 +23,9 @@ const Header: React.FC<HeaderProps> = ({
     onPersonalizeClick, 
     viewMode, 
     onToggleViewMode,
-    onOpenChat
+    onOpenChat,
+    scrollDirection = 'up',
+    isAtTop = true
 }) => {
     const [query, setQuery] = useState('');
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -73,10 +78,21 @@ const Header: React.FC<HeaderProps> = ({
         active:scale-95 active:animate-ripple
     `;
 
+    const isVisible = scrollDirection === 'up' || isAtTop;
+    const glassStyle = isAtTop ? 'bg-[#050505]/60 backdrop-blur-lg' : 'bg-[#050505]/90 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.8)]';
+
     return (
         <>
-            {/* Top Bar: Glassmorphic Style */}
-            <header className="sticky top-0 z-40 bg-[#050505]/60 backdrop-blur-xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)] animate-slide-up">
+            {/* Top Bar: Fixed Glassmorphic Style with Scroll Transitions */}
+            <header 
+                className={`
+                    fixed top-0 left-0 right-0 z-40 
+                    border-b border-white/5 
+                    transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)
+                    ${glassStyle}
+                    ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}
+                `}
+            >
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     
                     {/* 1. NEWS CLUB LOGO */}
