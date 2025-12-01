@@ -15,11 +15,11 @@ import LandingPage from './components/LandingPage';
 import HomeView from './components/HomeView'; 
 import AuthModal from './components/AuthModal';
 import ClubDashboard from './components/ClubDashboard';
-import AdminPanel from './components/AdminPanel'; // Import AdminPanel
+import AdminPanel from './components/AdminPanel';
 import ParticleBackground from './components/ParticleBackground';
-import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon, ShieldIcon } from './components/icons';
-import { NewsArticle, UserRole, UserProfile } from './types';
+import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
+import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
+import { NewsArticle, UserProfile } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -117,6 +117,7 @@ const App = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [isVerifyingIdentity, setIsVerifyingIdentity] = useState(false);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -162,6 +163,8 @@ const App = () => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
             if (user) {
+                setIsVerifyingIdentity(true); // START LOADING
+                
                 // Check if profile exists in DB
                 await checkUserProfile(user);
 
@@ -171,12 +174,15 @@ const App = () => {
                     if (userData.savedArticles) setSavedArticles(new Set(userData.savedArticles));
                     if (userData.preferences) setPreferences(userData.preferences);
                 }
+                
+                setIsVerifyingIdentity(false); // STOP LOADING
             } else {
                 // Load Local Data
                 try {
                     const saved = localStorage.getItem('savedArticles');
                     if (saved) setSavedArticles(new Set(JSON.parse(saved)));
                 } catch { setSavedArticles(new Set()); }
+                setIsVerifyingIdentity(false);
             }
         });
         return () => unsubscribe();
@@ -330,6 +336,15 @@ const App = () => {
     const displayedArticles = showSavedOnly
         ? articles.filter(a => savedArticles.has(a.id))
         : baseFilteredArticles;
+
+    // IF VERIFYING IDENTITY
+    if (isVerifyingIdentity) {
+        return (
+            <div className="h-screen w-full bg-[#050505] flex items-center justify-center">
+                <HolographicScanner text="VERIFYING IDENTITY" />
+            </div>
+        );
+    }
 
     // RENDER LANDING PAGE IF NOT ENTERED YET
     if (showLanding) {

@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon, BellIcon } from './icons';
-import { loginWithGoogle, logoutUser, auth } from '../services/firebase';
+import { logoutUser, auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { getUserProfile, getUserMessages } from '../services/dbService';
 import { UserRole } from '../types';
 import NotificationsModal from './NotificationsModal';
+import LoginModal from './LoginModal';
 
 interface HeaderProps {
     onSearch: (query: string) => void;
@@ -34,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [userRole, setUserRole] = useState<UserRole>('user');
-    const [authDomainError, setAuthDomainError] = useState<string | null>(null);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -64,20 +65,6 @@ const Header: React.FC<HeaderProps> = ({
 
     const toggleSearch = () => {
         setIsSearchExpanded(!isSearchExpanded);
-    };
-
-    const handleLogin = async () => {
-        setAuthDomainError(null);
-        try {
-            await loginWithGoogle();
-        } catch (e: any) {
-            console.error("Login error:", e);
-            if (e.code === 'auth/unauthorized-domain') {
-                setAuthDomainError(window.location.hostname);
-            } else {
-                alert("Login failed: " + (e.message || "Unknown error"));
-            }
-        }
     };
 
     const handleLogout = async () => {
@@ -253,7 +240,7 @@ const Header: React.FC<HeaderProps> = ({
                              </div>
                         ) : (
                              <button 
-                                onClick={handleLogin}
+                                onClick={() => setShowLoginModal(true)}
                                 className="
                                     group relative flex items-center justify-center gap-2 px-5 py-2 rounded-full overflow-hidden
                                     bg-white/5 border border-brand-primary/50 
@@ -293,49 +280,14 @@ const Header: React.FC<HeaderProps> = ({
                 )}
             </header>
 
+            {/* LOGIN PORTAL MODAL */}
+            {showLoginModal && (
+                <LoginModal onClose={() => setShowLoginModal(false)} onLoginSuccess={() => setShowLoginModal(false)} />
+            )}
+
             {/* NOTIFICATIONS MODAL */}
             {showNotifications && user && (
                 <NotificationsModal userId={user.uid} onClose={() => { setShowNotifications(false); setUnreadCount(0); }} />
-            )}
-
-            {/* FIREBASE DOMAIN ERROR MODAL */}
-            {authDomainError && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
-                    <div className="bg-[#050505] border border-brand-secondary rounded-2xl p-6 max-w-lg w-full shadow-[0_0_50px_rgba(123,47,255,0.3)] relative">
-                        <button 
-                            onClick={() => setAuthDomainError(null)}
-                            className="absolute top-4 right-4 text-brand-text-muted hover:text-white"
-                        >
-                            <CloseIcon className="w-6 h-6" />
-                        </button>
-                        
-                        <div className="flex flex-col items-center text-center space-y-4">
-                            <div className="w-16 h-16 rounded-full bg-brand-secondary/10 flex items-center justify-center border border-brand-secondary animate-pulse">
-                                <BoltIcon className="h-8 w-8 text-brand-secondary" />
-                            </div>
-                            
-                            <h3 className="text-2xl font-orbitron font-bold text-white tracking-widest">ACCESS DENIED</h3>
-                            
-                            <p className="text-brand-text-muted text-sm">
-                                Security Protocol Violation: Unauthorized Domain
-                            </p>
-
-                            <div className="w-full bg-black border border-brand-primary/20 rounded-lg p-4 text-left">
-                                <p className="text-[10px] text-brand-primary uppercase tracking-widest mb-2">Required Action</p>
-                                <code className="block w-full bg-[#111] p-2 rounded text-brand-accent font-mono text-xs break-all select-all border border-white/5">
-                                    {authDomainError}
-                                </code>
-                            </div>
-
-                            <button 
-                                onClick={() => setAuthDomainError(null)}
-                                className="w-full py-3 bg-brand-secondary hover:bg-brand-secondary/80 text-white font-bold rounded-lg transition-colors mt-4 font-orbitron tracking-widest text-xs shadow-[0_0_20px_rgba(123,47,255,0.4)]"
-                            >
-                                ACKNOWLEDGE
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </>
     );
