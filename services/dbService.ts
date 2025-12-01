@@ -76,12 +76,7 @@ export const verifyClubCredentials = async (clubId: string, tempPass: string): P
             where("tempPass", "==", tempPass)
         );
         const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-            // Check if already used? (Optional business logic)
-            return true;
-        }
-        return false;
+        return !querySnapshot.empty;
     } catch (error) {
         console.error("Verification failed:", error);
         return false;
@@ -95,12 +90,32 @@ export const createUserProfile = async (uid: string, profileData: Partial<UserPr
         await setDoc(userRef, {
             ...profileData,
             createdAt: new Date(),
-            // Ensure defaults
             preferences: { categories: [], sources: [] },
             savedArticles: []
         }, { merge: true });
     } catch (error) {
         console.error("Error creating profile:", error);
+        throw error;
+    }
+};
+
+export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
+    try {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, data);
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        throw error;
+    }
+};
+
+export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
+    try {
+        const storageRef = ref(storage, `profile_pictures/${uid}`);
+        await uploadBytes(storageRef, file);
+        return await getDownloadURL(storageRef);
+    } catch (error) {
+        console.error("Error uploading profile picture:", error);
         throw error;
     }
 };
@@ -122,7 +137,6 @@ export const uploadClubVideo = async (userId: string, weekNo: number, file: File
 };
 
 export const saveClubSubmission = async (userId: string, weekNo: number, videoUrl: string, feedback: AIFeedback) => {
-    // Unique ID for the submission
     const submissionId = `${userId}_week_${weekNo}`;
     const submissionRef = doc(db, "club_submissions", submissionId);
     
@@ -137,13 +151,11 @@ export const saveClubSubmission = async (userId: string, weekNo: number, videoUr
 
     await setDoc(submissionRef, submission);
     
-    // Also save feedback separately for easier querying if needed
     const feedbackRef = doc(db, `club_feedback/${userId}/weeks`, `week_${weekNo}`);
     await setDoc(feedbackRef, feedback);
 };
 
 export const getWeeklyTask = async (weekNo: number) => {
-    // This could come from a database, but for now we mock it
     return {
         title: `Week ${weekNo} Assignment`,
         description: "Report on a recent technological breakthrough in your city. Focus on clear diction and maintaining eye contact.",
@@ -164,38 +176,25 @@ export const getStudentHistory = async (userId: string): Promise<ClubSubmission[
 
 // --- ADMIN FEATURES ---
 
-// Get All Users (for Admin)
 export const getAllUsers = async (): Promise<UserProfile[]> => {
     const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as UserProfile));
 };
 
-// Toggle Pin/Star
 export const toggleUserStatus = async (uid: string, field: 'isPinned' | 'isStarred', value: boolean) => {
     const userRef = doc(db, "users", uid);
     await updateDoc(userRef, { [field]: value });
 };
 
-// Send Admin Message
 export const sendAdminMessage = async (message: AdminMessage) => {
-    // 1. Save to DB
     const msgRef = collection(db, "messages");
     await addDoc(msgRef, message);
-
-    // 2. Mock External APIs if selected
-    if (message.channels.includes('whatsapp')) {
-        console.log(`[MOCK] Sending WhatsApp to ${message.recipients.length} users: ${message.content}`);
-    }
-    if (message.channels.includes('sms')) {
-        console.log(`[MOCK] Sending SMS to ${message.recipients.length} users: ${message.content}`);
-    }
+    if (message.channels.includes('whatsapp')) console.log(`[MOCK] WhatsApp sent to ${message.recipients.length}`);
+    if (message.channels.includes('sms')) console.log(`[MOCK] SMS sent to ${message.recipients.length}`);
 };
 
-// Get Messages for a User
 export const getUserMessages = async (uid: string): Promise<AdminMessage[]> => {
-    // Logic: Fetch messages where 'recipients' array contains uid OR 'targetType' is 'all'
-    // Firestore array-contains only allows one condition. We'll fetch basic and filter.
     const q = query(
         collection(db, "messages"),
         orderBy("createdAt", "desc"),
@@ -211,7 +210,6 @@ export const getUserMessages = async (uid: string): Promise<AdminMessage[]> => {
         );
 };
 
-// Mark Message as Read
 export const markMessageRead = async (msgId: string, uid: string) => {
     const msgRef = doc(db, "messages", msgId);
     await updateDoc(msgRef, {

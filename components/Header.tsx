@@ -67,11 +67,7 @@ const Header: React.FC<HeaderProps> = ({
         setIsSearchExpanded(!isSearchExpanded);
     };
 
-    const handleLogout = async () => {
-        await logoutUser();
-    };
-
-    // Helper for button styles - Updated to Hi-Tech Glass Neon Spec
+    // Helper for button styles
     const navButtonStyle = (isActive: boolean, activeColorClass: string, activeShadowClass: string) => `
         flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border overflow-hidden relative
         font-orbitron text-[10px] font-bold tracking-wider
@@ -110,10 +106,9 @@ const Header: React.FC<HeaderProps> = ({
                         </span>
                     </div>
 
-                    {/* CENTRAL NAVIGATION (Desktop) - Glass Pill */}
+                    {/* CENTRAL NAVIGATION (Desktop) */}
                     <nav className="hidden md:flex items-center gap-1 bg-white/5 rounded-full px-2 py-1.5 border border-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] backdrop-blur-md">
                         
-                        {/* 2. HOME */}
                         <button 
                             onClick={() => onToggleViewMode('grid')}
                             className={navButtonStyle(viewMode === 'grid', 'brand-primary', 'rgba(58,190,254,0.2)')}
@@ -122,7 +117,6 @@ const Header: React.FC<HeaderProps> = ({
                             <span>HOME</span>
                         </button>
 
-                        {/* 3. EXPLORE (Search) */}
                         <div className="relative">
                             <button 
                                 onClick={toggleSearch}
@@ -132,7 +126,6 @@ const Header: React.FC<HeaderProps> = ({
                                 <span>EXPLORE</span>
                             </button>
                             
-                            {/* Desktop Search Dropdown */}
                             {isSearchExpanded && (
                                 <form 
                                     onSubmit={handleSearch}
@@ -154,7 +147,6 @@ const Header: React.FC<HeaderProps> = ({
                             )}
                         </div>
 
-                        {/* 4. AI CHAT */}
                         <button 
                             onClick={onOpenChat}
                             className={navButtonStyle(false, 'brand-primary', '')}
@@ -163,7 +155,6 @@ const Header: React.FC<HeaderProps> = ({
                             <span>AI CHAT</span>
                         </button>
 
-                        {/* 5. REELS */}
                         <button 
                             onClick={() => onToggleViewMode('reels')}
                             className={navButtonStyle(viewMode === 'reels', 'brand-secondary', 'rgba(123,47,255,0.2)')}
@@ -172,7 +163,6 @@ const Header: React.FC<HeaderProps> = ({
                             <span>REELS</span>
                         </button>
 
-                        {/* 6. SUNRISE CLUB TAB (Conditional) */}
                         {(userRole === 'member' || userRole === 'admin') && (
                             <button
                                 onClick={() => onToggleViewMode('club')}
@@ -183,7 +173,6 @@ const Header: React.FC<HeaderProps> = ({
                             </button>
                         )}
 
-                        {/* 7. ADMIN PANEL (Conditional) */}
                         {userRole === 'admin' && (
                             <button
                                 onClick={() => onToggleViewMode('admin')}
@@ -198,7 +187,6 @@ const Header: React.FC<HeaderProps> = ({
                     {/* RIGHT SIDE (Mobile Icons + Profile) */}
                     <div className="flex items-center gap-3">
                         
-                        {/* Notification Bell */}
                         {user && (
                             <button 
                                 onClick={() => setShowNotifications(true)}
@@ -211,12 +199,10 @@ const Header: React.FC<HeaderProps> = ({
                             </button>
                         )}
 
-                        {/* Feedback Button */}
                         <button className="p-2 text-brand-text-muted hover:text-brand-accent transition-colors hidden sm:block hover:bg-white/5 rounded-full relative overflow-hidden active:animate-ripple" title="Feedback">
                              <MessageSquareIcon className="h-5 w-5" />
                         </button>
 
-                        {/* Mobile Search Icon */}
                         <button onClick={toggleSearch} className="md:hidden p-2 text-brand-text-muted hover:text-brand-accent transition-colors hover:bg-white/5 rounded-full relative overflow-hidden active:animate-ripple">
                             <CompassIcon className="h-6 w-6" />
                         </button>
@@ -226,16 +212,13 @@ const Header: React.FC<HeaderProps> = ({
                              <div className="flex items-center gap-3 pl-3 border-l border-white/10">
                                  <button 
                                     onClick={onPersonalizeClick}
-                                    className="w-9 h-9 rounded-full overflow-hidden border border-brand-primary/30 hover:border-brand-primary hover:shadow-[0_0_15px_#3ABEFE] transition-all relative active:scale-95"
+                                    className="w-9 h-9 rounded-full overflow-hidden border border-brand-primary/30 hover:border-brand-primary hover:shadow-[0_0_15px_#3ABEFE] transition-all relative active:scale-95 bg-brand-surface"
                                 >
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
                                     ) : (
                                         <UserIcon className="h-5 w-5 m-2 text-brand-text" />
                                     )}
-                                </button>
-                                <button onClick={handleLogout} className="hidden md:block text-[10px] font-orbitron text-brand-text-muted hover:text-brand-primary transition-colors">
-                                    LOGOUT
                                 </button>
                              </div>
                         ) : (
@@ -252,7 +235,6 @@ const Header: React.FC<HeaderProps> = ({
                             >
                                 <UserIcon className="h-4 w-4 relative z-10" />
                                 <span className="relative z-10">LOGIN</span>
-                                 {/* Inner Shine */}
                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-primary/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                             </button>
                         )}

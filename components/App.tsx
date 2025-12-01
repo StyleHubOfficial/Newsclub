@@ -16,6 +16,8 @@ import HomeView from './components/HomeView';
 import AuthModal from './components/AuthModal';
 import ClubDashboard from './components/ClubDashboard';
 import AdminPanel from './components/AdminPanel';
+import LoginModal from './components/LoginModal'; // Correct Import
+import ProfileModal from './components/ProfileModal'; // New Import
 import ParticleBackground from './components/ParticleBackground';
 import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
@@ -118,6 +120,10 @@ const App = () => {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [isVerifyingIdentity, setIsVerifyingIdentity] = useState(false);
+    
+    // Profile & Personalization State
+    const [isProfileModalOpen, setProfileModalOpen] = useState(false);
+    const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -129,7 +135,6 @@ const App = () => {
     
     // Pagination & Infinite Scroll
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
     const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club' | 'admin'>('grid');
     
@@ -201,6 +206,7 @@ const App = () => {
         setAudioGenOpen(tool === 'audio');
         setSelectedArticle(null); // Close article if open
         setPersonalizationModalOpen(false); // Close personalization
+        setProfileModalOpen(false);
     };
 
     const closeAll = () => {
@@ -209,6 +215,7 @@ const App = () => {
         setAudioGenOpen(false);
         setSelectedArticle(null);
         setPersonalizationModalOpen(false);
+        setProfileModalOpen(false);
     };
 
     const allCategories = [...new Set(articles.map(a => a.category))];
@@ -441,7 +448,7 @@ const App = () => {
                 <Header 
                     onSearch={handleSearch} 
                     isSearching={isSearching} 
-                    onPersonalizeClick={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    onPersonalizeClick={() => { closeAll(); setProfileModalOpen(true); }}
                     viewMode={viewMode}
                     onToggleViewMode={(mode) => setViewMode(mode)}
                     showSavedOnly={showSavedOnly}
@@ -470,7 +477,7 @@ const App = () => {
                 </ErrorBoundary>
             )}
             
-            {/* Render SearchResultsModal if we have results OR if we are currently searching */}
+            {/* Search Modal */}
             {(searchResults || isSearching) && (
                 <SearchResultsModal 
                     result={searchResults || { text: '', sources: [] }} 
@@ -478,6 +485,17 @@ const App = () => {
                     isLoading={isSearching} 
                 />
             )}
+
+            {/* Profile Modal */}
+            {isProfileModalOpen && currentUser && (
+                <ProfileModal 
+                    user={currentUser} 
+                    onClose={() => setProfileModalOpen(false)}
+                    onOpenPersonalization={() => { setProfileModalOpen(false); setPersonalizationModalOpen(true); }}
+                />
+            )}
+
+            {/* Personalization Modal */}
             {isPersonalizationModalOpen && (
                 <PersonalizationModal
                     allCategories={allCategories}
@@ -487,6 +505,8 @@ const App = () => {
                     onClose={() => setPersonalizationModalOpen(false)}
                 />
             )}
+
+            {/* Audio Modal */}
             {isAudioGenOpen && (
                 <ErrorBoundary componentName="AudioGenerationModal">
                     <AudioGenerationModal articles={articles} onClose={() => setAudioGenOpen(false)} />
@@ -544,13 +564,13 @@ const App = () => {
             {/* Bottom Nav - Hide in reels mode */}
             {viewMode !== 'reels' && (
                 <BottomNav 
-                    viewMode={(viewMode === 'club' || viewMode === 'admin') ? 'grid' : viewMode} // Fallback visually for mobile nav
+                    viewMode={(viewMode === 'club' || viewMode === 'admin') ? 'grid' : viewMode}
                     onChangeView={(mode) => setViewMode(mode)}
                     onOpenExplore={() => {
                         document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                     onOpenChat={() => openTool('chat')}
-                    onOpenProfile={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    onOpenProfile={() => { closeAll(); setProfileModalOpen(true); }}
                     isScrolling={isScrolling}
                 />
             )}

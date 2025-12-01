@@ -1,5 +1,15 @@
+
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    signOut, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    deleteUser as firebaseDeleteUser,
+    User
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -23,7 +33,8 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Auth Helpers
+// --- Auth Helpers ---
+
 export const loginWithGoogle = async () => {
     try {
         const result = await signInWithPopup(auth, googleProvider);
@@ -34,6 +45,33 @@ export const loginWithGoogle = async () => {
     }
 };
 
+export const loginWithEmail = async (email: string, pass: string) => {
+    try {
+        const result = await signInWithEmailAndPassword(auth, email, pass);
+        return result.user;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const registerWithEmail = async (email: string, pass: string) => {
+    try {
+        const result = await createUserWithEmailAndPassword(auth, email, pass);
+        return result.user;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const logoutUser = async () => {
     await signOut(auth);
+};
+
+export const deleteUserAccount = async (user: User) => {
+    try {
+        await firebaseDeleteUser(user);
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        throw error;
+    }
 };

@@ -7,7 +7,7 @@ export interface NewsArticle {
     image: string;
     category: string;
     source: string;
-    url?: string; // Optional URL for sharing
+    url?: string;
     isSummaryLoading?: boolean;
     dataPoints?: { label: string; value: number }[];
     visualizationTitle?: string;
@@ -43,19 +43,20 @@ export interface UserProfile {
     displayName: string;
     phoneNumber?: string;
     studentClass?: string;
+    bio?: string;
+    photoURL?: string;
     role: UserRole;
     clubId?: string;
     createdAt: any;
     lastLogin?: any;
-    // Admin Flags
     isPinned?: boolean;
     isStarred?: boolean;
-    groups?: string[]; // Group IDs
+    groups?: string[];
 }
 
 export interface AIFeedback {
     pronunciationScore: number;
-    speedScore: number; // 0-100 (50 is ideal)
+    speedScore: number;
     confidenceScore: number;
     clarityScore: number;
     tips: string[];
@@ -67,13 +68,11 @@ export interface ClubSubmission {
     id?: string;
     userId: string;
     weekNo: number;
-    uploadTime: any; // Firestore Timestamp
+    uploadTime: any;
     videoUrl: string;
     feedback?: AIFeedback;
     status: 'pending' | 'analyzed';
 }
-
-// --- ADMIN SYSTEM TYPES ---
 
 export interface UserGroup {
     id: string;
@@ -86,12 +85,12 @@ export interface AdminMessage {
     id?: string;
     senderId: string;
     senderName: string;
-    recipients: string[]; // List of User UIDs
-    targetType: 'user' | 'group' | 'all' | 'club'; // For UI display purposes
+    recipients: string[];
+    targetType: 'user' | 'group' | 'all' | 'club';
     content: string;
     attachments?: string[];
     channels: ('app' | 'whatsapp' | 'sms')[];
-    scheduledFor?: any; // Timestamp or null
+    scheduledFor?: any;
     createdAt: any;
-    readBy: string[]; // UIDs who have opened it
+    readBy: string[];
 }
