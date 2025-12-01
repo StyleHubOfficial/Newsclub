@@ -12,21 +12,24 @@ interface SearchResultsModalProps {
 const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ result, onClose, isLoading }) => {
     return (
         <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Container with Page Enter Transition */}
+            {/* FLOATING GLASS PANEL */}
             <div className="
                 bg-[#050505]/80 backdrop-blur-2xl 
                 w-full max-w-3xl max-h-[85vh] 
                 rounded-[22px] 
-                shadow-[0_0_60px_-10px_rgba(40,255,211,0.15)] 
+                shadow-[0_0_50px_rgba(40,255,211,0.15)] 
                 border border-white/10 ring-1 ring-white/5 
                 flex flex-col animate-page-enter relative overflow-hidden
             " onClick={(e) => e.stopPropagation()}>
                 
+                {/* Holographic Texture */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+
                 {/* Horizontal Laser Sweep */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-accent to-transparent z-50 animate-scan-line"></div>
 
                 {/* Header */}
-                <header className="p-5 border-b border-brand-accent/20 flex justify-between items-center bg-white/5 backdrop-blur-xl z-10">
+                <header className="p-5 border-b border-brand-accent/20 flex justify-between items-center bg-white/5 backdrop-blur-xl z-10 relative">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-brand-accent/10 rounded-full border border-brand-accent/30 text-brand-accent shadow-[0_0_10px_rgba(40,255,211,0.2)]">
                             <SearchIcon className="w-5 h-5" />
@@ -44,7 +47,7 @@ const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ result, onClose
                 </header>
 
                 {/* Content */}
-                <div className="p-6 md:p-8 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-brand-accent/20 scrollbar-track-transparent">
+                <div className="p-6 md:p-8 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-brand-accent/20 scrollbar-track-transparent relative z-10">
                     {isLoading ? (
                         <div className="flex flex-col justify-center items-center h-64 gap-4">
                             <HolographicScanner text="SCANNING NEURAL WEB" />

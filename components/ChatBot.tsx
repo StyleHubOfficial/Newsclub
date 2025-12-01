@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import { streamChatResponse, generateImageFromPrompt, resetChat } from '../services/geminiService';
@@ -198,9 +197,19 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed bottom-24 right-0 left-0 md:left-auto md:right-6 w-full md:w-[450px] h-[70vh] z-40 animate-slide-up px-3 md:px-0">
-            {/* Glass Panel */}
-            <div className="bg-[#050505]/80 backdrop-blur-2xl rounded-[22px] shadow-[0_0_80px_-20px_rgba(58,190,254,0.3)] flex flex-col h-full border border-white/10 overflow-hidden ring-1 ring-white/5">
-                <header className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+            {/* FLOATING GLASS PANEL */}
+            <div className="
+                bg-[#050505]/80 backdrop-blur-2xl 
+                rounded-[22px] 
+                shadow-[0_0_50px_rgba(58,190,254,0.15)] 
+                flex flex-col h-full 
+                border border-white/10 ring-1 ring-white/5 
+                overflow-hidden relative
+            ">
+                {/* Holographic Texture Overlay */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+
+                <header className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5 relative z-10">
                     <div className="flex items-center gap-3">
                         <BotAvatar />
                         <div>
@@ -216,19 +225,30 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                     </button>
                 </header>
                 
-                {error && <div className="bg-red-900/40 border-b border-red-500/50 text-red-200 text-xs p-2 text-center font-mono">system_alert: {error}</div>}
+                {error && <div className="bg-red-900/40 border-b border-red-500/50 text-red-200 text-xs p-2 text-center font-mono relative z-10">system_alert: {error}</div>}
 
-                <div className="flex-grow p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-brand-primary/20 scrollbar-track-transparent">
+                <div className="flex-grow p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-brand-primary/20 scrollbar-track-transparent relative z-10">
                     {messages.map(msg => (
                         <div key={msg.id} className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.sender === 'bot' && <div className="pt-1"><BotAvatar /></div>}
-                            <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl backdrop-blur-md border ${
-                                msg.isError 
-                                    ? 'bg-red-900/10 border-red-500/40 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                            
+                            {/* AI MESSAGE BOXES */}
+                            <div className={`
+                                max-w-[85%] px-5 py-3.5 
+                                backdrop-blur-md border transition-all duration-300 relative overflow-hidden group
+                                ${
+                                    msg.isError 
+                                    ? 'bg-red-900/10 border-red-500/40 text-red-200 rounded-2xl shadow-[0_0_15px_rgba(239,68,68,0.2)]'
                                     : msg.sender === 'user' 
-                                        ? 'bg-brand-primary/10 border-brand-primary/30 text-white rounded-br-none shadow-[0_0_20px_rgba(58,190,254,0.1)]' 
-                                        : 'bg-white/5 border-white/10 text-gray-200 rounded-bl-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-                            }`}>
+                                        ? 'bg-brand-primary/10 border-brand-primary/50 text-white rounded-2xl rounded-br-none shadow-[0_0_15px_rgba(58,190,254,0.2)] animate-pulse-glow' // User Bubble
+                                        : 'bg-brand-secondary/10 border-brand-secondary/50 text-brand-text rounded-2xl rounded-bl-none shadow-[0_0_15px_rgba(123,47,255,0.2)] animate-card-enter' // AI Bubble
+                                }
+                            `}>
+                                {/* Light Beam Animation for Bot Messages */}
+                                {msg.sender === 'bot' && !msg.isError && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-sheen pointer-events-none"></div>
+                                )}
+
                                 {msg.isLoading && <ThinkingBubble />}
                                 
                                 {msg.isError && (
@@ -241,9 +261,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                                 {msg.text && <p className={`whitespace-pre-wrap text-sm leading-relaxed font-light ${msg.isError ? 'font-mono text-xs opacity-80' : ''}`}>{msg.text}</p>}
                                 
                                 {msg.imageUrl && (
-                                    <div className="mt-2 relative group rounded-xl overflow-hidden border border-brand-primary/40 shadow-[0_0_20px_rgba(58,190,254,0.2)]">
-                                        <img src={msg.imageUrl} alt="Generated" className="w-full h-auto transition-transform duration-700 group-hover:scale-105" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                    <div className="mt-2 relative group/img rounded-xl overflow-hidden border border-brand-primary/40 shadow-[0_0_20px_rgba(58,190,254,0.2)]">
+                                        <img src={msg.imageUrl} alt="Generated" className="w-full h-auto transition-transform duration-700 group-hover/img:scale-105" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-3">
                                             <span className="text-[10px] text-brand-primary font-orbitron tracking-widest border border-brand-primary/50 px-2 py-1 rounded bg-black/50 backdrop-blur-md">GENERATED_ASSET</span>
                                         </div>
                                     </div>
@@ -254,7 +274,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
                     <div ref={messagesEndRef} />
                 </div>
                 
-                <footer className="p-3 border-t border-white/5 bg-white/5 backdrop-blur-lg">
+                <footer className="p-3 border-t border-white/5 bg-white/5 backdrop-blur-lg relative z-10">
                     <div className="flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-full p-1.5 pl-3 focus-within:border-brand-primary/50 transition-colors shadow-inner">
                          <button 
                             onClick={() => setMode(m => m === 'image' ? 'chat' : 'image')} 

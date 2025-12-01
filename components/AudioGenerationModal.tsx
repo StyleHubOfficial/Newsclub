@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
@@ -251,7 +250,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     // --- Render ---
     const selectedArticle = articles.find(a => a.id === selectedArticleId);
     
-    // Updated Mode Toggle Style
+    // Updated Mode Toggle Style - Neon Glass
     const modeButtonStyle = (isActive: boolean) => `
         px-4 py-2 rounded-full font-semibold transition-all duration-300 text-sm border
         ${isActive 
@@ -262,17 +261,32 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-lg flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-[#050505]/80 backdrop-blur-2xl w-full max-w-3xl rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5 flex flex-col animate-page-enter relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* FLOATING GLASS PANEL */}
+            <div 
+                className="
+                    bg-[#050505]/80 backdrop-blur-2xl 
+                    w-full max-w-3xl 
+                    rounded-[22px] 
+                    shadow-[0_0_50px_rgba(58,190,254,0.15)] 
+                    border border-white/10 ring-1 ring-white/5 
+                    flex flex-col animate-page-enter relative overflow-hidden
+                " 
+                onClick={e => e.stopPropagation()}
+            >
+                {/* HOLOGRAPHIC TEXTURE */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+
+                {/* Horizontal Laser Sweep */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent z-50 animate-scan-line"></div>
 
-                <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-white/5">
-                    <h2 className="font-orbitron text-xl text-brand-secondary">NEWS REPORTER</h2>
+                <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-white/5 relative z-10">
+                    <h2 className="font-orbitron text-xl text-brand-secondary tracking-widest">NEWS REPORTER</h2>
                     <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors p-2 hover:bg-white/5 rounded-full">
                         <CloseIcon />
                     </button>
                 </header>
                 
-                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto relative z-10">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="bg-brand-bg/50 border border-brand-primary/20 rounded-full p-1 flex gap-1 w-min">
                             <button onClick={() => setMode('text')} className={modeButtonStyle(mode === 'text')}>Text Input</button>
@@ -344,7 +358,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                 </div>
 
                 {status === 'error' && (
-                    <div className="px-6 py-2">
+                    <div className="px-6 py-2 relative z-10">
                         <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-3 text-red-200 text-center text-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
                             <span className="font-bold">Error:</span> {error}
                             <button onClick={() => setStatus('idle')} className="ml-4 underline hover:text-white">Reset</button>
@@ -352,7 +366,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                     </div>
                 )}
 
-                <div className="px-6 pb-6 text-center min-h-[60px] flex flex-col justify-center">
+                <div className="px-6 pb-6 text-center min-h-[60px] flex flex-col justify-center relative z-10">
                     {(status === 'idle' || status === 'error') && (
                         <button 
                             onClick={handleGenerate} 
@@ -375,7 +389,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                 </div>
                 
                  {(status === 'playing' || status === 'paused' || status === 'ready') && (
-                    <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up">
+                    <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up relative z-10">
                          <div className="flex justify-between items-center">
                             <span className="font-orbitron text-xs text-brand-text-muted tracking-widest uppercase">
                                 {status === 'playing' ? 'Now Playing' : (status === 'paused' ? 'Paused' : 'Ready')}

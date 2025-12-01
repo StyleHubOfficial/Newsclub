@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';

@@ -1,5 +1,7 @@
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
+import { UserProfile } from "../types";
 
 // Save user preferences (categories, sources)
 export const saveUserPreferences = async (userId: string, preferences: any) => {
@@ -44,5 +46,60 @@ export const loadUserData = async (userId: string) => {
     } catch (error) {
         console.error("Error loading user data:", error);
         return null;
+    }
+};
+
+// --- NEW AUTHENTICATION & PROFILE LOGIC ---
+
+// Check if user has a profile setup
+export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+    try {
+        const userRef = doc(db, "users", uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists() && docSnap.data().role) {
+            return docSnap.data() as UserProfile;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+    }
+};
+
+// Verify Club Credentials
+export const verifyClubCredentials = async (clubId: string, tempPass: string): Promise<boolean> => {
+    try {
+        const q = query(
+            collection(db, "club_members"), 
+            where("clubId", "==", clubId),
+            where("tempPass", "==", tempPass)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            // Check if already used? (Optional business logic)
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Verification failed:", error);
+        return false;
+    }
+};
+
+// Create or Update User Profile
+export const createUserProfile = async (uid: string, profileData: Partial<UserProfile>) => {
+    try {
+        const userRef = doc(db, "users", uid);
+        await setDoc(userRef, {
+            ...profileData,
+            createdAt: new Date(),
+            // Ensure defaults
+            preferences: { categories: [], sources: [] },
+            savedArticles: []
+        }, { merge: true });
+    } catch (error) {
+        console.error("Error creating profile:", error);
+        throw error;
     }
 };

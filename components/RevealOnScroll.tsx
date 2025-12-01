@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 
 interface RevealOnScrollProps {
@@ -26,8 +25,8 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
                 }
             },
             {
-                threshold: 0.15, // Trigger when 15% visible for smoother reveal
-                rootMargin: '20px' 
+                threshold: 0.1, // Trigger slightly earlier
+                rootMargin: '50px' 
             }
         );
 
@@ -38,29 +37,31 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
         return () => observer.disconnect();
     }, []);
 
-    const getAnimationClass = () => {
+    // Define Start (Hidden) and End (Visible) states using Utility Classes
+    // We use transition-all to smoothly animate between them.
+    const getTransitionClasses = () => {
+        const base = "transition-all duration-700 cubic-bezier(0.2, 0.8, 0.2, 1)"; // Smooth ease-out
+        
         if (!isVisible) {
-            // Start states
             switch (animation) {
-                case 'zoom-in': return 'opacity-0 scale-95';
-                case 'slide-right': return 'opacity-0 -translate-x-8';
-                default: return 'opacity-0 translate-y-8'; // fade-up
+                case 'zoom-in': return `${base} opacity-0 scale-95`;
+                case 'slide-right': return `${base} opacity-0 -translate-x-8`;
+                default: return `${base} opacity-0 translate-y-12`; // fade-up
             }
         }
         
-        // End states (Animations)
+        // Visible State
         switch (animation) {
-            case 'zoom-in': return 'animate-scale-in opacity-100 scale-100';
-            case 'slide-right': return 'animate-slide-in-left-fade opacity-100 translate-x-0';
-            case 'fade-up': return 'animate-slide-up-fade opacity-100 translate-y-0';
-            default: return 'animate-fade-in opacity-100';
+            case 'zoom-in': return `${base} opacity-100 scale-100`;
+            case 'slide-right': return `${base} opacity-100 translate-x-0`;
+            default: return `${base} opacity-100 translate-y-0`; // fade-up
         }
     };
 
     return (
         <div 
             ref={ref} 
-            className={`transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${getAnimationClass()} ${className}`}
+            className={`${getTransitionClasses()} ${className}`}
             style={{ transitionDelay: `${delay}ms` }}
         >
             {children}

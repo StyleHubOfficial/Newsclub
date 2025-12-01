@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
 import RevealOnScroll from './RevealOnScroll';
@@ -43,6 +42,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     const trendingTopics = ["Artificial Intelligence", "Space Exploration", "Quantum Tech", "Biotech", "Cybersecurity", "Green Energy"];
 
     // Reusable Section Heading Component
+    // We add a specific class to trigger the width expansion on reveal
     const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNode, accent?: 'primary' | 'secondary' | 'accent' | 'white' }> = ({ children, icon, accent = 'primary' }) => {
         const colorMap = {
             primary: 'from-brand-primary via-brand-accent',
@@ -58,15 +58,16 @@ const HomeView: React.FC<HomeViewProps> = ({
         };
 
         return (
-            <RevealOnScroll animation="zoom-in">
-                <div className="relative inline-block mb-8 group">
+            <RevealOnScroll animation="zoom-in" className="group">
+                <div className="relative inline-block mb-8">
                     <div className="flex items-center gap-3 relative z-10">
                         {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
                         <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase animate-text-shimmer bg-[length:200%_auto]">
                             {children}
                         </h3>
                     </div>
-                    {/* Neon Underline - Auto Draws on Reveal */}
+                    {/* Neon Underline - Uses group-hover-like logic controlled by RevealOnScroll's visibility */}
+                    {/* Since RevealOnScroll adds opacity-100, we can use that to trigger the width transition if we use a child combinator or just the animate class */}
                     <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line origin-left`}></div>
                 </div>
             </RevealOnScroll>

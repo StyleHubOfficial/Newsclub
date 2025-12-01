@@ -34,3 +34,16 @@ export type AnalysisResult = {
     title: string;
     content: string;
 };
+
+export type UserRole = 'user' | 'member' | 'admin';
+
+export interface UserProfile {
+    uid: string;
+    email: string | null;
+    displayName: string;
+    phoneNumber?: string;
+    studentClass?: string;
+    role: UserRole;
+    clubId?: string;
+    createdAt: any;
+}

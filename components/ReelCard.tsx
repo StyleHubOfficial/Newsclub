@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NewsArticle } from '../types';
 import { BookmarkIcon } from './icons';
@@ -34,10 +33,19 @@ const ReelCard: React.FC<ReelCardProps> = ({ article, onClick, onToggleSave, isS
             <div className="absolute top-20 right-6 md:right-12 z-30">
                 <button 
                     onClick={handleSaveClick} 
-                    className={`p-3 rounded-full transition-all backdrop-blur-xl border border-white/10 ${isSaved ? 'bg-brand-primary text-white shadow-[0_0_20px_#0ea5e9]' : 'bg-black/30 text-white hover:text-brand-primary hover:bg-black/50'}`}
+                    className={`
+                        group/icon relative overflow-hidden
+                        p-3 rounded-full transition-all duration-300 backdrop-blur-xl border border-white/10 
+                        ${isSaved 
+                            ? 'bg-brand-primary text-white shadow-[0_0_20px_#0ea5e9]' 
+                            : 'bg-black/30 text-white hover:text-brand-primary hover:bg-black/50'}
+                        hover:scale-110 hover:rotate-12
+                        active:scale-95 active:animate-ripple
+                    `}
                     aria-label={isSaved ? "Unsave article" : "Save article"}
                 >
-                    <BookmarkIcon isSaved={isSaved} className="h-6 w-6 md:h-8 md:w-8" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity"></div>
+                    <BookmarkIcon isSaved={isSaved} className="h-6 w-6 md:h-8 md:w-8 relative z-10" />
                 </button>
             </div>
             

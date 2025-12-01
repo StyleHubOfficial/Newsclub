@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NewsArticle, AnalysisResult } from '../types';
 import { getFastSummary, getDeepAnalysis, generateNewsBroadcastSpeech } from '../services/geminiService';
@@ -262,11 +261,33 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
         active:scale-95
     `;
 
+    // Neon Circular Action Icon Style
+    const actionIconClass = `
+        relative group/icon overflow-hidden
+        p-2 rounded-full transition-all duration-300 border border-white/10 
+        bg-black/40 text-brand-text-muted
+        hover:text-white hover:bg-white/10 hover:border-white/30
+        hover:scale-110 hover:rotate-12
+        active:scale-95 active:animate-ripple
+    `;
+
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Modal Container with Page Enter Transition */}
-            <div className="bg-[#050505]/60 w-full max-w-5xl max-h-[90vh] rounded-[22px] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 flex flex-col animate-page-enter relative overflow-hidden backdrop-blur-2xl ring-1 ring-white/5" onClick={e => e.stopPropagation()}>
-                
+            {/* FLOATING GLASS PANEL - MODAL */}
+            <div 
+                className="
+                    bg-[#050505]/80 backdrop-blur-2xl 
+                    w-full max-w-5xl max-h-[90vh] 
+                    rounded-[24px] 
+                    shadow-[0_0_50px_rgba(58,190,254,0.15)] 
+                    border border-white/10 ring-1 ring-white/5 
+                    flex flex-col animate-page-enter relative overflow-hidden
+                " 
+                onClick={e => e.stopPropagation()}
+            >
+                {/* HOLOGRAPHIC TEXTURE OVERLAY */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+
                 {/* Horizontal Laser Sweep */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-accent to-transparent z-50 animate-scan-line"></div>
 
@@ -280,8 +301,8 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     >
                         <CloseIcon />
                     </button>
-                    <div className="absolute bottom-4 left-6 right-6">
-                         <span className="inline-block bg-brand-primary/20 text-brand-primary border border-brand-primary/50 font-bold text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm mb-2 backdrop-blur-md">
+                    <div className="absolute bottom-4 left-6 right-6 z-10">
+                         <span className="inline-block bg-brand-primary/20 text-brand-primary border border-brand-primary/50 font-bold text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-sm mb-2 backdrop-blur-md shadow-[0_0_10px_rgba(58,190,254,0.3)]">
                             {article.category}
                         </span>
                         <h2 className="font-orbitron text-xl md:text-3xl text-white drop-shadow-lg leading-tight line-clamp-2">{article.title}</h2>
@@ -327,7 +348,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     </div>
 
                     <div className="flex items-center gap-3 w-full md:w-auto justify-end relative">
-                         {/* Text-to-Speech Trigger */}
+                         {/* Audio Agent */}
                          <div className="relative flex items-center gap-2 bg-black/40 rounded-full p-1 border border-white/10 shadow-inner">
                             <button 
                                 onClick={handleTextToSpeech}
@@ -335,7 +356,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                 className={`
                                     flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 active:scale-95
                                     ${audioReady 
-                                        ? 'text-black bg-brand-accent shadow-[0_0_15px_#28FFD3] animate-pulse-glow font-bold' 
+                                        ? 'text-black bg-brand-accent shadow-[0_0_15px_#28FFD3] animate-pulse-glow font-bold ring-1 ring-brand-accent' 
                                         : 'text-brand-text-muted hover:text-white hover:bg-white/10 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]'}
                                 `}
                             >
@@ -373,9 +394,10 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                          <div className="relative" ref={shareButtonRef as any}>
                             <button 
                                 onClick={() => setShareOpen(!isShareOpen)}
-                                className="p-2 rounded-full text-brand-text-muted hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10 active:scale-95"
+                                className={actionIconClass}
                             >
-                                <ShareIcon />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity"></div>
+                                <ShareIcon className="relative z-10" />
                             </button>
                             {isShareOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-fade-in">
@@ -391,23 +413,32 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
 
                         <button 
                             onClick={() => onToggleSave(article.id)} 
-                            className={`p-2 rounded-full transition-all duration-300 border border-transparent active:scale-95 ${isSaved ? 'text-brand-primary bg-brand-primary/10 shadow-[0_0_10px_rgba(58,190,254,0.2)] border-brand-primary/30' : 'text-brand-text-muted hover:text-white hover:bg-white/10 hover:border-white/10'}`}
+                            className={`
+                                group/icon relative overflow-hidden
+                                p-2 rounded-full transition-all duration-300 border border-transparent 
+                                ${isSaved 
+                                    ? 'text-brand-primary bg-brand-primary/10 shadow-[0_0_10px_rgba(58,190,254,0.2)] border-brand-primary/30' 
+                                    : 'text-brand-text-muted hover:text-white hover:bg-white/10 hover:border-white/10'}
+                                hover:scale-110 hover:rotate-12
+                                active:scale-95 active:animate-ripple
+                            `}
                         >
-                            <BookmarkIcon isSaved={isSaved} />
+                            <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity"></div>
+                            <BookmarkIcon isSaved={isSaved} className="relative z-10" />
                         </button>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-grow p-4 md:p-6 overflow-y-auto scroll-smooth relative">
+                <div className="flex-grow p-4 md:p-6 overflow-y-auto scroll-smooth relative z-10">
                     {isAudioLoading && (
-                        <div className="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm z-30 flex items-center justify-center animate-fade-in">
+                        <div className="absolute inset-0 bg-[#050505]/80 backdrop-blur-sm z-30 flex items-center justify-center animate-fade-in rounded-[22px]">
                              <HexagonLoader text="SYNTHESIZING AUDIO" />
                         </div>
                     )}
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-sm flex justify-between items-center backdrop-blur-sm">
+                        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-sm flex justify-between items-center backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
                             {error}
                             <button onClick={() => setError(null)}><CloseIcon className="w-4 h-4"/></button>
                         </div>
@@ -419,8 +450,9 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                  {(audioReady || isAudioLoading) && !isAudioLoading && (
                     <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up relative z-30">
                          <div className="flex justify-between items-center">
-                            <span className="font-orbitron text-xs text-brand-text-muted tracking-widest uppercase">
-                                {isPlaying ? 'Now Playing' : 'Paused'}
+                            <span className="font-orbitron text-xs text-brand-text-muted tracking-widest uppercase flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-brand-accent animate-pulse' : 'bg-gray-500'}`}></span>
+                                {isPlaying ? 'Playing Stream' : 'Stream Paused'}
                             </span>
                             {/* Visualizer using the state node */}
                             <div className="h-10 w-full max-w-xs opacity-80">
@@ -439,6 +471,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                                         shadow-[0_0_20px_rgba(255,255,255,0.4)]
                                         hover:scale-110 hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] 
                                         active:scale-95
+                                        border border-white/50
                                     "
                                 >
                                     {isPlaying ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6 ml-1"/>}
@@ -450,8 +483,8 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                              </div>
 
                              <div className="flex flex-col flex-grow max-w-xs gap-1">
-                                <div className="flex justify-between text-[10px] text-brand-text-muted">
-                                    <span>Volume</span>
+                                <div className="flex justify-between text-[10px] text-brand-text-muted font-orbitron">
+                                    <span>Gain Level</span>
                                     <span>{Math.round(volume * 100)}%</span>
                                 </div>
                                 <input 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CloseIcon, SettingsIcon } from './icons';
 
@@ -44,21 +43,24 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-[#050505]/90 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            {/* Glass Container with Page Enter Transition */}
+            {/* FLOATING GLASS PANEL */}
             <div className="
                 bg-[#050505]/80 backdrop-blur-2xl 
                 w-full max-w-2xl 
                 rounded-[22px] 
-                shadow-[0_0_60px_-10px_rgba(123,47,255,0.15)] 
+                shadow-[0_0_50px_rgba(123,47,255,0.15)] 
                 border border-white/10 ring-1 ring-white/5 
                 flex flex-col animate-page-enter relative overflow-hidden
             " onClick={(e) => e.stopPropagation()}>
                 
+                {/* Holographic Texture */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+
                 {/* Horizontal Laser Sweep */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent z-50 animate-scan-line"></div>
 
                 {/* Header */}
-                <header className="p-5 border-b border-brand-secondary/20 flex justify-between items-center bg-white/5 backdrop-blur-xl rounded-t-[22px]">
+                <header className="p-5 border-b border-brand-secondary/20 flex justify-between items-center bg-white/5 backdrop-blur-xl rounded-t-[22px] relative z-10">
                      <div className="flex items-center gap-3">
                         <div className="p-2 bg-brand-secondary/10 rounded-full border border-brand-secondary/30 text-brand-secondary shadow-[0_0_10px_rgba(123,47,255,0.2)]">
                             <SettingsIcon className="w-5 h-5" />
@@ -72,7 +74,7 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
                     </button>
                 </header>
 
-                <div className="p-6 md:p-8 flex-grow overflow-y-auto space-y-10">
+                <div className="p-6 md:p-8 flex-grow overflow-y-auto space-y-10 relative z-10">
                     {/* Categories Section */}
                     <div>
                         <h3 className="font-orbitron text-xs text-brand-primary mb-6 tracking-[0.2em] uppercase flex items-center gap-2 border-b border-white/5 pb-2">
@@ -122,7 +124,7 @@ const PersonalizationModal: React.FC<PersonalizationModalProps> = ({
                     </div>
                 </div>
 
-                <footer className="p-5 border-t border-white/10 flex justify-end gap-4 bg-white/5 backdrop-blur-xl rounded-b-[22px]">
+                <footer className="p-5 border-t border-white/10 flex justify-end gap-4 bg-white/5 backdrop-blur-xl rounded-b-[22px] relative z-10">
                      <button 
                         onClick={onClose} 
                         className="

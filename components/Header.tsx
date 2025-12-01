@@ -1,15 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon } from './icons';
+import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon } from './icons';
 import { loginWithGoogle, logoutUser, auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { getUserProfile } from '../services/dbService';
+import { UserRole } from '../types';
 
 interface HeaderProps {
     onSearch: (query: string) => void;
     isSearching: boolean;
     onPersonalizeClick: () => void;
-    viewMode: 'grid' | 'reels';
-    onToggleViewMode: (mode: 'grid' | 'reels') => void;
+    viewMode: 'grid' | 'reels' | 'club';
+    onToggleViewMode: (mode: 'grid' | 'reels' | 'club') => void;
     showSavedOnly: boolean;
     onToggleShowSaved: () => void;
     onOpenChat: () => void;
@@ -30,11 +32,18 @@ const Header: React.FC<HeaderProps> = ({
     const [query, setQuery] = useState('');
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [userRole, setUserRole] = useState<UserRole>('user');
     const [authDomainError, setAuthDomainError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+            if (currentUser) {
+                const profile = await getUserProfile(currentUser.uid);
+                if (profile) setUserRole(profile.role);
+            } else {
+                setUserRole('user');
+            }
         });
         return () => unsubscribe();
     }, []);
@@ -167,6 +176,17 @@ const Header: React.FC<HeaderProps> = ({
                             <ReelsIcon className="h-4 w-4" />
                             <span>REELS</span>
                         </button>
+
+                        {/* 6. SUNRISE CLUB TAB (Conditional) */}
+                        {(userRole === 'member' || userRole === 'admin') && (
+                            <button
+                                onClick={() => onToggleViewMode('club')}
+                                className={navButtonStyle(viewMode === 'club', 'brand-accent', 'rgba(40,255,211,0.3)')}
+                            >
+                                <ShieldIcon className="h-4 w-4" />
+                                <span>CLUB</span>
+                            </button>
+                        )}
                     </nav>
 
                     {/* RIGHT SIDE (Mobile Icons + Profile) */}

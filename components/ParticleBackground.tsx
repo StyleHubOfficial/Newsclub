@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 
 const ParticleBackground: React.FC = () => {
@@ -6,7 +5,8 @@ const ParticleBackground: React.FC = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-             // Basic parallax stub if needed globally, but CSS animation handles most movement
+            // Apply a parallax factor (e.g., background moves at 10% of scroll speed)
+            setOffsetY(window.scrollY * 0.1);
         };
 
         window.addEventListener('scroll', handleScroll);
@@ -15,17 +15,34 @@ const ParticleBackground: React.FC = () => {
 
     return (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#050505]">
-            {/* 1. Faint Circuit Pattern Overlay - Parallax Movement simulated via CSS animation */}
-            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] animate-float" style={{ animationDuration: '20s' }}></div>
+            {/* 1. Faint Circuit Pattern Overlay - Parallax Movement */}
+            <div 
+                className="absolute inset-0 bg-grid-pattern opacity-[0.03]" 
+                style={{ 
+                    transform: `translateY(-${offsetY}px)`,
+                    transition: 'transform 0.1s ease-out'
+                }} 
+            ></div>
 
-            {/* 2. Soft Glowing Gradients (Blobs) */}
-            <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] animate-pulse-glow"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-brand-secondary/10 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
-            <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-brand-accent/5 rounded-full blur-[100px] animate-float"></div>
+            {/* 2. Soft Glowing Gradients (Blobs) - Slower Parallax */}
+            <div 
+                className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] animate-pulse-glow"
+                style={{ transform: `translateY(-${offsetY * 0.5}px)` }}
+            ></div>
+            <div 
+                className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-brand-secondary/10 rounded-full blur-[120px] animate-pulse-glow" 
+                style={{ 
+                    animationDelay: '2s',
+                    transform: `translateY(-${offsetY * 0.8}px)` 
+                }}
+            ></div>
+            <div 
+                className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-brand-accent/5 rounded-full blur-[100px] animate-float"
+                style={{ transform: `translateY(-${offsetY * 0.3}px)` }}
+            ></div>
 
-            {/* 3. Floating Particles Layer */}
+            {/* 3. Floating Particles Layer - Independent Float Animation */}
             <div className="absolute inset-0">
-                {/* Generate random particles via CSS */}
                 {Array.from({ length: 20 }).map((_, i) => (
                     <div
                         key={i}

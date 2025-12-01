@@ -20,7 +20,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
         <div 
             className={`
                 relative z-0 group cursor-pointer overflow-hidden
-                rounded-[22px] 
+                rounded-[24px] 
                 bg-gradient-to-br from-white/10 via-[#050505]/40 to-transparent
                 backdrop-blur-xl 
                 border border-white/10
@@ -45,8 +45,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-sheen pointer-events-none z-20 w-1/2 h-full skew-x-12"></div>
 
             {/* Corner Accents - Hi-Tech Brackets */}
-            <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-white/20 rounded-tl-[20px] group-hover:border-brand-primary group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
-            <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-white/20 rounded-br-[20px] group-hover:border-brand-accent group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
+            <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-white/20 rounded-tl-[24px] group-hover:border-brand-primary group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
+            <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-white/20 rounded-br-[24px] group-hover:border-brand-accent group-hover:w-12 group-hover:h-12 transition-all duration-500 z-20"></div>
 
             <div className="relative z-10">
                 <div className="relative overflow-hidden h-52">
@@ -54,12 +54,24 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, onClick, onToggleSave, isS
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-90"></div>
                     
                     <div className="absolute top-3 right-3 z-30">
+                        {/* Neon Circular Action Icon */}
                         <button 
                             onClick={handleSaveClick} 
-                            className={`p-2.5 rounded-full transition-all backdrop-blur-xl border border-white/10 ${isSaved ? 'bg-brand-primary text-[#050505] shadow-[0_0_15px_#3ABEFE]' : 'bg-black/40 text-white hover:text-brand-primary hover:bg-black/60 hover:border-brand-primary/50'}`}
+                            className={`
+                                group/icon relative overflow-hidden
+                                p-2.5 rounded-full transition-all duration-300 backdrop-blur-xl border 
+                                ${isSaved 
+                                    ? 'bg-brand-primary text-[#050505] shadow-[0_0_15px_#3ABEFE] border-brand-primary' 
+                                    : 'bg-black/40 text-white border-white/10 hover:text-brand-primary hover:bg-black/60 hover:border-brand-primary/50'
+                                }
+                                hover:scale-110 hover:rotate-12
+                                active:scale-95 active:animate-ripple
+                            `}
                             aria-label={isSaved ? "Unsave article" : "Save article"}
                         >
-                            <BookmarkIcon isSaved={isSaved} className="w-5 h-5 group-hover:animate-pulse-once" />
+                            {/* Inner Hologram Reflection */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover/icon:opacity-100 transition-opacity"></div>
+                            <BookmarkIcon isSaved={isSaved} className="w-5 h-5 relative z-10" />
                         </button>
                     </div>
 

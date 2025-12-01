@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import NewsCard from './components/NewsCard';
@@ -12,14 +13,15 @@ import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import HomeView from './components/HomeView'; 
+import AuthModal from './components/AuthModal';
 import ParticleBackground from './components/ParticleBackground';
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
-import { NewsArticle } from './types';
+import { BoltIcon, MicIcon, SoundWaveIcon, ShieldIcon } from './components/icons';
+import { NewsArticle, UserRole } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { toggleCloudSavedArticle, loadUserData, saveUserPreferences } from './services/dbService';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -111,6 +113,8 @@ const App = () => {
     // New State for Landing Page
     const [showLanding, setShowLanding] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [userRole, setUserRole] = useState<UserRole>('user');
+    const [showAuthModal, setShowAuthModal] = useState(false);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
     const [isChatOpen, setChatOpen] = useState(false);
@@ -124,18 +128,39 @@ const App = () => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
-    const [viewMode, setViewMode] = useState<'grid' | 'reels'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club'>('grid');
     
     const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
+    // Scroll Logic States
+    const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up');
+    const [isAtTop, setIsAtTop] = useState(true);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const lastScrollY = useRef(0);
+    const scrollTimeout = useRef<number | null>(null);
+
     const observer = useRef<IntersectionObserver | null>(null);
 
     // Auth & Data Sync
+    const checkUserProfile = useCallback(async (user: User) => {
+        const profile = await getUserProfile(user.uid);
+        if (profile) {
+            setUserRole(profile.role);
+            setShowAuthModal(false);
+        } else {
+            // Profile doesn't exist - Trigger signup flow
+            setShowAuthModal(true);
+        }
+    }, []);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
             if (user) {
+                // Check if profile exists in DB
+                await checkUserProfile(user);
+
                 // Load Cloud Data
                 const userData = await loadUserData(user.uid);
                 if (userData) {
@@ -151,7 +176,13 @@ const App = () => {
             }
         });
         return () => unsubscribe();
-    }, []);
+    }, [checkUserProfile]);
+
+    const handleProfileComplete = async () => {
+        if (currentUser) {
+            await checkUserProfile(currentUser);
+        }
+    };
 
     // Helper to ensure mutual exclusivity
     const openTool = (tool: 'chat' | 'live' | 'audio') => {
@@ -261,6 +292,31 @@ const App = () => {
         }
     };
 
+    const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+        const currentScrollY = e.currentTarget.scrollTop;
+        
+        // Determine Direction
+        if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+            setScrollDirection('down');
+        } else if (currentScrollY < lastScrollY.current) {
+            setScrollDirection('up');
+        }
+        
+        // Determine At Top
+        setIsAtTop(currentScrollY < 20);
+
+        // Determine Scrolling State
+        setIsScrolling(true);
+        if (scrollTimeout.current) {
+            window.clearTimeout(scrollTimeout.current);
+        }
+        scrollTimeout.current = window.setTimeout(() => {
+            setIsScrolling(false);
+        }, 150);
+
+        lastScrollY.current = currentScrollY;
+    };
+
     const baseFilteredArticles = articles.filter(article => {
         const categoryMatch = preferences.categories.length === 0 || preferences.categories.includes(article.category);
         const sourceMatch = preferences.sources.length === 0 || preferences.sources.includes(article.source);
@@ -276,7 +332,6 @@ const App = () => {
         return <LandingPage onEnterApp={() => setShowLanding(false)} />;
     }
 
-    // MAIN APP UI
     return (
         <div className="h-full bg-brand-bg font-sans flex flex-col relative overflow-hidden">
             <ParticleBackground />
@@ -292,6 +347,8 @@ const App = () => {
                     showSavedOnly={showSavedOnly}
                     onToggleShowSaved={() => setShowSavedOnly(prev => !prev)}
                     onOpenChat={() => openTool('chat')}
+                    scrollDirection={scrollDirection}
+                    isAtTop={isAtTop}
                 />
             )}
             
@@ -312,8 +369,36 @@ const App = () => {
                         />
                     </ErrorBoundary>
                 </div>
+            ) : viewMode === 'club' ? (
+                <div key="club" className="flex-grow flex flex-col items-center justify-center relative z-10 animate-page-enter p-6">
+                    <div className="text-center space-y-6 max-w-2xl">
+                        <div className="inline-block p-6 rounded-full bg-brand-accent/10 border border-brand-accent/50 shadow-[0_0_50px_rgba(40,255,211,0.2)] animate-pulse-glow">
+                            <ShieldIcon className="w-16 h-16 text-brand-accent" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-orbitron font-bold text-white tracking-wider">
+                            SUNRISE <span className="text-brand-accent">NEWS CLUB</span>
+                        </h1>
+                        <p className="text-brand-text-muted">
+                            Authorized personnel only. Accessing exclusive school reporting tools and assignments.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-8">
+                            <button className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-brand-accent/10 hover:border-brand-accent transition-all text-left group">
+                                <h3 className="font-orbitron text-brand-accent mb-2">My Assignments</h3>
+                                <p className="text-xs text-gray-400">View and submit pending news reports.</p>
+                            </button>
+                            <button className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-brand-secondary/10 hover:border-brand-secondary transition-all text-left group">
+                                <h3 className="font-orbitron text-brand-secondary mb-2">Editorial Board</h3>
+                                <p className="text-xs text-gray-400">Collaborate with other student editors.</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             ) : (
-                <main key="grid" className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter">
+                <main 
+                    key="grid" 
+                    className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter pt-16"
+                    onScroll={handleMainScroll}
+                >
                     {/* Glow Trail Effect */}
                     <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
                     
@@ -342,6 +427,11 @@ const App = () => {
                 </main>
             )}
 
+            {/* Auth Modal for New Users */}
+            {showAuthModal && currentUser && (
+                <AuthModal user={currentUser} onComplete={handleProfileComplete} />
+            )}
+
             {selectedArticle && (
                 <ErrorBoundary componentName="ArticleModal">
                     <ArticleModal 
@@ -352,6 +442,7 @@ const App = () => {
                     />
                 </ErrorBoundary>
             )}
+            
             {/* Render SearchResultsModal if we have results OR if we are currently searching */}
             {(searchResults || isSearching) && (
                 <SearchResultsModal 
@@ -426,13 +517,14 @@ const App = () => {
             {/* Bottom Nav - Hide in reels mode */}
             {viewMode !== 'reels' && (
                 <BottomNav 
-                    viewMode={viewMode}
-                    onChangeView={setViewMode}
+                    viewMode={viewMode === 'club' ? 'grid' : viewMode} // Fallback visually for mobile nav
+                    onChangeView={(mode) => setViewMode(mode)}
                     onOpenExplore={() => {
                         document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                     onOpenChat={() => openTool('chat')}
                     onOpenProfile={() => { closeAll(); setPersonalizationModalOpen(true); }}
+                    isScrolling={isScrolling}
                 />
             )}
 
