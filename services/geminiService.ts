@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality, Part } from "@google/genai";
-import type { SearchResult, NewsArticle } from '../types';
+import type { SearchResult, NewsArticle, AIFeedback } from '../types';
 
 function getAiClient() {
     let apiKey: string | undefined;
@@ -396,5 +396,69 @@ export async function generateFuturisticArticles(count: number = 4): Promise<Omi
     } catch (error) {
         console.error("Failed to generate AI articles:", error);
         return [];
+    }
+}
+
+// --- NEW FUNCTION: Analyze Student Video Submission ---
+export async function analyzeStudentVideo(videoFile: File): Promise<AIFeedback> {
+    const ai = getAiClient();
+    
+    // Convert File to Base64
+    const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(videoFile);
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+
+    const prompt = `
+        You are an expert news reporting coach. Analyze this student's news reporting video submission.
+        Evaluation Criteria:
+        1. Pronunciation & Diction
+        2. Speaking Speed (Pacing)
+        3. Confidence & Body Language
+        4. Clarity of Message
+        5. Logical Flow
+        6. Background Noise Level
+
+        Return a strict JSON object with this structure:
+        {
+            "pronunciationScore": number (0-100),
+            "speedScore": number (0-100, where 50 is ideal, <30 is too slow, >70 is too fast),
+            "confidenceScore": number (0-100),
+            "clarityScore": number (0-100),
+            "tips": ["tip1", "tip2", "tip3"],
+            "mistakes": ["mistake1", "mistake2"],
+            "strengths": ["strength1", "strength2"]
+        }
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [
+                {
+                    parts: [
+                        { text: prompt },
+                        { 
+                            inlineData: { 
+                                mimeType: videoFile.type, 
+                                data: base64Data 
+                            } 
+                        }
+                    ]
+                }
+            ],
+            config: {
+                responseMimeType: 'application/json'
+            }
+        });
+
+        if (!response.text) throw new Error("No analysis generated.");
+        return JSON.parse(response.text) as AIFeedback;
+
+    } catch (error) {
+        console.error("Video analysis failed:", error);
+        throw new Error("Failed to analyze video. Ensure the file is valid and under size limits.");
     }
 }

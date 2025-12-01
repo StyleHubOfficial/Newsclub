@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon } from './icons';
+import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon, BellIcon } from './icons';
 import { loginWithGoogle, logoutUser, auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { getUserProfile } from '../services/dbService';
+import { getUserProfile, getUserMessages } from '../services/dbService';
 import { UserRole } from '../types';
+import NotificationsModal from './NotificationsModal';
 
 interface HeaderProps {
     onSearch: (query: string) => void;
     isSearching: boolean;
     onPersonalizeClick: () => void;
-    viewMode: 'grid' | 'reels' | 'club';
-    onToggleViewMode: (mode: 'grid' | 'reels' | 'club') => void;
+    viewMode: 'grid' | 'reels' | 'club' | 'admin';
+    onToggleViewMode: (mode: 'grid' | 'reels' | 'club' | 'admin') => void;
     showSavedOnly: boolean;
     onToggleShowSaved: () => void;
     onOpenChat: () => void;
@@ -34,6 +35,8 @@ const Header: React.FC<HeaderProps> = ({
     const [user, setUser] = useState<User | null>(null);
     const [userRole, setUserRole] = useState<UserRole>('user');
     const [authDomainError, setAuthDomainError] = useState<string | null>(null);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -41,6 +44,11 @@ const Header: React.FC<HeaderProps> = ({
             if (currentUser) {
                 const profile = await getUserProfile(currentUser.uid);
                 if (profile) setUserRole(profile.role);
+                
+                // Check Notifications
+                const msgs = await getUserMessages(currentUser.uid);
+                const unread = msgs.filter(m => !m.readBy?.includes(currentUser.uid)).length;
+                setUnreadCount(unread);
             } else {
                 setUserRole('user');
             }
@@ -187,11 +195,35 @@ const Header: React.FC<HeaderProps> = ({
                                 <span>CLUB</span>
                             </button>
                         )}
+
+                        {/* 7. ADMIN PANEL (Conditional) */}
+                        {userRole === 'admin' && (
+                            <button
+                                onClick={() => onToggleViewMode('admin')}
+                                className={navButtonStyle(viewMode === 'admin', 'red-500', 'rgba(239,68,68,0.3)')}
+                            >
+                                <BoltIcon className="h-4 w-4" />
+                                <span>ADMIN</span>
+                            </button>
+                        )}
                     </nav>
 
                     {/* RIGHT SIDE (Mobile Icons + Profile) */}
                     <div className="flex items-center gap-3">
                         
+                        {/* Notification Bell */}
+                        {user && (
+                            <button 
+                                onClick={() => setShowNotifications(true)}
+                                className="p-2 text-brand-text-muted hover:text-white transition-colors hover:bg-white/5 rounded-full relative"
+                            >
+                                <BellIcon className="h-5 w-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-brand-primary rounded-full animate-pulse border border-black"></span>
+                                )}
+                            </button>
+                        )}
+
                         {/* Feedback Button */}
                         <button className="p-2 text-brand-text-muted hover:text-brand-accent transition-colors hidden sm:block hover:bg-white/5 rounded-full relative overflow-hidden active:animate-ripple" title="Feedback">
                              <MessageSquareIcon className="h-5 w-5" />
@@ -260,6 +292,11 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                 )}
             </header>
+
+            {/* NOTIFICATIONS MODAL */}
+            {showNotifications && user && (
+                <NotificationsModal userId={user.uid} onClose={() => { setShowNotifications(false); setUnreadCount(0); }} />
+            )}
 
             {/* FIREBASE DOMAIN ERROR MODAL */}
             {authDomainError && (

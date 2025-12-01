@@ -14,14 +14,16 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import HomeView from './components/HomeView'; 
 import AuthModal from './components/AuthModal';
+import ClubDashboard from './components/ClubDashboard';
+import AdminPanel from './components/AdminPanel'; // Import AdminPanel
 import ParticleBackground from './components/ParticleBackground';
 import { getShortSummary, searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon, ShieldIcon } from './components/icons';
-import { NewsArticle, UserRole } from './types';
+import { NewsArticle, UserRole, UserProfile } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile } from './services/dbService';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -113,7 +115,7 @@ const App = () => {
     // New State for Landing Page
     const [showLanding, setShowLanding] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [userRole, setUserRole] = useState<UserRole>('user');
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
 
     const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
@@ -128,7 +130,7 @@ const App = () => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isPersonalizationModalOpen, setPersonalizationModalOpen] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
-    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club' | 'admin'>('grid');
     
     const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -146,8 +148,10 @@ const App = () => {
     const checkUserProfile = useCallback(async (user: User) => {
         const profile = await getUserProfile(user.uid);
         if (profile) {
-            setUserRole(profile.role);
+            setUserProfile(profile);
             setShowAuthModal(false);
+            // Log login time
+            await logUserLogin(user.uid);
         } else {
             // Profile doesn't exist - Trigger signup flow
             setShowAuthModal(true);
@@ -332,6 +336,87 @@ const App = () => {
         return <LandingPage onEnterApp={() => setShowLanding(false)} />;
     }
 
+    // Determine Main Content Based on viewMode
+    let mainContent;
+    if (viewMode === 'reels') {
+        mainContent = (
+            <div key="reels" className="fixed inset-0 z-50 bg-black animate-page-enter">
+                 {/* Glow Trail Effect */}
+                 <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
+                <ErrorBoundary componentName="ReelsView">
+                    <ReelsView 
+                        articles={displayedArticles} 
+                        onCardClick={handleCardClick}
+                        onToggleSave={toggleSaveArticle}
+                        savedArticles={savedArticles}
+                        onLoadMore={fetchMoreArticles}
+                        isLoadingMore={isLoadingMore}
+                        onExitReels={() => setViewMode('grid')}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    } else if (viewMode === 'club') {
+        mainContent = currentUser ? (
+            <div key="club" className="flex-grow relative z-10 animate-page-enter pt-16">
+                <ErrorBoundary componentName="ClubDashboard">
+                    <ClubDashboard user={currentUser} />
+                </ErrorBoundary>
+            </div>
+        ) : (
+            <div className="flex-grow flex items-center justify-center pt-16">
+                <p className="text-white">Please Login to access Club Features.</p>
+            </div>
+        );
+    } else if (viewMode === 'admin') {
+        mainContent = (currentUser && userProfile?.role === 'admin') ? (
+            <div key="admin" className="flex-grow relative z-10 animate-page-enter pt-16 h-screen">
+                <ErrorBoundary componentName="AdminPanel">
+                    <AdminPanel adminUser={userProfile} />
+                </ErrorBoundary>
+            </div>
+        ) : (
+            <div className="flex-grow flex items-center justify-center pt-16">
+                <p className="text-red-500 font-orbitron">ACCESS DENIED. ADMIN PRIVILEGES REQUIRED.</p>
+            </div>
+        );
+    } else {
+        // Grid View
+        mainContent = (
+            <main 
+                key="grid" 
+                className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter pt-16"
+                onScroll={handleMainScroll}
+            >
+                {/* Glow Trail Effect */}
+                <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
+                
+                <div className="container mx-auto">
+                    <HomeView 
+                        articles={displayedArticles}
+                        onArticleClick={handleCardClick}
+                        onToggleSave={toggleSaveArticle}
+                        savedArticles={savedArticles}
+                        onOpenChat={() => openTool('chat')}
+                        onOpenLive={() => openTool('live')}
+                        onOpenAudio={() => openTool('audio')}
+                        onViewReels={() => setViewMode('reels')}
+                        onSearch={handleSearch}
+                    />
+                    
+                    {/* Infinite Scroll Trigger */}
+                    <div ref={lastArticleElementRef} className="h-10 w-full"></div>
+
+                    {isLoadingMore && !showSavedOnly && (
+                        <div className="flex justify-center items-center py-8">
+                            <HolographicScanner text="GENERATING NEW INTEL" />
+                        </div>
+                    )}
+                </div>
+            </main>
+        );
+    }
+
     return (
         <div className="h-full bg-brand-bg font-sans flex flex-col relative overflow-hidden">
             <ParticleBackground />
@@ -352,80 +437,7 @@ const App = () => {
                 />
             )}
             
-             {/* Main Content Area with Page Transition */}
-             {viewMode === 'reels' ? (
-                <div key="reels" className="fixed inset-0 z-50 bg-black animate-page-enter">
-                     {/* Glow Trail Effect */}
-                     <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
-                    <ErrorBoundary componentName="ReelsView">
-                        <ReelsView 
-                            articles={displayedArticles} 
-                            onCardClick={handleCardClick}
-                            onToggleSave={toggleSaveArticle}
-                            savedArticles={savedArticles}
-                            onLoadMore={fetchMoreArticles}
-                            isLoadingMore={isLoadingMore}
-                            onExitReels={() => setViewMode('grid')}
-                        />
-                    </ErrorBoundary>
-                </div>
-            ) : viewMode === 'club' ? (
-                <div key="club" className="flex-grow flex flex-col items-center justify-center relative z-10 animate-page-enter p-6">
-                    <div className="text-center space-y-6 max-w-2xl">
-                        <div className="inline-block p-6 rounded-full bg-brand-accent/10 border border-brand-accent/50 shadow-[0_0_50px_rgba(40,255,211,0.2)] animate-pulse-glow">
-                            <ShieldIcon className="w-16 h-16 text-brand-accent" />
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-orbitron font-bold text-white tracking-wider">
-                            SUNRISE <span className="text-brand-accent">NEWS CLUB</span>
-                        </h1>
-                        <p className="text-brand-text-muted">
-                            Authorized personnel only. Accessing exclusive school reporting tools and assignments.
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-8">
-                            <button className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-brand-accent/10 hover:border-brand-accent transition-all text-left group">
-                                <h3 className="font-orbitron text-brand-accent mb-2">My Assignments</h3>
-                                <p className="text-xs text-gray-400">View and submit pending news reports.</p>
-                            </button>
-                            <button className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-brand-secondary/10 hover:border-brand-secondary transition-all text-left group">
-                                <h3 className="font-orbitron text-brand-secondary mb-2">Editorial Board</h3>
-                                <p className="text-xs text-gray-400">Collaborate with other student editors.</p>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <main 
-                    key="grid" 
-                    className="flex-grow overflow-y-auto pb-24 md:pb-4 relative z-10 animate-page-enter pt-16"
-                    onScroll={handleMainScroll}
-                >
-                    {/* Glow Trail Effect */}
-                    <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-primary to-transparent opacity-50 blur-[2px] animate-scan-sweep pointer-events-none z-[60]"></div>
-                    
-                    <div className="container mx-auto">
-                        <HomeView 
-                            articles={displayedArticles}
-                            onArticleClick={handleCardClick}
-                            onToggleSave={toggleSaveArticle}
-                            savedArticles={savedArticles}
-                            onOpenChat={() => openTool('chat')}
-                            onOpenLive={() => openTool('live')}
-                            onOpenAudio={() => openTool('audio')}
-                            onViewReels={() => setViewMode('reels')}
-                            onSearch={handleSearch}
-                        />
-                        
-                        {/* Infinite Scroll Trigger */}
-                        <div ref={lastArticleElementRef} className="h-10 w-full"></div>
-
-                        {isLoadingMore && !showSavedOnly && (
-                            <div className="flex justify-center items-center py-8">
-                                <HolographicScanner text="GENERATING NEW INTEL" />
-                            </div>
-                        )}
-                    </div>
-                </main>
-            )}
+            {mainContent}
 
             {/* Auth Modal for New Users */}
             {showAuthModal && currentUser && (
@@ -467,7 +479,7 @@ const App = () => {
             )}
             
             {/* Desktop FABs - Hide in reels mode */}
-            {viewMode !== 'reels' && (
+            {viewMode !== 'reels' && viewMode !== 'admin' && (
                 <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-6 z-50">
                      <button
                         onClick={() => openTool('audio')}
@@ -517,7 +529,7 @@ const App = () => {
             {/* Bottom Nav - Hide in reels mode */}
             {viewMode !== 'reels' && (
                 <BottomNav 
-                    viewMode={viewMode === 'club' ? 'grid' : viewMode} // Fallback visually for mobile nav
+                    viewMode={(viewMode === 'club' || viewMode === 'admin') ? 'grid' : viewMode} // Fallback visually for mobile nav
                     onChangeView={(mode) => setViewMode(mode)}
                     onOpenExplore={() => {
                         document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });
