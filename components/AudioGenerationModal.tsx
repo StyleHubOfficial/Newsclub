@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
 import { NewsArticle } from '../types';
-import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon } from './icons';
+import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon, SoundWaveIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
 import { HexagonLoader } from './Loaders';
 

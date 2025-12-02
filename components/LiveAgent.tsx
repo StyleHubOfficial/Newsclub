@@ -2,21 +2,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/audioUtils';
-import { CloseIcon, MicIcon } from './icons';
+import { CloseIcon, MicIcon, BoltIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
-import { ThinkingBubble } from './Loaders';
+import { ThinkingBubble, HexagonLoader } from './Loaders';
 
 interface LiveAgentProps {
     onClose: () => void;
 }
 
 const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
-    const [status, setStatus] = useState('Initializing...');
+    const [status, setStatus] = useState('OFFLINE');
     const [transcription, setTranscription] = useState<{ user: string, model: string }[]>([]);
     const [currentTurn, setCurrentTurn] = useState({ user: '', model: '' });
     const [isListening, setIsListening] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasPermissionError, setHasPermissionError] = useState(false);
     
     const currentTurnDataRef = useRef({ user: '', model: '' });
     const thinkingTimeoutRef = useRef<number | null>(null);
@@ -52,6 +54,14 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
         scrollToBottom();
     }, [transcription, currentTurn]);
 
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            cleanup();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const getApiKey = () => {
         let key = '';
         if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) {
@@ -66,24 +76,42 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
 
     const startSession = async () => {
         setError(null);
+        setHasPermissionError(false);
+        setIsConnecting(true);
+        setStatus('INITIALIZING UPLINK...');
+
         try {
             const apiKey = getApiKey();
             if (!apiKey) throw new Error("API_KEY not found. Please set VITE_API_KEY.");
             
             const ai = new GoogleGenAI({ apiKey });
             
-            setStatus('Requesting uplink...');
-            streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // 1. Request Microphone Access (Must be first to trigger prompt)
+            setStatus('REQUESTING BIO-METRIC ACCESS...');
+            try {
+                streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (permErr) {
+                console.error("Microphone permission denied:", permErr);
+                setHasPermissionError(true);
+                throw new Error("Microphone access denied. Please allow permission in your browser settings.");
+            }
 
-            setStatus('Establishing Neural Link...');
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-            outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+            // 2. Initialize Audio Contexts
+            setStatus('ESTABLISHING NEURAL LINK...');
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            audioContextRef.current = new AudioContextClass({ sampleRate: 16000 });
+            outputAudioContextRef.current = new AudioContextClass({ sampleRate: 24000 });
             
+            // Resume contexts immediately (User Gesture context is active here)
+            await audioContextRef.current.resume();
+            await outputAudioContextRef.current.resume();
+
             const outputNode = outputAudioContextRef.current.createGain();
             analyserNodeRef.current = outputAudioContextRef.current.createAnalyser();
             outputNode.connect(analyserNodeRef.current);
             analyserNodeRef.current.connect(outputAudioContextRef.current.destination);
 
+            // 3. Connect to Gemini Live
             sessionPromiseRef.current = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 callbacks: {
@@ -91,7 +119,10 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         setStatus('LINK ESTABLISHED');
                         setIsListening(true);
                         setIsConnected(true);
+                        setIsConnecting(false);
+                        
                         if (!audioContextRef.current || !streamRef.current) return;
+                        
                         const source = audioContextRef.current.createMediaStreamSource(streamRef.current);
                         const scriptProcessor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
                         
@@ -119,8 +150,12 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                             setIsListening(true);
                             currentTurnDataRef.current.user += message.serverContent.inputTranscription.text;
                             setCurrentTurn({ ...currentTurnDataRef.current });
-                            // Simple debounce
-                            thinkingTimeoutRef.current = window.setTimeout(() => { setStatus('PROCESSING...'); setIsListening(false); }, 1000);
+                            
+                            // Simple debounce to switch state if silence follows
+                            thinkingTimeoutRef.current = window.setTimeout(() => { 
+                                setStatus('PROCESSING...'); 
+                                setIsListening(false); 
+                            }, 1000);
                         }
                         if (message.serverContent?.outputTranscription) {
                             setStatus('TRANSMITTING');
@@ -167,11 +202,13 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                         setError('Neural link severed. Retrying handshake recommended.');
                         setIsListening(false);
                         setIsConnected(false);
+                        setIsConnecting(false);
                     },
                     onclose: () => {
                         setStatus('DISCONNECTED');
                         setIsListening(false);
                         setIsConnected(false);
+                        setIsConnecting(false);
                     },
                 },
                 config: {
@@ -188,16 +225,9 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
             setStatus('SYSTEM FAILURE');
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
             setIsListening(false);
+            setIsConnecting(false);
         }
     };
-
-    useEffect(() => {
-        startSession();
-        return () => {
-            cleanup();
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
@@ -237,99 +267,134 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                 {error && (
                     <div className="bg-red-900/90 text-white p-3 text-center text-xs font-mono border-b border-red-500/50 z-10 flex justify-between items-center px-6">
                         <span>ERROR: {error}</span>
-                        <button 
-                            onClick={startSession} 
-                            className="px-3 py-1 bg-red-800 rounded border border-red-500 hover:bg-red-700 transition-colors font-orbitron text-[10px]"
-                        >
-                            RECONNECT
-                        </button>
+                        {hasPermissionError && (
+                            <span className="ml-2 font-bold underline cursor-pointer" onClick={() => window.open('chrome://settings/content/microphone', '_blank')}>FIX PERMISSIONS</span>
+                        )}
                     </div>
                 )}
 
-                {/* Chat History */}
-                <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent relative z-10">
-                    {/* Welcome Message */}
-                    <div className="flex justify-start">
-                         <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 backdrop-blur-sm shadow-lg">
-                            <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
-                            <p className="text-brand-text font-light">Live link established. I'm listening.</p>
+                {/* --- CONNECT SCREEN vs CHAT SCREEN --- */}
+                {!isConnected ? (
+                    <div className="flex-grow flex flex-col items-center justify-center relative z-10 space-y-8">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-brand-primary/20 blur-3xl rounded-full animate-pulse-glow"></div>
+                            <HexagonLoader size="lg" />
                         </div>
-                    </div>
-
-                    {transcription.map((turn, index) => (
-                        <div key={index} className="space-y-4">
-                            {turn.user && (
-                                <div className="flex justify-end animate-fade-in">
-                                    <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-2xl rounded-tr-2xl p-4 text-right shadow-[0_0_15px_rgba(58,190,254,0.1)]">
-                                        <p className="text-brand-primary text-xs font-orbitron mb-2">YOU</p>
-                                        <p className="text-white font-light">{turn.user}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {turn.model && (
-                                <div className="flex justify-start animate-fade-in">
-                                    <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 shadow-lg">
-                                        <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
-                                        <p className="text-brand-text font-light">{turn.model}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-
-                    {/* Current Turn (Real-time) */}
-                    {(currentTurn.user || currentTurn.model) && (
-                         <div className="space-y-4">
-                            {currentTurn.user && (
-                                <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-2xl rounded-tr-2xl p-4 text-right opacity-80">
-                                         <p className="text-brand-primary text-xs font-orbitron mb-2">RECEIVING...</p>
-                                        <p className="text-white font-light">{currentTurn.user}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {currentTurn.model && (
-                                <div className="flex justify-start animate-pulse">
-                                    <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary/50 rounded-r-2xl rounded-tl-2xl p-4 opacity-80">
-                                        <p className="text-brand-secondary text-xs font-orbitron mb-2">TRANSMITTING...</p>
-                                        <p className="text-brand-text font-light">{currentTurn.model}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                    
-                    {!isListening && status === 'PROCESSING...' && (
-                        <div className="flex justify-start animate-fade-in">
-                             <div className="bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4">
-                                <ThinkingBubble />
-                            </div>
-                        </div>
-                    )}
-                    <div ref={transcriptionEndRef} />
-                </div>
-
-                {/* Footer / Visualizer */}
-                <footer className="p-0 bg-black/40 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative z-10">
-                     <div className="w-full h-32 flex flex-col items-center justify-center relative">
                         
-                        {/* Status Overlay */}
-                        <div className="absolute top-2 left-0 right-0 text-center">
-                            <span className={`text-[10px] font-orbitron tracking-[0.3em] ${isListening ? 'text-brand-primary animate-pulse' : 'text-brand-text-muted'}`}>
-                                {status}
+                        <div className="text-center space-y-2">
+                            <h3 className="text-2xl font-orbitron text-white tracking-widest">NEURAL LINK OFFLINE</h3>
+                            <p className="text-brand-text-muted text-sm max-w-xs mx-auto">
+                                Initialize voice uplink to begin real-time analysis with the News Reporter Agent.
+                            </p>
+                        </div>
+
+                        <button 
+                            onClick={startSession}
+                            disabled={isConnecting}
+                            className="
+                                group relative px-10 py-4 rounded-full overflow-hidden
+                                bg-white/5 border border-brand-primary/50 text-brand-primary 
+                                font-orbitron font-bold tracking-[0.2em] 
+                                shadow-[0_0_30px_rgba(58,190,254,0.2)]
+                                hover:shadow-[0_0_50px_rgba(58,190,254,0.5)] hover:scale-105 hover:bg-brand-primary hover:text-black
+                                active:scale-95 transition-all duration-300
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                        >
+                            <span className="relative z-10 flex items-center gap-3">
+                                {isConnecting ? 'ESTABLISHING CONNECTION...' : 'ESTABLISH UPLINK'} 
+                                {!isConnecting && <BoltIcon className="w-5 h-5" />}
                             </span>
-                        </div>
-                        
-                       <div className="w-full opacity-80 mt-4 px-4">
-                           <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={80} width={600} />
-                       </div>
-                       
-                       {/* Microphone Icon Animation */}
-                       <div className={`absolute bottom-4 p-4 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110 animate-vibrate' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
-                            <MicIcon className={`h-6 w-6 ${isListening ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
-                       </div>
+                        </button>
                     </div>
-                </footer>
+                ) : (
+                    <>
+                        {/* Chat History */}
+                        <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent relative z-10">
+                            {/* Welcome Message */}
+                            <div className="flex justify-start">
+                                 <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 backdrop-blur-sm shadow-lg">
+                                    <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
+                                    <p className="text-brand-text font-light">Live link established. I'm listening.</p>
+                                </div>
+                            </div>
+
+                            {transcription.map((turn, index) => (
+                                <div key={index} className="space-y-4">
+                                    {turn.user && (
+                                        <div className="flex justify-end animate-fade-in">
+                                            <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-2xl rounded-tr-2xl p-4 text-right shadow-[0_0_15px_rgba(58,190,254,0.1)]">
+                                                <p className="text-brand-primary text-xs font-orbitron mb-2">YOU</p>
+                                                <p className="text-white font-light">{turn.user}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {turn.model && (
+                                        <div className="flex justify-start animate-fade-in">
+                                            <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 shadow-lg">
+                                                <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
+                                                <p className="text-brand-text font-light">{turn.model}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* Current Turn (Real-time) */}
+                            {(currentTurn.user || currentTurn.model) && (
+                                 <div className="space-y-4">
+                                    {currentTurn.user && (
+                                        <div className="flex justify-end animate-pulse">
+                                            <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-2xl rounded-tr-2xl p-4 text-right opacity-80">
+                                                 <p className="text-brand-primary text-xs font-orbitron mb-2">RECEIVING...</p>
+                                                <p className="text-white font-light">{currentTurn.user}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {currentTurn.model && (
+                                        <div className="flex justify-start animate-pulse">
+                                            <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary/50 rounded-r-2xl rounded-tl-2xl p-4 opacity-80">
+                                                <p className="text-brand-secondary text-xs font-orbitron mb-2">TRANSMITTING...</p>
+                                                <p className="text-brand-text font-light">{currentTurn.model}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {!isListening && status === 'PROCESSING...' && (
+                                <div className="flex justify-start animate-fade-in">
+                                     <div className="bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4">
+                                        <ThinkingBubble />
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={transcriptionEndRef} />
+                        </div>
+
+                        {/* Footer / Visualizer */}
+                        <footer className="p-0 bg-black/40 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative z-10">
+                             <div className="w-full h-32 flex flex-col items-center justify-center relative">
+                                
+                                {/* Status Overlay */}
+                                <div className="absolute top-2 left-0 right-0 text-center">
+                                    <span className={`text-[10px] font-orbitron tracking-[0.3em] ${isListening ? 'text-brand-primary animate-pulse' : 'text-brand-text-muted'}`}>
+                                        {status}
+                                    </span>
+                                </div>
+                                
+                               <div className="w-full opacity-80 mt-4 px-4">
+                                   <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={80} width={600} />
+                               </div>
+                               
+                               {/* Microphone Icon Animation */}
+                               <div className={`absolute bottom-4 p-4 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110 animate-vibrate' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
+                                    <MicIcon className={`h-6 w-6 ${isListening ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
+                               </div>
+                            </div>
+                        </footer>
+                    </>
+                )}
             </div>
         </div>
     );
