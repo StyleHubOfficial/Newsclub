@@ -69,6 +69,13 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
 // Verify Club Credentials
 export const verifyClubCredentials = async (clubId: string, tempPass: string): Promise<boolean> => {
+    // 1. HARDCODED BYPASS FOR DEMO/TESTING
+    // Allows login even if Firestore data hasn't been seeded manually
+    if (clubId === "SUN-001" && tempPass === "news2024") {
+        return true;
+    }
+
+    // 2. Real Database Check
     try {
         const q = query(
             collection(db, "club_members"), 

@@ -225,6 +225,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLoginSuccess }) => {
                                         >
                                             VERIFY & LOGIN
                                         </button>
+                                        <p className="text-[10px] text-brand-text-muted text-center font-mono opacity-50">
+                                            DEMO: SUN-001 / news2024
+                                        </p>
                                     </form>
                                 )}
 

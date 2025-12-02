@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NewsArticle } from '../types';
 import { BookmarkIcon } from './icons';

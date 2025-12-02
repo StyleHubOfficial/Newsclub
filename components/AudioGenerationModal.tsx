@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
@@ -207,6 +208,7 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         // Progress Text Animation
         let intervalId = 0;
         let messageIndex = 0;
+        // @ts-ignore
         intervalId = window.setInterval(() => {
             messageIndex = (messageIndex + 1) % progressMessages.length;
             setProgressMessage(progressMessages[messageIndex]);
@@ -233,219 +235,272 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
             if (audioData) {
                 const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
                 audioBufferRef.current = buffer;
-                
                 setStatus('ready');
-                playAudioBuffer(0); // Auto-play on success
+                playAudioBuffer(0); // Auto-play
             } else {
-                throw new Error("Audio generation failed to produce data.");
+                throw new Error("No audio data received from the neural network.");
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+
+        } catch (err: any) {
+            console.error("Audio Generation Error:", err);
+            setError(err.message || "Failed to synthesize audio.");
             setStatus('error');
         } finally {
             clearInterval(intervalId);
+            // If we didn't error or finish (though playAudioBuffer sets 'playing'), reset if stuck
+            if (status === 'generating') setStatus('idle'); 
         }
     };
 
-    // --- Render ---
-    const selectedArticle = articles.find(a => a.id === selectedArticleId);
-    
-    // Updated Mode Toggle Style - Neon Glass
-    const modeButtonStyle = (isActive: boolean) => `
-        px-4 py-2 rounded-full font-semibold transition-all duration-300 text-sm border
-        ${isActive 
-            ? 'bg-brand-primary text-white border-brand-primary shadow-[0_0_15px_rgba(58,190,254,0.4)] ring-1 ring-brand-primary/30' 
-            : 'bg-white/5 text-brand-text-muted border-white/10 hover:bg-white/10 hover:border-white/20 hover:text-white'}
-        active:scale-95
-    `;
-
     return (
-        <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-lg flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
-            {/* FLOATING GLASS PANEL */}
+        <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-md flex items-center justify-center z-[70] p-4 animate-fade-in" onClick={onClose}>
+            {/* Modal Container */}
             <div 
                 className="
-                    bg-[#050505]/80 backdrop-blur-2xl 
-                    w-full max-w-3xl 
-                    rounded-[22px] 
-                    shadow-[0_0_50px_rgba(58,190,254,0.15)] 
-                    border border-white/10 ring-1 ring-white/5 
-                    flex flex-col animate-page-enter relative overflow-hidden
+                    bg-[#0a0a0a]/90 w-full max-w-4xl h-[85vh] 
+                    rounded-[30px] border border-white/10 
+                    shadow-[0_0_60px_rgba(123,47,255,0.15)] 
+                    flex flex-col relative overflow-hidden animate-scale-in
                 " 
                 onClick={e => e.stopPropagation()}
             >
-                {/* HOLOGRAPHIC TEXTURE */}
-                <div className="absolute inset-0 bg-grid-pattern opacity-[0.05] pointer-events-none"></div>
+                {/* Holographic Texture */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none"></div>
 
-                {/* Horizontal Laser Sweep */}
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent z-50 animate-scan-line"></div>
-
-                <header className="p-4 flex justify-between items-center border-b border-brand-primary/20 bg-white/5 relative z-10">
-                    <h2 className="font-orbitron text-xl text-brand-secondary tracking-widest">NEWS REPORTER</h2>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-brand-primary transition-colors p-2 hover:bg-white/5 rounded-full">
+                {/* Header */}
+                <header className="p-6 border-b border-brand-secondary/20 flex justify-between items-center bg-white/5 backdrop-blur-xl relative z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-secondary/10 rounded-full border border-brand-secondary/30 text-brand-secondary shadow-[0_0_15px_rgba(123,47,255,0.3)]">
+                            <SparklesIcon className="w-5 h-5" />
+                        </div>
+                        <h2 className="font-orbitron text-xl text-white tracking-widest">
+                            AUDIO <span className="text-brand-secondary">STUDIO</span>
+                        </h2>
+                    </div>
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
                         <CloseIcon />
                     </button>
                 </header>
-                
-                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto relative z-10">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="bg-brand-bg/50 border border-brand-primary/20 rounded-full p-1 flex gap-1 w-min">
-                            <button onClick={() => setMode('text')} className={modeButtonStyle(mode === 'text')}>Text Input</button>
-                            <button onClick={() => setMode('article')} className={modeButtonStyle(mode === 'article')}>Article Mode</button>
-                            <button onClick={() => setMode('ai-conversation')} className={`${modeButtonStyle(mode === 'ai-conversation')} flex items-center gap-2`}>
-                                <SparklesIcon/> AI Topic
-                            </button>
-                        </div>
-                         <div className={`flex items-center gap-2 transition-opacity duration-300`}>
-                            {(['English', 'Hindi', 'Hinglish'] as Language[]).map(lang => (
-                                <button key={lang} onClick={() => setLanguage(lang)} className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${language === lang ? 'bg-brand-secondary text-white border-brand-secondary shadow-sm' : 'bg-transparent text-brand-text-muted border-transparent hover:bg-white/5'}`}>
-                                    {lang}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
 
-                    {status === 'generating' ? (
-                        <div className="flex flex-col items-center justify-center h-48 py-8 animate-fade-in">
-                            <HexagonLoader text={progressMessage} />
+                <div className="flex-grow flex flex-col md:flex-row overflow-hidden relative z-10">
+                    
+                    {/* Left Panel: Configuration */}
+                    <div className="w-full md:w-1/2 p-6 overflow-y-auto border-r border-white/5 space-y-8">
+                        
+                        {/* 1. Source Selection */}
+                        <div className="space-y-4">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-brand-secondary rounded-full"></span> Input Source
+                            </label>
+                            <div className="flex p-1 bg-black/40 rounded-xl border border-white/10">
+                                <button 
+                                    onClick={() => setMode('text')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${mode === 'text' ? 'bg-brand-secondary text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    TEXT
+                                </button>
+                                <button 
+                                    onClick={() => setMode('article')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${mode === 'article' ? 'bg-brand-secondary text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    ARTICLE
+                                </button>
+                                <button 
+                                    onClick={() => setMode('ai-conversation')}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${mode === 'ai-conversation' ? 'bg-brand-secondary text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    AI SCRIPT
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        <>
+
+                        {/* 2. Content Input */}
+                        <div className="space-y-4">
+                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-brand-secondary rounded-full"></span> Content
+                            </label>
+                            
                             {mode === 'text' && (
-                                <div className="space-y-2">
-                                    <textarea 
-                                        value={textInput}
-                                        onChange={e => setTextInput(e.target.value)}
-                                        placeholder="Enter any text here. Our AI Anchors (Orion & Celeste) will turn it into a professional news broadcast..."
-                                        className="w-full h-32 bg-white/5 border border-brand-secondary/30 rounded-xl p-4 focus:outline-none focus:border-brand-primary focus:shadow-[0_0_15px_rgba(58,190,254,0.1)] transition-all text-brand-text resize-none font-light"
-                                    />
-                                    <p className="text-[10px] text-brand-text-muted text-right font-orbitron tracking-widest">
-                                        MODE: NEURAL SCRIPTING
-                                    </p>
-                                </div>
+                                <textarea 
+                                    value={textInput}
+                                    onChange={(e) => setTextInput(e.target.value)}
+                                    placeholder="Enter text to convert to broadcast speech..."
+                                    className="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-secondary outline-none resize-none placeholder-white/20 font-light"
+                                />
                             )}
+
                             {mode === 'article' && (
-                                <div>
-                                     <select 
-                                        value={selectedArticleId || ''} 
-                                        onChange={e => setSelectedArticleId(Number(e.target.value))}
-                                        className="w-full bg-white/5 border border-brand-secondary/30 rounded-xl py-2 px-4 focus:outline-none focus:border-brand-primary transition-all text-brand-text mb-2"
-                                     >
-                                        {articles.map(article => <option key={article.id} value={article.id} className="bg-brand-bg">{article.title}</option>)}
+                                <div className="space-y-3">
+                                    <select 
+                                        value={selectedArticleId || ''}
+                                        onChange={(e) => setSelectedArticleId(Number(e.target.value))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-brand-secondary outline-none"
+                                    >
+                                        {articles.map(article => (
+                                            <option key={article.id} value={article.id} className="bg-black text-white">
+                                                {article.title}
+                                            </option>
+                                        ))}
                                     </select>
-                                    <p className="text-sm text-brand-text-muted h-10 overflow-hidden text-ellipsis px-2">{selectedArticle?.summary}</p>
+                                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <h4 className="text-xs font-bold text-gray-400 mb-2">Preview</h4>
+                                        <p className="text-xs text-gray-500 line-clamp-4 leading-relaxed">
+                                            {articles.find(a => a.id === selectedArticleId)?.content || "Select an article to preview content."}
+                                        </p>
+                                    </div>
                                 </div>
                             )}
+
                             {mode === 'ai-conversation' && (
-                                 <div className="relative">
+                                <div className="space-y-4">
                                     <textarea 
                                         value={aiTopicInput}
-                                        onChange={e => setAiTopicInput(e.target.value)}
-                                        placeholder="Describe a topic... The AI will generate a news-style conversation about it. You can also upload a .txt file."
-                                        className="w-full h-32 bg-white/5 border border-brand-secondary/30 rounded-xl p-4 focus:outline-none focus:border-brand-primary focus:shadow-[0_0_15px_rgba(58,190,254,0.1)] transition-all text-brand-text pr-28 resize-none font-light"
+                                        onChange={(e) => setAiTopicInput(e.target.value)}
+                                        placeholder="Describe a topic (e.g. 'Future of AI') or paste content..."
+                                        className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-secondary outline-none resize-none placeholder-white/20"
                                     />
-                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".txt" />
-                                    <button 
-                                        onClick={() => fileInputRef.current?.click()} 
-                                        className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-brand-bg/50 border border-brand-secondary/50 rounded-full text-sm font-semibold text-brand-text-muted hover:bg-brand-secondary/20 hover:text-white transition-colors hover:border-brand-secondary"
+                                    <div 
+                                        className="border border-dashed border-white/20 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors"
+                                        onClick={() => fileInputRef.current?.click()}
                                     >
-                                        <UploadIcon className="h-4 w-4" />
-                                        Upload
-                                    </button>
+                                        <UploadIcon className="w-6 h-6 text-gray-500 mb-2" />
+                                        <span className="text-xs text-gray-400">Upload Text File (.txt)</span>
+                                        <input type="file" ref={fileInputRef} className="hidden" accept=".txt" onChange={handleFileChange} />
+                                    </div>
                                 </div>
                             )}
-                        </>
-                    )}
-                </div>
+                        </div>
 
-                {status === 'error' && (
-                    <div className="px-6 py-2 relative z-10">
-                        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-3 text-red-200 text-center text-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                            <span className="font-bold">Error:</span> {error}
-                            <button onClick={() => setStatus('idle')} className="ml-4 underline hover:text-white">Reset</button>
+                        {/* 3. Language & Generate */}
+                        <div className="space-y-4 pt-4 border-t border-white/5">
+                             <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Broadcast Language</label>
+                                <select 
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value as Language)}
+                                    className="bg-black border border-white/10 rounded-lg px-3 py-1 text-xs text-white focus:border-brand-secondary outline-none"
+                                >
+                                    <option value="English">English</option>
+                                    <option value="Hindi">Hindi</option>
+                                    <option value="Hinglish">Hinglish</option>
+                                </select>
+                            </div>
+
+                            <button 
+                                onClick={handleGenerate}
+                                disabled={status === 'generating'}
+                                className="
+                                    w-full py-4 rounded-xl font-orbitron font-bold tracking-widest text-sm
+                                    bg-gradient-to-r from-brand-secondary to-brand-primary 
+                                    text-white shadow-[0_0_20px_rgba(123,47,255,0.4)]
+                                    hover:shadow-[0_0_30px_rgba(123,47,255,0.6)] hover:scale-[1.02]
+                                    active:scale-95 transition-all
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                    flex items-center justify-center gap-2
+                                "
+                            >
+                                {status === 'generating' ? 'SYNTHESIZING...' : 'GENERATE AUDIO'}
+                                {status !== 'generating' && <SparklesIcon className="w-4 h-4" />}
+                            </button>
+
+                            {error && (
+                                <div className="p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-center font-mono">
+                                    Error: {error}
+                                </div>
+                            )}
                         </div>
                     </div>
-                )}
 
-                <div className="px-6 pb-6 text-center min-h-[60px] flex flex-col justify-center relative z-10">
-                    {(status === 'idle' || status === 'error') && (
-                        <button 
-                            onClick={handleGenerate} 
-                            className="
-                                self-center group relative overflow-hidden px-10 py-3 rounded-full 
-                                bg-white/5 border border-brand-primary/50 
-                                text-white font-orbitron font-bold text-lg tracking-wide
-                                backdrop-blur-md
-                                transition-all duration-300
-                                hover:bg-brand-primary/20 hover:border-brand-primary hover:shadow-[0_0_30px_rgba(58,190,254,0.5)] 
-                                hover:scale-105
-                                active:scale-95 active:shadow-inner active:animate-ripple
-                            "
-                        >
-                           <span className="relative z-10">Synthesize Audio</span>
-                           {/* Inner Shine */}
-                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
-                        </button>
-                    )}
-                </div>
-                
-                 {(status === 'playing' || status === 'paused' || status === 'ready') && (
-                    <footer className="p-4 border-t border-brand-primary/20 bg-white/5 backdrop-blur-md flex flex-col gap-4 animate-slide-up relative z-10">
-                         <div className="flex justify-between items-center">
-                            <span className="font-orbitron text-xs text-brand-text-muted tracking-widest uppercase">
-                                {status === 'playing' ? 'Now Playing' : (status === 'paused' ? 'Paused' : 'Ready')}
-                            </span>
-                            <div className="h-10 w-full max-w-xs opacity-80">
-                                <AudioVisualizer analyserNode={analyserForVisualizer} width={200} height={40} barColor="#e11d48" gap={3} />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-4">
-                             <div className="flex items-center gap-3">
-                                <button 
-                                    onClick={handlePlayPauseClick}
-                                    className="
-                                        w-12 h-12 rounded-full flex items-center justify-center transition-all 
-                                        bg-white text-black 
-                                        shadow-[0_0_20px_rgba(255,255,255,0.4)]
-                                        hover:scale-110 hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] 
-                                        active:scale-95
-                                    "
-                                >
-                                    {status === 'playing' ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6 ml-1"/>}
-                                </button>
-                                <button onClick={stopAudio} className="p-3 rounded-full text-brand-text-muted hover:text-brand-accent hover:bg-white/5 transition-colors active:scale-95 border border-transparent hover:border-white/10">
-                                    <StopIcon className="w-6 h-6" />
-                                </button>
-                             </div>
-
-                             <div className="flex flex-col flex-grow max-w-xs gap-1">
-                                <div className="flex justify-between text-[10px] text-brand-text-muted">
-                                    <span>Volume</span>
-                                    <span>{Math.round(volume * 100)}%</span>
+                    {/* Right Panel: Visualization & Playback */}
+                    <div className="w-full md:w-1/2 bg-black/40 flex flex-col relative">
+                        {status === 'generating' ? (
+                            <div className="flex-grow flex flex-col items-center justify-center p-8 text-center space-y-6">
+                                <HexagonLoader size="lg" />
+                                <div className="space-y-2">
+                                    <h3 className="text-brand-secondary font-orbitron text-lg animate-pulse">{progressMessage}</h3>
+                                    <p className="text-xs text-gray-500 font-mono">Processing neural tensors...</p>
                                 </div>
-                                <input 
-                                    type="range" 
-                                    min="0" max="1" step="0.01" 
-                                    value={volume} 
-                                    onChange={(e) => setVolume(Number(e.target.value))}
-                                    className="w-full h-1 bg-brand-surface rounded-lg appearance-none cursor-pointer accent-brand-secondary"
-                                />
-                             </div>
-
-                            <div className="flex items-center gap-1 bg-black/40 border border-brand-primary/20 rounded-lg p-1">
-                                {[1, 1.25, 1.5].map(rate => (
-                                    <button 
-                                        key={rate} 
-                                        onClick={() => setPlaybackRate(rate)}
-                                        className={`px-2 py-1 text-[10px] font-bold rounded transition-colors ${playbackRate === rate ? 'bg-brand-secondary text-white shadow-sm' : 'text-brand-text-muted hover:bg-white/10'}`}
-                                    >
-                                       {rate}x
-                                    </button>
-                                ))}
                             </div>
-                        </div>
-                    </footer>
-                )}
+                        ) : (
+                            <div className="flex-grow flex flex-col">
+                                {/* Visualizer Area */}
+                                <div className="flex-grow flex items-center justify-center p-8 relative overflow-hidden">
+                                     {/* Background Glow */}
+                                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-brand-secondary/20 rounded-full blur-[100px] transition-opacity duration-1000 ${status === 'playing' ? 'opacity-100 animate-pulse' : 'opacity-20'}`}></div>
+                                    
+                                    <div className="relative z-10 w-full">
+                                        {status === 'idle' || status === 'error' ? (
+                                            <div className="text-center text-gray-600">
+                                                <SoundWaveIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                                <p className="text-sm font-light">Audio visualization will appear here.</p>
+                                            </div>
+                                        ) : (
+                                            <AudioVisualizer 
+                                                analyserNode={analyserForVisualizer} 
+                                                barColor="#7B2FFF" 
+                                                gap={4} 
+                                                height={200} 
+                                                width={400} 
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Controls Footer */}
+                                <div className="p-6 bg-white/5 border-t border-white/10 backdrop-blur-xl">
+                                    <div className="flex items-center justify-between gap-4">
+                                        {/* Play/Pause Main Button */}
+                                        <button 
+                                            onClick={handlePlayPauseClick}
+                                            disabled={status === 'idle' || status === 'error'}
+                                            className={`
+                                                w-16 h-16 rounded-full flex items-center justify-center transition-all 
+                                                border border-white/20 shadow-lg
+                                                ${status === 'playing' 
+                                                    ? 'bg-brand-secondary text-white shadow-[0_0_20px_#7B2FFF]' 
+                                                    : 'bg-white text-black hover:scale-105'}
+                                                disabled:opacity-30 disabled:cursor-not-allowed
+                                            `}
+                                        >
+                                            {status === 'playing' ? <PauseIcon className="w-8 h-8" /> : <PlayIcon className="w-8 h-8 ml-1" />}
+                                        </button>
+
+                                        {/* Volume & Speed */}
+                                        <div className="flex-grow space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-bold text-gray-500 w-8">VOL</span>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" max="1" step="0.05" 
+                                                    value={volume} 
+                                                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                                    className="flex-grow h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-secondary"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                 <span className="text-[10px] font-bold text-gray-500 w-8">SPD</span>
+                                                 {[0.75, 1, 1.25, 1.5].map(rate => (
+                                                     <button 
+                                                        key={rate}
+                                                        onClick={() => setPlaybackRate(rate)}
+                                                        className={`
+                                                            px-2 py-1 rounded text-[10px] font-bold transition-colors border border-transparent
+                                                            ${playbackRate === rate 
+                                                                ? 'bg-white/10 text-white border-white/20' 
+                                                                : 'text-gray-600 hover:text-gray-300'}
+                                                        `}
+                                                     >
+                                                         {rate}x
+                                                     </button>
+                                                 ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import { streamChatResponse, generateImageFromPrompt, resetChat } from '../services/geminiService';
