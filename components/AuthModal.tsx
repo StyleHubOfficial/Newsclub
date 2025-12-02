@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { User } from 'firebase/auth';
-import { ShieldIcon, UserIcon, BoltIcon } from './icons';
+import { ShieldIcon, UserIcon, BoltIcon, LogOutIcon } from './icons';
 import { verifyClubCredentials, createUserProfile } from '../services/dbService';
+import { logoutUser } from '../services/firebase';
 import { HexagonLoader } from './Loaders';
 
 interface AuthModalProps {
@@ -60,6 +61,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
         }
     };
 
+    const handleLogout = async () => {
+        await logoutUser();
+        // The App component will detect auth state change and remove this modal
+    };
+
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-xl flex items-center justify-center z-[100] p-4">
             <div className="
@@ -71,6 +77,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary to-transparent animate-scan-line"></div>
                 <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
+
+                {/* EXIT BUTTON */}
+                <button 
+                    onClick={handleLogout}
+                    className="absolute top-4 right-4 text-brand-text-muted hover:text-red-400 transition-colors z-50 flex items-center gap-1 text-[10px] font-orbitron tracking-wider bg-black/40 px-2 py-1 rounded-full border border-white/10 hover:border-red-500/30"
+                    title="Logout & Exit"
+                >
+                    EXIT <LogOutIcon className="w-3 h-3" />
+                </button>
 
                 <div className="p-8 relative z-10">
                     <div className="flex flex-col items-center mb-8">
