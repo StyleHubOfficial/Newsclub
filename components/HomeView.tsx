@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
@@ -27,6 +28,37 @@ interface HomeViewProps {
     onSearch: (query: string) => void;
 }
 
+// --- FIX: Moved SectionHeading OUTSIDE to prevent re-mounting on scroll ---
+const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNode, accent?: 'primary' | 'secondary' | 'accent' | 'white' }> = ({ children, icon, accent = 'primary' }) => {
+    const colorMap = {
+        primary: 'from-brand-primary via-brand-accent',
+        secondary: 'from-brand-secondary via-brand-primary',
+        accent: 'from-brand-accent via-white',
+        white: 'from-white via-brand-text-muted'
+    };
+    const shadowColor = {
+            primary: '#3ABEFE',
+            secondary: '#7B2FFF',
+            accent: '#28FFD3',
+            white: '#ffffff'
+    };
+
+    return (
+        <RevealOnScroll animation="zoom-in" className="group">
+            <div className="relative inline-block mb-8">
+                <div className="flex items-center gap-3 relative z-10">
+                    {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
+                    <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase animate-text-shimmer bg-[length:200%_auto]">
+                        {children}
+                    </h3>
+                </div>
+                {/* Neon Underline */}
+                <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line origin-left`}></div>
+            </div>
+        </RevealOnScroll>
+    );
+};
+
 const HomeView: React.FC<HomeViewProps> = ({
     articles,
     onArticleClick,
@@ -40,39 +72,6 @@ const HomeView: React.FC<HomeViewProps> = ({
 }) => {
     // Trending Topics Data
     const trendingTopics = ["Artificial Intelligence", "Space Exploration", "Quantum Tech", "Biotech", "Cybersecurity", "Green Energy"];
-
-    // Reusable Section Heading Component
-    // We add a specific class to trigger the width expansion on reveal
-    const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNode, accent?: 'primary' | 'secondary' | 'accent' | 'white' }> = ({ children, icon, accent = 'primary' }) => {
-        const colorMap = {
-            primary: 'from-brand-primary via-brand-accent',
-            secondary: 'from-brand-secondary via-brand-primary',
-            accent: 'from-brand-accent via-white',
-            white: 'from-white via-brand-text-muted'
-        };
-        const shadowColor = {
-             primary: '#3ABEFE',
-             secondary: '#7B2FFF',
-             accent: '#28FFD3',
-             white: '#ffffff'
-        };
-
-        return (
-            <RevealOnScroll animation="zoom-in" className="group">
-                <div className="relative inline-block mb-8">
-                    <div className="flex items-center gap-3 relative z-10">
-                        {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
-                        <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase animate-text-shimmer bg-[length:200%_auto]">
-                            {children}
-                        </h3>
-                    </div>
-                    {/* Neon Underline - Uses group-hover-like logic controlled by RevealOnScroll's visibility */}
-                    {/* Since RevealOnScroll adds opacity-100, we can use that to trigger the width transition if we use a child combinator or just the animate class */}
-                    <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line origin-left`}></div>
-                </div>
-            </RevealOnScroll>
-        );
-    };
 
     return (
         <div className="flex flex-col space-y-10 md:space-y-16 pb-24 animate-fade-in pt-8">
