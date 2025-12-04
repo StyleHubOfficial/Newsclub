@@ -136,7 +136,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLoginSuccess }) => {
                         <h2 className="font-orbitron text-2xl text-white font-bold tracking-widest mb-1">
                             ACCESS PORTAL
                         </h2>
-                        <p className="text-brand-text-muted text-xs font-light">
+                        {/* UPDATED TAGLINE */}
+                        <p className="text-brand-primary text-xs font-bold tracking-wider animate-pulse mb-2">
+                            LOGIN TO GET FULL ACCESS TO FEATURES AND NEW INTERFACE
+                        </p>
+                        <p className="text-brand-text-muted text-[10px] font-light">
                             Select your authentication protocol
                         </p>
                     </div>

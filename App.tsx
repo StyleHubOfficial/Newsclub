@@ -200,23 +200,23 @@ const App = () => {
     };
 
     // Helper to ensure mutual exclusivity
-    const openTool = (tool: 'chat' | 'live' | 'audio') => {
+    const openTool = useCallback((tool: 'chat' | 'live' | 'audio') => {
         setChatOpen(tool === 'chat');
         setLiveAgentOpen(tool === 'live');
         setAudioGenOpen(tool === 'audio');
         setSelectedArticle(null); // Close article if open
         setPersonalizationModalOpen(false); // Close personalization
         setProfileModalOpen(false);
-    };
+    }, []);
 
-    const closeAll = () => {
+    const closeAll = useCallback(() => {
         setChatOpen(false);
         setLiveAgentOpen(false);
         setAudioGenOpen(false);
         setSelectedArticle(null);
         setPersonalizationModalOpen(false);
         setProfileModalOpen(false);
-    };
+    }, []);
 
     const allCategories = [...new Set(articles.map(a => a.category))];
     const allSources = [...new Set(articles.map(a => a.source))];
@@ -274,10 +274,10 @@ const App = () => {
         if (node) observer.current.observe(node);
     }, [isLoadingMore, showSavedOnly, fetchMoreArticles]);
 
-    const handleCardClick = (article: NewsArticle) => {
+    const handleCardClick = useCallback((article: NewsArticle) => {
         closeAll();
         setSelectedArticle(article);
-    };
+    }, [closeAll]);
 
     const handleCloseModal = () => {
         setSelectedArticle(null);

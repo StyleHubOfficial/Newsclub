@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
 import RevealOnScroll from './RevealOnScroll';
@@ -28,8 +28,11 @@ interface HomeViewProps {
     onSearch: (query: string) => void;
 }
 
-// --- FIX: Moved SectionHeading OUTSIDE to prevent re-mounting on scroll ---
+// --- FIX: SectionHeading manages its own animation state ---
 const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNode, accent?: 'primary' | 'secondary' | 'accent' | 'white' }> = ({ children, icon, accent = 'primary' }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
     const colorMap = {
         primary: 'from-brand-primary via-brand-accent',
         secondary: 'from-brand-secondary via-brand-primary',
@@ -43,19 +46,31 @@ const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNo
             white: '#ffffff'
     };
 
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect(); // Ensure it only runs ONCE
+                }
+            },
+            { threshold: 0.2 }
+        );
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <RevealOnScroll animation="zoom-in" className="group">
-            <div className="relative inline-block mb-8">
-                <div className="flex items-center gap-3 relative z-10">
-                    {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
-                    <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase animate-text-shimmer bg-[length:200%_auto]">
-                        {children}
-                    </h3>
-                </div>
-                {/* Neon Underline */}
-                <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] animate-draw-line origin-left`}></div>
+        <div ref={ref} className="group relative inline-block mb-8 transition-all duration-700">
+            <div className={`flex items-center gap-3 relative z-10 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
+                <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase">
+                    {children}
+                </h3>
             </div>
-        </RevealOnScroll>
+            {/* Neon Underline - Only animates when isVisible is true */}
+            <div className={`absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r ${colorMap[accent]} to-transparent shadow-[0_0_10px_${shadowColor[accent]}] origin-left transition-all duration-1000 ${isVisible ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>
+        </div>
     );
 };
 

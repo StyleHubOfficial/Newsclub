@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
@@ -44,9 +45,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         </span>
                     </h1>
 
-                    <p className="text-xs md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-primary/30 md:pl-6 mx-auto md:mx-0 font-light">
-                         News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless glass interface.
-                    </p>
+                    <div className="space-y-4">
+                        <p className="text-xs md:text-lg text-brand-text-muted max-w-lg leading-relaxed border-l-0 md:border-l-2 border-brand-primary/30 md:pl-6 mx-auto md:mx-0 font-light">
+                             News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless glass interface.
+                        </p>
+                        
+                        {/* TAGLINE ADDITION */}
+                        <div className="inline-flex items-center gap-2 md:pl-6 animate-pulse-glow">
+                            <BoltIcon className="w-4 h-4 text-brand-primary" />
+                            <span className="text-[10px] md:text-xs font-orbitron font-bold text-brand-primary tracking-widest uppercase text-shadow-neon">
+                                Login to get full access to features and new interface
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex justify-center md:justify-start transform scale-90 md:scale-100 origin-center md:origin-left">
                          <NeonSignature />
