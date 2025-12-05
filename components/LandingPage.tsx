@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon } from './icons';
+import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon, UserIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
 import NeonSignature from './NeonSignature';
 import RevealOnScroll from './RevealOnScroll';
@@ -11,6 +11,10 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
+
+    const handleRedirect = () => {
+        window.location.href = 'https://newsclub-app.vercel.app';
+    };
 
     return (
         <div className="min-h-[100dvh] bg-[#050505] text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-black">
@@ -76,10 +80,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                             "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
-                                ENTER SYSTEM <BoltIcon />
+                                ENTER SYSTEM <BoltIcon className="w-5 h-5" />
                             </span>
                             {/* Inner Shine Effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
+                        </button>
+
+                        <button 
+                            onClick={handleRedirect}
+                            className="
+                                group relative px-10 py-4 overflow-hidden rounded-full 
+                                bg-brand-accent/10 border border-brand-accent text-brand-accent font-orbitron tracking-[0.2em] 
+                                transition-all duration-300 
+                                hover:bg-brand-accent hover:text-black hover:shadow-[0_0_40px_rgba(40,255,211,0.6)] 
+                                hover:scale-105
+                                active:scale-95 w-full md:w-auto backdrop-blur-md
+                            "
+                        >
+                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
+                                LOGIN TO NEW INTERFACE <UserIcon className="w-5 h-5" />
+                            </span>
                         </button>
                     </div>
                 </div>
