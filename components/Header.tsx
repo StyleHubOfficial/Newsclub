@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon, BellIcon } from './icons';
 import { logoutUser, auth } from '../services/firebase';
@@ -65,6 +64,11 @@ const Header: React.FC<HeaderProps> = ({
 
     const toggleSearch = () => {
         setIsSearchExpanded(!isSearchExpanded);
+    };
+
+    const handleLoginRedirect = () => {
+        // Redirect to Vercel App for Login as requested
+        window.location.href = 'https://newsclub-app.vercel.app';
     };
 
     // Helper for button styles
@@ -223,7 +227,7 @@ const Header: React.FC<HeaderProps> = ({
                              </div>
                         ) : (
                              <button 
-                                onClick={() => setShowLoginModal(true)}
+                                onClick={handleLoginRedirect}
                                 className="
                                     group relative flex items-center justify-center gap-2 px-5 py-2 rounded-full overflow-hidden
                                     bg-white/5 border border-brand-primary/50 
@@ -262,7 +266,7 @@ const Header: React.FC<HeaderProps> = ({
                 )}
             </header>
 
-            {/* LOGIN PORTAL MODAL */}
+            {/* LOGIN PORTAL MODAL - Kept here if called internally, but Header uses redirect */}
             {showLoginModal && (
                 <LoginModal onClose={() => setShowLoginModal(false)} onLoginSuccess={() => setShowLoginModal(false)} />
             )}
