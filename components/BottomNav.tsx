@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HomeIcon, ReelsIcon, CompassIcon, BoltIcon, UserIcon } from './icons';
 
@@ -37,9 +38,10 @@ const BottomNav: React.FC<BottomNavProps> = ({
                 fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe
                 bg-[#050505]/95 backdrop-blur-xl border-t border-white/5
                 transition-all duration-300 ease-out
+                /* Removed scale-95 to fix jitter */
                 ${isScrolling 
-                    ? 'scale-95 opacity-90 translate-y-2' 
-                    : 'scale-100 opacity-100 translate-y-0 shadow-[0_-10px_50px_-10px_rgba(58,190,254,0.3)]'
+                    ? 'opacity-90 translate-y-1' 
+                    : 'opacity-100 translate-y-0 shadow-[0_-10px_50px_-10px_rgba(58,190,254,0.3)]'
                 }
             `}
         >

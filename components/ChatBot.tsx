@@ -5,10 +5,12 @@ import { streamChatResponse, generateImageFromPrompt, resetChat } from '../servi
 import { CloseIcon, SendIcon, ImageIcon, MicIcon, StopIcon } from './icons';
 import { ThinkingBubble } from './Loaders';
 import { Part } from '@google/genai';
+import { User } from 'firebase/auth';
 
 interface ChatBotProps {
     isOpen: boolean;
     onClose: () => void;
+    user: User | null;
 }
 
 const BotAvatar = () => (
@@ -23,9 +25,9 @@ const BotAvatar = () => (
     </div>
 );
 
-const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
+const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything or request a visual generation.', sender: 'bot' }
+        { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything regarding News, Science, or Technology.', sender: 'bot' }
     ]);
     const [input, setInput] = useState('');
     const [mode, setMode] = useState<'chat' | 'image'>('chat');
@@ -46,7 +48,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
         if (isOpen) {
              resetChat();
              if(messages.length === 0 || messages[0].id !== 'initial') {
-                 setMessages([ { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything or request a visual generation.', sender: 'bot' } ]);
+                 setMessages([ { id: 'initial', text: 'Greetings. I am your Neural Assistant. Ask me anything regarding News, Science, or Technology.', sender: 'bot' } ]);
              }
             setError(null);
         } else {
@@ -153,6 +155,21 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose }) => {
         const botMessage: ChatMessage = { id: botMessageId, sender: 'bot', isLoading: true };
         
         setMessages(prev => [...prev, userMessage, botMessage]);
+
+        // RESTRICTION CHECK
+        if (!user) {
+             setMessages(prev => prev.map(msg => 
+                msg.id === botMessageId 
+                    ? { 
+                        ...msg, 
+                        text: "SYSTEM_ALERT: Visual Neural Synthesis is restricted to authorized personnel. Please LOGIN to access image generation capabilities.", 
+                        isLoading: false,
+                        isError: true 
+                      } 
+                    : msg
+            ));
+            return;
+        }
 
         try {
             const imageUrl = await generateImageFromPrompt(input);

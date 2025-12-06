@@ -26,6 +26,8 @@ interface HomeViewProps {
     onOpenAudio: () => void;
     onViewReels: () => void;
     onSearch: (query: string) => void;
+    isUserLoggedIn: boolean;
+    onTriggerLogin: () => void;
 }
 
 // --- FIX: SectionHeading manages its own animation state ---
@@ -83,7 +85,9 @@ const HomeView: React.FC<HomeViewProps> = ({
     onOpenLive,
     onOpenAudio,
     onViewReels,
-    onSearch
+    onSearch,
+    isUserLoggedIn,
+    onTriggerLogin
 }) => {
     // Trending Topics Data
     const trendingTopics = ["Artificial Intelligence", "Space Exploration", "Quantum Tech", "Biotech", "Cybersecurity", "Green Energy"];
@@ -323,4 +327,4 @@ const HomeView: React.FC<HomeViewProps> = ({
     );
 };
 
-export default HomeView;
+export default React.memo(HomeView); // Correct memo usage for performance

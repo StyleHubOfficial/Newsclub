@@ -6,17 +6,20 @@ import { NewsArticle } from '../types';
 import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon, SoundWaveIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
 import { HexagonLoader } from './Loaders';
+import { User } from 'firebase/auth';
 
 interface AudioGenerationModalProps {
     articles: NewsArticle[];
     onClose: () => void;
+    user: User | null;
+    onLoginRequest: () => void;
 }
 
 type Mode = 'text' | 'article' | 'ai-conversation';
 type Language = 'English' | 'Hindi' | 'Hinglish';
 const progressMessages = ["INITIALIZING NEURAL NET", "ANALYZING SYNTAX", "SCRIPTING BROADCAST", "SYNTHESIZING AUDIO WAVES", "FINALIZING OUTPUT"];
 
-const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, onClose }) => {
+const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, onClose, user, onLoginRequest }) => {
     // --- UI State ---
     const [mode, setMode] = useState<Mode>('text');
     const [textInput, setTextInput] = useState('');
@@ -51,6 +54,8 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
             if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
                 audioContextRef.current.close();
             }
+            // Stop TTS Demo
+            window.speechSynthesis.cancel();
         };
     }, []);
 
@@ -169,7 +174,29 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         }
     };
 
+    // Play a browser-based TTS demo for non-logged in users
+    const playDemo = () => {
+        window.speechSynthesis.cancel();
+        const demoText = "This is a pre-built demonstration of the News Club Audio Broadcast system. In a live environment, I would be discussing the latest breakthroughs in Mars colonization, detailing the success of the Ares 4 mission and the discovery of subterranean aquifers. To generate custom audio reports on any topic, please log in.";
+        const utterance = new SpeechSynthesisUtterance(demoText);
+        utterance.rate = 1.1;
+        utterance.pitch = 1;
+        
+        setStatus('playing'); // Mock playing state
+        window.speechSynthesis.speak(utterance);
+        
+        utterance.onend = () => {
+            setStatus('idle');
+        };
+    };
+
     const handleGenerate = async () => {
+        // AUTH CHECK
+        if (!user) {
+            onLoginRequest();
+            return;
+        }
+
         if (status === 'generating') return;
         
         if (mode === 'text' && !textInput.trim()) { setError("Please enter text or upload a file."); return; }
@@ -369,19 +396,36 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                 </div>
                             )}
 
-                            <button 
-                                onClick={handleGenerate}
-                                className="
-                                    w-full py-4 rounded-xl 
-                                    bg-gradient-to-r from-brand-secondary to-brand-primary 
-                                    text-white font-orbitron font-bold tracking-widest
-                                    shadow-[0_0_20px_rgba(123,47,255,0.4)]
-                                    hover:shadow-[0_0_30px_rgba(123,47,255,0.6)] hover:scale-[1.01]
-                                    active:scale-[0.99] transition-all
-                                "
-                            >
-                                {status === 'ready' || status === 'playing' || status === 'paused' ? 'REGENERATE AUDIO' : 'INITIATE SYNTHESIS'}
-                            </button>
+                            {user ? (
+                                <button 
+                                    onClick={handleGenerate}
+                                    className="
+                                        w-full py-4 rounded-xl 
+                                        bg-gradient-to-r from-brand-secondary to-brand-primary 
+                                        text-white font-orbitron font-bold tracking-widest
+                                        shadow-[0_0_20px_rgba(123,47,255,0.4)]
+                                        hover:shadow-[0_0_30px_rgba(123,47,255,0.6)] hover:scale-[1.01]
+                                        active:scale-[0.99] transition-all
+                                    "
+                                >
+                                    {status === 'ready' || status === 'playing' || status === 'paused' ? 'REGENERATE AUDIO' : 'INITIATE SYNTHESIS'}
+                                </button>
+                            ) : (
+                                <div className="flex gap-4">
+                                    <button 
+                                        onClick={playDemo}
+                                        className="flex-1 py-4 rounded-xl border border-brand-secondary/50 text-brand-secondary font-orbitron font-bold tracking-widest hover:bg-brand-secondary/10 hover:text-white transition-all"
+                                    >
+                                        PLAY DEMO BROADCAST
+                                    </button>
+                                    <button 
+                                        onClick={onLoginRequest}
+                                        className="flex-1 py-4 rounded-xl bg-white/10 text-white font-orbitron font-bold tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        LOGIN TO GENERATE
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </footer>
@@ -391,4 +435,3 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
 };
 
 export default AudioGenerationModal;
-    

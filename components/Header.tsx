@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon, BellIcon } from './icons';
 import { logoutUser, auth } from '../services/firebase';
@@ -223,7 +222,7 @@ const Header: React.FC<HeaderProps> = ({
                              </div>
                         ) : (
                              <button 
-                                onClick={() => window.location.href = 'https://newsclub-app.vercel.app'}
+                                onClick={() => setShowLoginModal(true)}
                                 className="
                                     group relative flex items-center justify-center gap-2 px-5 py-2 rounded-full overflow-hidden
                                     bg-white/5 border border-brand-primary/50 

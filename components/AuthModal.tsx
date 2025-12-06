@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from 'firebase/auth';
 import { ShieldIcon, UserIcon, BoltIcon, LogOutIcon } from './icons';
