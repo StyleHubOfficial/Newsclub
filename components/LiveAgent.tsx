@@ -235,7 +235,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
             <div 
                 className="
                     bg-[#050505]/80 backdrop-blur-2xl 
-                    w-full max-w-2xl h-[80vh] 
+                    w-full max-w-2xl h-[85vh] 
                     rounded-[22px] 
                     shadow-[0_0_50px_rgba(14,165,233,0.3)] 
                     border border-white/10 ring-1 ring-white/5 
@@ -309,31 +309,43 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                     </div>
                 ) : (
                     <>
-                        {/* Chat History */}
-                        <div className="flex-grow p-6 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent relative z-10">
-                            {/* Welcome Message */}
-                            <div className="flex justify-start">
-                                 <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 backdrop-blur-sm shadow-lg">
-                                    <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
-                                    <p className="text-brand-text font-light">Live link established. I'm listening.</p>
+                        {/* HOLOGRAPHIC CORE - Visual Focus */}
+                        <div className="h-40 w-full flex items-center justify-center relative flex-shrink-0 mt-4">
+                            <div className={`relative w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500
+                                ${status === 'RECEIVING INPUT' ? 'scale-110 shadow-[0_0_50px_#0ea5e9]' : ''}
+                                ${status === 'TRANSMITTING' ? 'scale-125 shadow-[0_0_60px_#7B2FFF]' : ''}
+                                ${status === 'PROCESSING...' ? 'animate-pulse shadow-[0_0_30px_#ffffff]' : ''}
+                            `}>
+                                {/* Core */}
+                                <div className={`absolute inset-0 rounded-full blur-xl opacity-60
+                                    ${status === 'RECEIVING INPUT' ? 'bg-brand-primary' : status === 'TRANSMITTING' ? 'bg-brand-secondary' : 'bg-white'}
+                                `}></div>
+                                <div className="z-10 text-white/50">
+                                    <MicIcon className="w-8 h-8" />
                                 </div>
+                                {/* Orbital Rings */}
+                                <div className="absolute inset-[-20%] border border-white/10 rounded-full animate-spin-slow"></div>
+                                <div className="absolute inset-[-10%] border border-white/5 rounded-full animate-spin-reverse"></div>
                             </div>
+                        </div>
 
+                        {/* Chat History */}
+                        <div className="flex-grow px-6 py-2 overflow-y-auto space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-brand-secondary/30 scrollbar-track-transparent relative z-10">
                             {transcription.map((turn, index) => (
                                 <div key={index} className="space-y-4">
                                     {turn.user && (
                                         <div className="flex justify-end animate-fade-in">
                                             <div className="max-w-[85%] bg-brand-primary/10 border-r-2 border-brand-primary rounded-l-2xl rounded-tr-2xl p-4 text-right shadow-[0_0_15px_rgba(58,190,254,0.1)]">
-                                                <p className="text-brand-primary text-xs font-orbitron mb-2">YOU</p>
-                                                <p className="text-white font-light">{turn.user}</p>
+                                                <p className="text-brand-primary text-xs font-orbitron mb-1 tracking-widest">YOU</p>
+                                                <p className="text-white font-light text-sm">{turn.user}</p>
                                             </div>
                                         </div>
                                     )}
                                     {turn.model && (
                                         <div className="flex justify-start animate-fade-in">
                                             <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary rounded-r-2xl rounded-tl-2xl p-4 shadow-lg">
-                                                <p className="text-brand-secondary text-xs font-orbitron mb-2">NEWS REPORTER</p>
-                                                <p className="text-brand-text font-light">{turn.model}</p>
+                                                <p className="text-brand-secondary text-xs font-orbitron mb-1 tracking-widest">NEWS REPORTER</p>
+                                                <p className="text-brand-text font-light text-sm">{turn.model}</p>
                                             </div>
                                         </div>
                                     )}
@@ -346,16 +358,16 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                                     {currentTurn.user && (
                                         <div className="flex justify-end animate-pulse">
                                             <div className="max-w-[85%] bg-brand-primary/5 border-r-2 border-brand-primary/50 rounded-l-2xl rounded-tr-2xl p-4 text-right opacity-80">
-                                                 <p className="text-brand-primary text-xs font-orbitron mb-2">RECEIVING...</p>
-                                                <p className="text-white font-light">{currentTurn.user}</p>
+                                                 <p className="text-brand-primary text-xs font-orbitron mb-1 tracking-widest">RECEIVING...</p>
+                                                <p className="text-white font-light text-sm">{currentTurn.user}</p>
                                             </div>
                                         </div>
                                     )}
                                     {currentTurn.model && (
                                         <div className="flex justify-start animate-pulse">
                                             <div className="max-w-[85%] bg-white/5 border-l-2 border-brand-secondary/50 rounded-r-2xl rounded-tl-2xl p-4 opacity-80">
-                                                <p className="text-brand-secondary text-xs font-orbitron mb-2">TRANSMITTING...</p>
-                                                <p className="text-brand-text font-light">{currentTurn.model}</p>
+                                                <p className="text-brand-secondary text-xs font-orbitron mb-1 tracking-widest">TRANSMITTING...</p>
+                                                <p className="text-brand-text font-light text-sm">{currentTurn.model}</p>
                                             </div>
                                         </div>
                                     )}
@@ -374,7 +386,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
 
                         {/* Footer / Visualizer */}
                         <footer className="p-0 bg-black/40 backdrop-blur-lg flex-shrink-0 border-t border-brand-primary/30 relative z-10">
-                             <div className="w-full h-32 flex flex-col items-center justify-center relative">
+                             <div className="w-full h-24 flex flex-col items-center justify-center relative">
                                 
                                 {/* Status Overlay */}
                                 <div className="absolute top-2 left-0 right-0 text-center">
@@ -384,12 +396,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                                 </div>
                                 
                                <div className="w-full opacity-80 mt-4 px-4">
-                                   <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={80} width={600} />
-                               </div>
-                               
-                               {/* Microphone Icon Animation */}
-                               <div className={`absolute bottom-4 p-4 rounded-full border transition-all duration-500 transform ${isListening ? 'border-brand-primary bg-brand-primary/10 shadow-[0_0_20px_#0ea5e9] scale-110 animate-vibrate' : 'border-brand-text-muted/30 bg-transparent scale-100'}`}>
-                                    <MicIcon className={`h-6 w-6 ${isListening ? 'text-brand-primary' : 'text-brand-text-muted'}`} />
+                                   <AudioVisualizer analyserNode={analyserNodeRef.current} barColor={isListening ? "#0ea5e9" : "#6366f1"} gap={2} height={60} width={600} />
                                </div>
                             </div>
                         </footer>

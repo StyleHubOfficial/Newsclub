@@ -177,10 +177,28 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     // Play a browser-based TTS demo for non-logged in users
     const playDemo = () => {
         window.speechSynthesis.cancel();
-        const demoText = "This is a pre-built demonstration of the News Club Audio Broadcast system. In a live environment, I would be discussing the latest breakthroughs in Mars colonization, detailing the success of the Ares 4 mission and the discovery of subterranean aquifers. To generate custom audio reports on any topic, please log in.";
+        
+        const demoScripts = {
+            English: "This is a pre-built demonstration of the News Club Audio Broadcast system. In a live environment, I would be discussing the latest breakthroughs in Mars colonization, detailing the success of the Ares 4 mission.",
+            Hindi: "यह न्यूज़ क्लब ऑडियो ब्रॉडकास्ट सिस्टम का डेमो है। वास्तविक प्रसारण में, मैं मंगल ग्रह पर बस्ती बसाने और एरेस 4 मिशन की सफलता के बारे में विस्तार से चर्चा करूँगा।",
+            Hinglish: "Yeh News Club Audio system ka ek demo broadcast hai. Real scenario mein, hum Mars colonization aur Ares 4 mission ki success ke baare mein detail mein baat karenge."
+        };
+
+        const demoText = demoScripts[language] || demoScripts['English'];
         const utterance = new SpeechSynthesisUtterance(demoText);
-        utterance.rate = 1.1;
+        utterance.rate = 1.0;
         utterance.pitch = 1;
+
+        // Try to match voice to language
+        const voices = window.speechSynthesis.getVoices();
+        let voice = null;
+        if (language === 'Hindi' || language === 'Hinglish') {
+            voice = voices.find(v => v.lang.includes('hi') || v.lang.includes('HI'));
+        }
+        if (!voice) {
+            voice = voices.find(v => v.lang.includes('en') && v.name.includes('Google'));
+        }
+        if (voice) utterance.voice = voice;
         
         setStatus('playing'); // Mock playing state
         window.speechSynthesis.speak(utterance);
@@ -411,16 +429,16 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                     {status === 'ready' || status === 'playing' || status === 'paused' ? 'REGENERATE AUDIO' : 'INITIATE SYNTHESIS'}
                                 </button>
                             ) : (
-                                <div className="flex gap-4">
+                                <div className="flex flex-col md:flex-row gap-4">
                                     <button 
                                         onClick={playDemo}
-                                        className="flex-1 py-4 rounded-xl border border-brand-secondary/50 text-brand-secondary font-orbitron font-bold tracking-widest hover:bg-brand-secondary/10 hover:text-white transition-all"
+                                        className="flex-1 py-4 rounded-xl border border-brand-secondary/50 text-brand-secondary font-orbitron font-bold tracking-widest hover:bg-brand-secondary/10 hover:text-white transition-all text-xs"
                                     >
-                                        PLAY DEMO BROADCAST
+                                        PLAY DEMO ({language.toUpperCase()})
                                     </button>
                                     <button 
                                         onClick={onLoginRequest}
-                                        className="flex-1 py-4 rounded-xl bg-white/10 text-white font-orbitron font-bold tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                                        className="flex-1 py-4 rounded-xl bg-white/10 text-white font-orbitron font-bold tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2 text-xs"
                                     >
                                         LOGIN TO GENERATE
                                     </button>
