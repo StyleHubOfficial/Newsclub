@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech, generateSpeechFromText } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audioUtils';
@@ -172,40 +171,6 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
             };
             reader.readAsText(file);
         }
-    };
-
-    // Play a browser-based TTS demo for non-logged in users
-    const playDemo = () => {
-        window.speechSynthesis.cancel();
-        
-        const demoScripts = {
-            English: "This is a pre-built demonstration of the News Club Audio Broadcast system. In a live environment, I would be discussing the latest breakthroughs in Mars colonization, detailing the success of the Ares 4 mission.",
-            Hindi: "यह न्यूज़ क्लब ऑडियो ब्रॉडकास्ट सिस्टम का डेमो है। वास्तविक प्रसारण में, मैं मंगल ग्रह पर बस्ती बसाने और एरेस 4 मिशन की सफलता के बारे में विस्तार से चर्चा करूँगा।",
-            Hinglish: "Yeh News Club Audio system ka ek demo broadcast hai. Real scenario mein, hum Mars colonization aur Ares 4 mission ki success ke baare mein detail mein baat karenge."
-        };
-
-        const demoText = demoScripts[language] || demoScripts['English'];
-        const utterance = new SpeechSynthesisUtterance(demoText);
-        utterance.rate = 1.0;
-        utterance.pitch = 1;
-
-        // Try to match voice to language
-        const voices = window.speechSynthesis.getVoices();
-        let voice = null;
-        if (language === 'Hindi' || language === 'Hinglish') {
-            voice = voices.find(v => v.lang.includes('hi') || v.lang.includes('HI'));
-        }
-        if (!voice) {
-            voice = voices.find(v => v.lang.includes('en') && v.name.includes('Google'));
-        }
-        if (voice) utterance.voice = voice;
-        
-        setStatus('playing'); // Mock playing state
-        window.speechSynthesis.speak(utterance);
-        
-        utterance.onend = () => {
-            setStatus('idle');
-        };
     };
 
     const handleGenerate = async () => {
@@ -408,41 +373,29 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                     
                                     <div className="flex-grow h-12 bg-black/40 rounded-xl border border-white/5 overflow-hidden relative">
                                         <div className="absolute inset-0 opacity-60">
-                                            <AudioVisualizer analyserNode={analyserForVisualizer} height={48} width={400} barColor="#7B2FFF" />
+                                            <AudioVisualizer analyserNode={analyserForVisualizer} width={500} height={48} />
                                         </div>
                                     </div>
                                 </div>
                             )}
-
-                            {user ? (
+                            
+                            {(status === 'idle' || status === 'error') && (
                                 <button 
                                     onClick={handleGenerate}
                                     className="
-                                        w-full py-4 rounded-xl 
-                                        bg-gradient-to-r from-brand-secondary to-brand-primary 
-                                        text-white font-orbitron font-bold tracking-widest
-                                        shadow-[0_0_20px_rgba(123,47,255,0.4)]
-                                        hover:shadow-[0_0_30px_rgba(123,47,255,0.6)] hover:scale-[1.01]
-                                        active:scale-[0.99] transition-all
+                                        group relative w-full py-4 rounded-xl overflow-hidden
+                                        bg-white/5 border border-brand-secondary/50
+                                        text-white font-orbitron font-bold text-lg tracking-[0.2em] 
+                                        shadow-[0_0_20px_rgba(123,47,255,0.3)]
+                                        hover:bg-brand-secondary/20 hover:border-brand-secondary hover:shadow-[0_0_40px_rgba(123,47,255,0.5)] 
+                                        active:scale-[0.98] transition-all
                                     "
                                 >
-                                    {status === 'ready' || status === 'playing' || status === 'paused' ? 'REGENERATE AUDIO' : 'INITIATE SYNTHESIS'}
+                                    <span className="relative z-10 flex items-center justify-center gap-3">
+                                        {status === 'error' ? 'RETRY SYNTHESIS' : 'INITIALIZE SYNTHESIS'} <SparklesIcon className="w-5 h-5" />
+                                    </span>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-secondary/30 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                                 </button>
-                            ) : (
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <button 
-                                        onClick={playDemo}
-                                        className="flex-1 py-4 rounded-xl border border-brand-secondary/50 text-brand-secondary font-orbitron font-bold tracking-widest hover:bg-brand-secondary/10 hover:text-white transition-all text-xs"
-                                    >
-                                        PLAY DEMO ({language.toUpperCase()})
-                                    </button>
-                                    <button 
-                                        onClick={onLoginRequest}
-                                        className="flex-1 py-4 rounded-xl bg-white/10 text-white font-orbitron font-bold tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2 text-xs"
-                                    >
-                                        LOGIN TO GENERATE
-                                    </button>
-                                </div>
                             )}
                         </div>
                     )}

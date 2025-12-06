@@ -1,31 +1,31 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Header from './components/Header';
-import NewsCard from './components/NewsCard';
-import ArticleModal from './components/ArticleModal';
-import ChatBot from './components/ChatBot';
-import LiveAgent from './components/LiveAgent';
-import SearchResultsModal from './components/SearchResultsModal';
-import PersonalizationModal from './components/PersonalizationModal';
-import ReelsView from './components/ReelsView';
-import AudioGenerationModal from './components/AudioGenerationModal';
-import BottomNav from './components/BottomNav';
-import ErrorBoundary from './components/ErrorBoundary';
-import LandingPage from './components/LandingPage';
-import HomeView from './components/HomeView'; 
-import AuthModal from './components/AuthModal';
-import ClubDashboard from './components/ClubDashboard';
-import AdminPanel from './components/AdminPanel';
-import LoginModal from './components/LoginModal'; 
-import ProfileModal from './components/ProfileModal'; 
-import ParticleBackground from './components/ParticleBackground';
-import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
-import { NewsArticle, UserProfile } from './types';
-import { HolographicScanner } from './components/Loaders';
-import { auth } from './services/firebase';
+import Header from './Header';
+import NewsCard from './NewsCard';
+import ArticleModal from './ArticleModal';
+import ChatBot from './ChatBot';
+import LiveAgent from './LiveAgent';
+import SearchResultsModal from './SearchResultsModal';
+import PersonalizationModal from './PersonalizationModal';
+import ReelsView from './ReelsView';
+import AudioGenerationModal from './AudioGenerationModal';
+import BottomNav from './BottomNav';
+import ErrorBoundary from './ErrorBoundary';
+import LandingPage from './LandingPage';
+import HomeView from './HomeView'; 
+import AuthModal from './AuthModal';
+import ClubDashboard from './ClubDashboard';
+import AdminPanel from './AdminPanel';
+import LoginModal from './LoginModal'; 
+import ProfileModal from './ProfileModal'; 
+import ParticleBackground from './ParticleBackground';
+import { searchWithGoogle, generateFuturisticArticles } from '../services/geminiService';
+import { BoltIcon, MicIcon, SoundWaveIcon } from './icons';
+import { NewsArticle, UserProfile } from '../types';
+import { HolographicScanner } from './Loaders';
+import { auth } from '../services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin } from './services/dbService';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin } from '../services/dbService';
 
 const initialArticles = [
     // Page 1
