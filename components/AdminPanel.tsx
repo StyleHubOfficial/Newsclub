@@ -10,13 +10,13 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterRole, setFilterRole] = useState<'all' | 'member' | 'user'>('all');
+    const [filterRole, setFilterRole] = useState<'all' | 'user'>('all');
 
     // Message State
     const [messageText, setMessageText] = useState('');
     const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
     const [channels, setChannels] = useState<{app: boolean, whatsapp: boolean, sms: boolean}>({ app: true, whatsapp: false, sms: false });
-    const [targetType, setTargetType] = useState<'specific' | 'all' | 'club'>('specific');
+    const [targetType, setTargetType] = useState<'specific' | 'all'>('specific');
     const [isSending, setIsSending] = useState(false);
 
     useEffect(() => {
@@ -53,8 +53,6 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
         // Logic for bulk selection
         if (targetType === 'all') {
             finalRecipients = users.map(u => u.uid);
-        } else if (targetType === 'club') {
-            finalRecipients = users.filter(u => u.role === 'member').map(u => u.uid);
         }
 
         const msg: AdminMessage = {
@@ -132,7 +130,6 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
                                     className="bg-transparent border-none outline-none text-sm text-gray-300"
                                 >
                                     <option value="all">All Roles</option>
-                                    <option value="member">Club Members</option>
                                     <option value="user">Users</option>
                                 </select>
                             </div>
@@ -167,7 +164,6 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
                                     </div>
                                     
                                     <div className="space-y-2 text-xs text-gray-400 mb-4">
-                                        {user.studentClass && <p>Class: {user.studentClass}</p>}
                                         {user.phoneNumber && <p>Phone: {user.phoneNumber}</p>}
                                         <p>Last Active: {user.lastLogin ? new Date(user.lastLogin.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                                     </div>
@@ -202,7 +198,7 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
                             <div className="mb-6 space-y-3">
                                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Target Audience</label>
                                 <div className="flex gap-3">
-                                    {['specific', 'all', 'club'].map(type => (
+                                    {['specific', 'all'].map(type => (
                                         <button 
                                             key={type}
                                             onClick={() => setTargetType(type as any)}
@@ -213,7 +209,7 @@ const AdminPanel: React.FC<{ adminUser: UserProfile }> = ({ adminUser }) => {
                                                     : 'bg-black/40 text-gray-400 border-white/10 hover:border-white/30'}
                                             `}
                                         >
-                                            {type === 'specific' ? `Selected (${selectedRecipients.length})` : type === 'all' ? 'All Users' : 'Club Members'}
+                                            {type === 'specific' ? `Selected (${selectedRecipients.length})` : 'All Users'}
                                         </button>
                                     ))}
                                 </div>

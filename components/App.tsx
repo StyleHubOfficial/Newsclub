@@ -14,7 +14,6 @@ import ErrorBoundary from './ErrorBoundary';
 import LandingPage from './LandingPage';
 import HomeView from './HomeView'; 
 import AuthModal from './AuthModal';
-import ClubDashboard from './ClubDashboard';
 import AdminPanel from './AdminPanel';
 import LoginModal from './LoginModal'; 
 import ProfileModal from './ProfileModal'; 
@@ -118,7 +117,7 @@ const App = () => {
     // Pagination & Infinite Scroll
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
-    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club' | 'admin'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'admin'>('grid');
     
     const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -226,8 +225,7 @@ const App = () => {
 
     const fetchMoreArticles = useCallback(async () => {
         if (isLoadingMore) return;
-        // LOGIN RESTRICTION FOR INFINITE SCROLL
-        if (!currentUser) return; 
+        // LOGIN RESTRICTION FOR INFINITE SCROLL REMOVED
 
         setIsLoadingMore(true);
         try {
@@ -243,12 +241,11 @@ const App = () => {
         } finally {
             setIsLoadingMore(false);
         }
-    }, [isLoadingMore, currentUser]);
+    }, [isLoadingMore]);
 
     const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
         if (isLoadingMore || showSavedOnly) return;
-        // If not logged in, we don't trigger load more
-        if (!currentUser) return;
+        // If not logged in, we don't trigger load more (REMOVED)
 
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
@@ -257,7 +254,7 @@ const App = () => {
             }
         });
         if (node) observer.current.observe(node);
-    }, [isLoadingMore, showSavedOnly, fetchMoreArticles, currentUser]);
+    }, [isLoadingMore, showSavedOnly, fetchMoreArticles]);
 
     const handleCardClick = useCallback((article: NewsArticle) => {
         closeAll();
@@ -361,18 +358,6 @@ const App = () => {
                         onExitReels={() => setViewMode('grid')}
                     />
                 </ErrorBoundary>
-            </div>
-        );
-    } else if (viewMode === 'club') {
-        mainContent = currentUser ? (
-            <div key="club" className="flex-grow relative z-10 animate-page-enter pt-16">
-                <ErrorBoundary componentName="ClubDashboard">
-                    <ClubDashboard user={currentUser} />
-                </ErrorBoundary>
-            </div>
-        ) : (
-            <div className="flex-grow flex items-center justify-center pt-16">
-                <p className="text-white">Please Login to access Club Features.</p>
             </div>
         );
     } else if (viewMode === 'admin') {
@@ -524,7 +509,7 @@ const App = () => {
                         articles={articles} 
                         onClose={() => setAudioGenOpen(false)} 
                         user={currentUser} // PASS USER
-                        onLoginRequest={() => { setAudioGenOpen(false); setShowLoginModal(true); }}
+                        onLoginRequest={() => { /* Guest access allowed */ }}
                     />
                 </ErrorBoundary>
             )}
@@ -580,7 +565,7 @@ const App = () => {
             {/* Bottom Nav - Hide in reels mode */}
             {viewMode !== 'reels' && (
                 <BottomNav 
-                    viewMode={(viewMode === 'club' || viewMode === 'admin') ? 'grid' : viewMode}
+                    viewMode={viewMode === 'admin' ? 'grid' : viewMode}
                     onChangeView={(mode) => setViewMode(mode)}
                     onOpenExplore={() => {
                         document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });

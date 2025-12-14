@@ -7,6 +7,7 @@ import {
     signOut, 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword,
+    sendPasswordResetEmail,
     deleteUser as firebaseDeleteUser,
     User
 } from "firebase/auth";
@@ -58,6 +59,14 @@ export const registerWithEmail = async (email: string, pass: string) => {
     try {
         const result = await createUserWithEmailAndPassword(auth, email, pass);
         return result.user;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const resetPassword = async (email: string) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
     } catch (error) {
         throw error;
     }

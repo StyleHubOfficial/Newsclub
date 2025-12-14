@@ -35,23 +35,36 @@ export type AnalysisResult = {
     content: string;
 };
 
-export type UserRole = 'user' | 'member' | 'admin';
+export type UserRole = 'user' | 'admin' | 'member';
 
 export interface UserProfile {
     uid: string;
     email: string | null;
     displayName: string;
     phoneNumber?: string;
-    studentClass?: string;
     bio?: string;
     photoURL?: string;
     role: UserRole;
-    clubId?: string;
     createdAt: any;
     lastLogin?: any;
     isPinned?: boolean;
     isStarred?: boolean;
-    groups?: string[];
+    studentClass?: string;
+    clubId?: string;
+}
+
+export interface AdminMessage {
+    id?: string;
+    senderId: string;
+    senderName: string;
+    recipients: string[];
+    targetType: 'user' | 'group' | 'all';
+    content: string;
+    attachments?: string[];
+    channels: ('app' | 'whatsapp' | 'sms')[];
+    scheduledFor?: any;
+    createdAt: any;
+    readBy: string[];
 }
 
 export interface AIFeedback {
@@ -68,29 +81,15 @@ export interface ClubSubmission {
     id?: string;
     userId: string;
     weekNo: number;
-    uploadTime: any;
     videoUrl: string;
-    feedback?: AIFeedback;
-    status: 'pending' | 'analyzed';
+    feedback: AIFeedback;
+    submittedAt: any;
 }
 
-export interface UserGroup {
+export interface WeeklyTask {
     id: string;
-    name: string;
-    memberIds: string[];
-    createdBy: string;
-}
-
-export interface AdminMessage {
-    id?: string;
-    senderId: string;
-    senderName: string;
-    recipients: string[];
-    targetType: 'user' | 'group' | 'all' | 'club';
-    content: string;
-    attachments?: string[];
-    channels: ('app' | 'whatsapp' | 'sms')[];
-    scheduledFor?: any;
-    createdAt: any;
-    readBy: string[];
+    weekNo: number;
+    title: string;
+    description: string;
+    deadline: string;
 }

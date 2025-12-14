@@ -1,7 +1,8 @@
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, orderBy, limit, addDoc } from "firebase/firestore";
+
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, getDocs, orderBy, limit, addDoc, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
-import { UserProfile, ClubSubmission, AIFeedback, AdminMessage } from "../types";
+import { UserProfile, AdminMessage, ClubSubmission, AIFeedback, WeeklyTask } from "../types";
 
 // Save user preferences (categories, sources)
 export const saveUserPreferences = async (userId: string, preferences: any) => {
@@ -66,29 +67,6 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     }
 };
 
-// Verify Club Credentials
-export const verifyClubCredentials = async (clubId: string, tempPass: string): Promise<boolean> => {
-    // 1. HARDCODED BYPASS FOR DEMO/TESTING
-    // Allows login even if Firestore data hasn't been seeded manually
-    if (clubId === "SUN-001" && tempPass === "news2024") {
-        return true;
-    }
-
-    // 2. Real Database Check
-    try {
-        const q = query(
-            collection(db, "club_members"), 
-            where("clubId", "==", clubId),
-            where("tempPass", "==", tempPass)
-        );
-        const querySnapshot = await getDocs(q);
-        return !querySnapshot.empty;
-    } catch (error) {
-        console.error("Verification failed:", error);
-        return false;
-    }
-};
-
 // Create or Update User Profile
 export const createUserProfile = async (uid: string, profileData: Partial<UserProfile>) => {
     try {
@@ -134,52 +112,6 @@ export const logUserLogin = async (uid: string) => {
     } catch (e) { /* ignore */ }
 };
 
-// --- CLUB SUBMISSION LOGIC ---
-
-export const uploadClubVideo = async (userId: string, weekNo: number, file: File): Promise<string> => {
-    const storageRef = ref(storage, `club_videos/${userId}/week_${weekNo}/${file.name}`);
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
-};
-
-export const saveClubSubmission = async (userId: string, weekNo: number, videoUrl: string, feedback: AIFeedback) => {
-    const submissionId = `${userId}_week_${weekNo}`;
-    const submissionRef = doc(db, "club_submissions", submissionId);
-    
-    const submission: ClubSubmission = {
-        userId,
-        weekNo,
-        videoUrl,
-        uploadTime: new Date(),
-        feedback,
-        status: 'analyzed'
-    };
-
-    await setDoc(submissionRef, submission);
-    
-    const feedbackRef = doc(db, `club_feedback/${userId}/weeks`, `week_${weekNo}`);
-    await setDoc(feedbackRef, feedback);
-};
-
-export const getWeeklyTask = async (weekNo: number) => {
-    return {
-        title: `Week ${weekNo} Assignment`,
-        description: "Report on a recent technological breakthrough in your city. Focus on clear diction and maintaining eye contact.",
-        deadline: "Sunday 23:59"
-    };
-};
-
-export const getStudentHistory = async (userId: string): Promise<ClubSubmission[]> => {
-    const q = query(
-        collection(db, "club_submissions"),
-        where("userId", "==", userId),
-        orderBy("weekNo", "desc"),
-        limit(10)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as ClubSubmission);
-};
-
 // --- ADMIN FEATURES ---
 
 export const getAllUsers = async (): Promise<UserProfile[]> => {
@@ -221,4 +153,59 @@ export const markMessageRead = async (msgId: string, uid: string) => {
     await updateDoc(msgRef, {
         readBy: arrayUnion(uid)
     });
+};
+
+// --- CLUB FEATURES ---
+
+export const uploadClubVideo = async (userId: string, weekNo: number, file: File): Promise<string> => {
+    try {
+        const storageRef = ref(storage, `club_submissions/${userId}/week_${weekNo}/${file.name}`);
+        await uploadBytes(storageRef, file);
+        return await getDownloadURL(storageRef);
+    } catch (error) {
+        console.error("Error uploading club video:", error);
+        throw error;
+    }
+};
+
+export const saveClubSubmission = async (userId: string, weekNo: number, videoUrl: string, feedback: AIFeedback) => {
+    try {
+        const submissionRef = collection(db, "submissions");
+        await addDoc(submissionRef, {
+            userId,
+            weekNo,
+            videoUrl,
+            feedback,
+            submittedAt: new Date()
+        });
+    } catch (error) {
+        console.error("Error saving submission:", error);
+        throw error;
+    }
+};
+
+export const getStudentHistory = async (userId: string): Promise<ClubSubmission[]> => {
+    try {
+        const q = query(
+            collection(db, "submissions"),
+            where("userId", "==", userId),
+            orderBy("submittedAt", "desc")
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubSubmission));
+    } catch (error) {
+        console.error("Error getting history:", error);
+        return [];
+    }
+};
+
+export const getWeeklyTask = async (weekNo: number): Promise<WeeklyTask | null> => {
+    // In a real application, fetch from 'tasks' collection where weekNo matches
+    return {
+        id: `week-${weekNo}`,
+        weekNo,
+        title: `News Report: Week ${weekNo}`,
+        description: "Record a 2-minute news segment covering a local event or a technological breakthrough. Focus on clear diction and maintaining eye contact.",
+        deadline: "Sunday 23:59"
+    };
 };

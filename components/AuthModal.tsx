@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { User } from 'firebase/auth';
-import { ShieldIcon, UserIcon, BoltIcon, LogOutIcon } from './icons';
-import { verifyClubCredentials, createUserProfile } from '../services/dbService';
+import { UserIcon, BoltIcon, LogOutIcon } from './icons';
+import { createUserProfile } from '../services/dbService';
 import { logoutUser } from '../services/firebase';
 import { HexagonLoader } from './Loaders';
 
@@ -13,10 +14,7 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
     const [name, setName] = useState(user.displayName || '');
     const [phone, setPhone] = useState('');
-    const [studentClass, setStudentClass] = useState('');
-    const [isClubMember, setIsClubMember] = useState(false);
-    const [clubId, setClubId] = useState('');
-    const [tempPass, setTempPass] = useState('');
+    const [bio, setBio] = useState('');
     
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -27,29 +25,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
         setIsLoading(true);
 
         try {
-            let role: 'user' | 'member' = 'user';
-
-            // Verification Logic
-            if (isClubMember) {
-                if (!clubId || !tempPass) {
-                    throw new Error("Club ID and Temporary Password are required for members.");
-                }
-                const isValid = await verifyClubCredentials(clubId, tempPass);
-                if (!isValid) {
-                    throw new Error("Invalid Club Credentials. Please contact your coordinator.");
-                }
-                role = 'member';
-            }
-
             // Create Profile
             await createUserProfile(user.uid, {
                 displayName: name,
                 phoneNumber: phone,
-                studentClass: studentClass,
+                bio: bio,
                 email: user.email,
-                role: role,
+                role: 'user', // Default role
                 uid: user.uid,
-                clubId: isClubMember ? clubId : undefined
             });
 
             onComplete(); // Trigger app refresh
@@ -62,7 +45,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
 
     const handleLogout = async () => {
         await logoutUser();
-        // The App component will detect auth state change and remove this modal
     };
 
     return (
@@ -95,7 +77,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
                             PROFILE SETUP
                         </h2>
                         <p className="text-brand-text-muted text-xs mt-2 text-center max-w-xs">
-                            Complete your registration for Sunrise International Public School
+                            Complete your registration for News Club
                         </p>
                     </div>
 
@@ -118,59 +100,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
                                     type="tel"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="Phone Number"
+                                    placeholder="Phone Number (Optional)"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/50 transition-all outline-none font-light placeholder-white/20"
-                                    required
                                 />
                             </div>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    value={studentClass}
-                                    onChange={(e) => setStudentClass(e.target.value)}
-                                    placeholder="Class (e.g. 10-A)"
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
+                                    placeholder="Short Bio / Interests"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/50 transition-all outline-none font-light placeholder-white/20"
                                 />
                             </div>
-                        </div>
-
-                        {/* Club Toggle */}
-                        <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-4 transition-all">
-                            <label className="flex items-center justify-between cursor-pointer group">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${isClubMember ? 'bg-brand-accent/20 text-brand-accent' : 'bg-white/5 text-gray-500'}`}>
-                                        <ShieldIcon className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <span className="block text-sm font-orbitron font-bold text-white group-hover:text-brand-accent transition-colors">News Club Member?</span>
-                                        <span className="text-[10px] text-brand-text-muted">Exclusive access for reporters</span>
-                                    </div>
-                                </div>
-                                <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${isClubMember ? 'bg-brand-accent' : 'bg-white/10'}`}>
-                                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isClubMember ? 'translate-x-6' : ''}`}></div>
-                                </div>
-                                <input type="checkbox" className="hidden" checked={isClubMember} onChange={(e) => setIsClubMember(e.target.checked)} />
-                            </label>
-
-                            {/* Club Fields */}
-                            {isClubMember && (
-                                <div className="mt-4 space-y-3 animate-slide-up">
-                                    <input
-                                        type="text"
-                                        value={clubId}
-                                        onChange={(e) => setClubId(e.target.value)}
-                                        placeholder="Assigned Club ID"
-                                        className="w-full bg-black/40 border border-brand-accent/30 rounded-lg px-3 py-2 text-sm text-brand-accent placeholder-brand-accent/30 focus:border-brand-accent outline-none"
-                                    />
-                                    <input
-                                        type="password"
-                                        value={tempPass}
-                                        onChange={(e) => setTempPass(e.target.value)}
-                                        placeholder="Temporary Password"
-                                        className="w-full bg-black/40 border border-brand-accent/30 rounded-lg px-3 py-2 text-sm text-brand-accent placeholder-brand-accent/30 focus:border-brand-accent outline-none"
-                                    />
-                                </div>
-                            )}
                         </div>
 
                         {error && (
@@ -194,7 +136,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ user, onComplete }) => {
                             "
                         >
                             <span className="relative z-10 flex items-center justify-center gap-2">
-                                {isLoading ? 'VERIFYING...' : 'COMPLETE REGISTRATION'} 
+                                {isLoading ? 'INITIALIZING...' : 'ENTER SYSTEM'} 
                                 {!isLoading && <BoltIcon className="w-4 h-4" />}
                             </span>
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12"></div>

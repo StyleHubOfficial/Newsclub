@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { NewsArticle } from '../types';
 import NewsCard from './NewsCard';
@@ -225,23 +226,6 @@ const HomeView: React.FC<HomeViewProps> = ({
                         </RevealOnScroll>
                     ))}
                 </div>
-                
-                {/* INFINITE SCROLL / LOGIN BARRIER */}
-                {!isUserLoggedIn && (
-                    <div className="py-8 pb-32 flex justify-center w-full">
-                        <button 
-                            onClick={() => window.location.href = 'https://newsclub-app.vercel.app'}
-                            className="
-                                px-8 py-3 rounded-full overflow-hidden relative
-                                bg-brand-primary/10 border border-brand-primary/50 
-                                text-brand-primary font-orbitron text-xs font-bold uppercase tracking-[0.2em] 
-                                hover:bg-brand-primary hover:text-black transition-all animate-pulse-glow
-                            "
-                        >
-                            LOGIN TO ACCESS FULL DATABASE
-                        </button>
-                    </div>
-                )}
             </section>
 
             <div className="container mx-auto px-6">

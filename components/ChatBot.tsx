@@ -156,20 +156,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
         
         setMessages(prev => [...prev, userMessage, botMessage]);
 
-        // RESTRICTION CHECK
-        if (!user) {
-             setMessages(prev => prev.map(msg => 
-                msg.id === botMessageId 
-                    ? { 
-                        ...msg, 
-                        text: "SYSTEM_ALERT: Visual Neural Synthesis is restricted to authorized personnel. Please LOGIN to access image generation capabilities.", 
-                        isLoading: false,
-                        isError: true 
-                      } 
-                    : msg
-            ));
-            return;
-        }
+        // RESTRICTION REMOVED for guest access
 
         try {
             const imageUrl = await generateImageFromPrompt(input);
