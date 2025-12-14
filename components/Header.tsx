@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SearchIcon, LogoIcon, HomeIcon, CompassIcon, BoltIcon, ReelsIcon, UserIcon, CloseIcon, MessageSquareIcon, ShieldIcon, BellIcon } from './icons';
 import { logoutUser, auth } from '../services/firebase';

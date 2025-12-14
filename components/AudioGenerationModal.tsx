@@ -174,12 +174,8 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
     };
 
     const handleGenerate = async () => {
-        // AUTH CHECK
-        if (!user) {
-            onLoginRequest();
-            return;
-        }
-
+        // AUTH CHECK REMOVED to allow guest access
+        
         if (status === 'generating') return;
         
         if (mode === 'text' && !textInput.trim()) { setError("Please enter text or upload a file."); return; }
@@ -250,156 +246,190 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                             AUDIO <span className="text-brand-secondary">SYNTHESIS</span>
                         </h2>
                     </div>
-                    <button onClick={onClose} className="text-brand-text-muted hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
+                    <button onClick={onClose} className="text-brand-text-muted hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full border border-transparent hover:border-white/10 active:scale-95">
                         <CloseIcon />
                     </button>
                 </header>
 
-                <div className="flex-grow p-6 md:p-8 overflow-y-auto space-y-8 relative z-10">
+                <div className="flex-grow p-6 md:p-8 overflow-y-auto relative z-10">
+                    
                     {/* Mode Selection */}
-                    <div className="grid grid-cols-3 gap-4">
-                        {(['text', 'article', 'ai-conversation'] as Mode[]).map(m => (
-                            <button
-                                key={m}
-                                onClick={() => setMode(m)}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                         {[
+                            { id: 'article', label: 'Article Read', icon: <SoundWaveIcon className="w-4 h-4" /> },
+                            { id: 'text', label: 'Custom Text', icon: <UploadIcon className="w-4 h-4" /> },
+                            { id: 'ai-conversation', label: 'Topic Generation', icon: <SparklesIcon className="w-4 h-4" /> }
+                         ].map(option => (
+                             <button
+                                key={option.id}
+                                onClick={() => setMode(option.id as Mode)}
                                 className={`
-                                    py-3 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all
-                                    ${mode === m 
-                                        ? 'bg-brand-secondary/20 border-brand-secondary text-white shadow-[0_0_15px_rgba(123,47,255,0.3)]' 
-                                        : 'bg-white/5 border-white/10 text-brand-text-muted hover:bg-white/10'}
+                                    flex items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-300 font-bold font-orbitron text-xs tracking-wider
+                                    ${mode === option.id 
+                                        ? 'bg-brand-secondary text-white border-brand-secondary shadow-[0_0_15px_rgba(123,47,255,0.4)]' 
+                                        : 'bg-white/5 border-white/10 text-brand-text-muted hover:bg-white/10 hover:text-white'}
                                 `}
-                            >
-                                {m.replace('-', ' ')}
-                            </button>
-                        ))}
+                             >
+                                 {option.icon} {option.label}
+                             </button>
+                         ))}
                     </div>
 
-                    {/* Inputs */}
-                    <div className="min-h-[200px]">
+                    {/* Dynamic Content Based on Mode */}
+                    <div className="bg-white/5 border border-white/10 rounded-[22px] p-6 mb-6">
                         {mode === 'article' && (
                             <div className="space-y-4">
-                                <label className="text-xs font-bold text-gray-500 uppercase">Select Source Material</label>
-                                <select 
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-brand-secondary"
-                                    value={selectedArticleId || ''}
-                                    onChange={(e) => setSelectedArticleId(Number(e.target.value))}
-                                >
-                                    {articles.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
-                                </select>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Select Article</label>
+                                <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    {articles.map(article => (
+                                        <button
+                                            key={article.id}
+                                            onClick={() => setSelectedArticleId(article.id)}
+                                            className={`
+                                                w-full text-left p-4 rounded-xl border transition-all
+                                                ${selectedArticleId === article.id 
+                                                    ? 'bg-brand-secondary/20 border-brand-secondary/50 text-white shadow-inner' 
+                                                    : 'bg-black/20 border-white/5 text-gray-400 hover:bg-black/40 hover:text-gray-200'}
+                                            `}
+                                        >
+                                            <div className="font-bold text-sm mb-1 truncate">{article.title}</div>
+                                            <div className="text-[10px] opacity-70 truncate">{article.summary}</div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
                         {mode === 'text' && (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <label className="text-xs font-bold text-gray-500 uppercase">Input Text</label>
-                                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-xs text-brand-secondary hover:text-white transition-colors">
-                                        <UploadIcon className="w-4 h-4" /> Upload .txt
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Input Text</label>
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="text-[10px] text-brand-secondary flex items-center gap-1 hover:underline"
+                                    >
+                                        <UploadIcon className="w-3 h-3" /> Upload .txt
                                     </button>
-                                    <input type="file" ref={fileInputRef} className="hidden" accept=".txt" onChange={handleFileChange} />
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        className="hidden" 
+                                        accept=".txt" 
+                                        onChange={handleFileChange} 
+                                    />
                                 </div>
-                                <textarea 
-                                    className="w-full h-40 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white resize-none outline-none focus:border-brand-secondary"
-                                    placeholder="Type or paste text here to synthesize..."
+                                <textarea
                                     value={textInput}
                                     onChange={(e) => setTextInput(e.target.value)}
+                                    placeholder="Type or paste text here for neural speech synthesis..."
+                                    className="w-full h-40 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-secondary outline-none transition-colors resize-none placeholder-gray-600 font-light"
                                 />
                             </div>
                         )}
 
                         {mode === 'ai-conversation' && (
                             <div className="space-y-4">
-                                <label className="text-xs font-bold text-gray-500 uppercase">Topic / Prompt</label>
-                                <input 
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white outline-none focus:border-brand-secondary placeholder-gray-600"
-                                    placeholder="E.g., The future of renewable energy..."
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Topic / Context</label>
+                                <input
+                                    type="text"
                                     value={aiTopicInput}
                                     onChange={(e) => setAiTopicInput(e.target.value)}
+                                    placeholder="e.g., The future of space travel..."
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-secondary outline-none transition-colors placeholder-gray-600 font-light"
                                 />
-                                <div className="p-4 bg-brand-secondary/5 rounded-xl border border-brand-secondary/20 flex items-start gap-3">
-                                    <SparklesIcon className="w-5 h-5 text-brand-secondary flex-shrink-0 mt-1" />
-                                    <p className="text-xs text-brand-text-muted leading-relaxed">
-                                        The AI will generate a professional news report script based on your topic and then synthesize it into a broadcast-quality audio stream with multiple speakers.
-                                    </p>
-                                </div>
+                                <p className="text-[10px] text-brand-text-muted">
+                                    The AI will generate a dynamic script and two-person news broadcast simulation based on this topic.
+                                </p>
                             </div>
                         )}
-                    </div>
-
-                     {/* Language Selector */}
-                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-500 uppercase">Output Language</label>
-                        <div className="flex gap-3">
-                            {(['English', 'Hindi', 'Hinglish'] as Language[]).map(l => (
-                                <button 
-                                    key={l}
-                                    onClick={() => setLanguage(l)}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-colors ${language === l ? 'bg-white text-black border-white' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30'}`}
-                                >
-                                    {l}
-                                </button>
-                            ))}
+                        
+                        {/* Language Selection */}
+                         <div className="mt-6 pt-6 border-t border-white/10">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">Voice Model Language</label>
+                            <div className="flex gap-4">
+                                {(['English', 'Hindi', 'Hinglish'] as Language[]).map(l => (
+                                    <label key={l} className="flex items-center gap-2 cursor-pointer group">
+                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${language === l ? 'border-brand-secondary' : 'border-gray-600'}`}>
+                                            {language === l && <div className="w-2 h-2 rounded-full bg-brand-secondary"></div>}
+                                        </div>
+                                        <span className={`text-sm ${language === l ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>{l}</span>
+                                        <input type="radio" className="hidden" checked={language === l} onChange={() => setLanguage(l)} />
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                     </div>
-
+                    
                     {error && (
-                        <div className="p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-xs text-center font-mono">
+                        <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-red-200 text-xs text-center font-mono">
                             ERROR: {error}
                         </div>
                     )}
+                    
+                    {/* Action Button */}
+                    <div className="flex justify-center">
+                        {status === 'generating' ? (
+                            <HexagonLoader size="md" text={progressMessage} />
+                        ) : (
+                            <button
+                                onClick={handleGenerate}
+                                className="
+                                    group relative px-10 py-4 rounded-full overflow-hidden
+                                    bg-gradient-to-r from-brand-secondary to-purple-600
+                                    text-white font-orbitron font-bold tracking-widest shadow-[0_0_30px_rgba(123,47,255,0.4)]
+                                    hover:shadow-[0_0_50px_rgba(123,47,255,0.6)] hover:scale-105
+                                    active:scale-95 transition-all
+                                "
+                            >
+                                <span className="relative z-10 flex items-center gap-3">
+                                    INITIATE SYNTHESIS <SoundWaveIcon className="w-5 h-5" />
+                                </span>
+                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12 z-0"></div>
+                            </button>
+                        )}
+                    </div>
                 </div>
-
-                {/* Footer Controls */}
-                <footer className="p-5 border-t border-white/10 bg-[#0a0a0a] relative z-10">
-                    {status === 'generating' ? (
-                        <div className="flex flex-col items-center gap-4 py-2">
-                            <HexagonLoader size="sm" text={progressMessage} />
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-6">
-                            {(status === 'ready' || status === 'playing' || status === 'paused') && (
-                                <div className="flex items-center justify-between gap-6 animate-slide-up">
-                                    <div className="flex items-center gap-4">
-                                        <button 
-                                            onClick={handlePlayPauseClick}
-                                            className="w-12 h-12 rounded-full bg-brand-secondary text-white flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_#7B2FFF]"
-                                        >
-                                            {status === 'playing' ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6 ml-1" />}
-                                        </button>
-                                        <button onClick={stopAudio} className="p-2 text-gray-500 hover:text-white">
-                                            <StopIcon className="w-6 h-6" />
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="flex-grow h-12 bg-black/40 rounded-xl border border-white/5 overflow-hidden relative">
-                                        <div className="absolute inset-0 opacity-60">
-                                            <AudioVisualizer analyserNode={analyserForVisualizer} width={500} height={48} />
-                                        </div>
-                                    </div>
+                
+                {/* Audio Player Footer */}
+                {(status === 'ready' || status === 'playing' || status === 'paused') && (
+                    <footer className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-xl relative z-20 animate-slide-up">
+                         <div className="flex items-center gap-4">
+                             {/* Play Controls */}
+                             <button 
+                                onClick={handlePlayPauseClick}
+                                className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                             >
+                                 {status === 'playing' ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6 ml-1" />}
+                             </button>
+                             <button 
+                                onClick={stopAudio}
+                                className="p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                             >
+                                 <StopIcon className="w-5 h-5" />
+                             </button>
+                             
+                             {/* Visualizer */}
+                             <div className="flex-grow h-12 bg-black/40 rounded-lg overflow-hidden relative border border-white/5">
+                                 <AudioVisualizer analyserNode={analyserForVisualizer} width={400} height={48} barColor="#7B2FFF" gap={2} />
+                             </div>
+                             
+                             {/* Settings */}
+                             <div className="hidden md:flex flex-col gap-1 w-32">
+                                <div className="flex justify-between text-[10px] text-gray-400 font-mono">
+                                    <span>VOL</span>
+                                    <span>{Math.round(volume * 100)}%</span>
                                 </div>
-                            )}
-                            
-                            {(status === 'idle' || status === 'error') && (
-                                <button 
-                                    onClick={handleGenerate}
-                                    className="
-                                        group relative w-full py-4 rounded-xl overflow-hidden
-                                        bg-white/5 border border-brand-secondary/50
-                                        text-white font-orbitron font-bold text-lg tracking-[0.2em] 
-                                        shadow-[0_0_20px_rgba(123,47,255,0.3)]
-                                        hover:bg-brand-secondary/20 hover:border-brand-secondary hover:shadow-[0_0_40px_rgba(123,47,255,0.5)] 
-                                        active:scale-[0.98] transition-all
-                                    "
-                                >
-                                    <span className="relative z-10 flex items-center justify-center gap-3">
-                                        {status === 'error' ? 'RETRY SYNTHESIS' : 'INITIALIZE SYNTHESIS'} <SparklesIcon className="w-5 h-5" />
-                                    </span>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-secondary/30 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </footer>
+                                <input 
+                                    type="range" 
+                                    min="0" max="1" step="0.01" 
+                                    value={volume} 
+                                    onChange={(e) => setVolume(Number(e.target.value))}
+                                    className="w-full h-1 bg-gray-700 rounded-full appearance-none cursor-pointer accent-brand-secondary"
+                                />
+                             </div>
+                         </div>
+                    </footer>
+                )}
             </div>
         </div>
     );

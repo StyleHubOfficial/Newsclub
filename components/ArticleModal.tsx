@@ -439,7 +439,7 @@ const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose, onToggleS
                     )}
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-sm flex justify-between items-center backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-200 text-xs flex justify-between items-center backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
                             {error}
                             <button onClick={() => setError(null)}><CloseIcon className="w-4 h-4"/></button>
                         </div>
