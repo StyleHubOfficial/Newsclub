@@ -1,30 +1,30 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Header from './Header';
-import NewsCard from './NewsCard';
-import ArticleModal from './ArticleModal';
-import ChatBot from './ChatBot';
-import LiveAgent from './LiveAgent';
-import SearchResultsModal from './SearchResultsModal';
-import PersonalizationModal from './PersonalizationModal';
-import ReelsView from './ReelsView';
-import AudioGenerationModal from './AudioGenerationModal';
-import BottomNav from './BottomNav';
-import ErrorBoundary from './ErrorBoundary';
-import LandingPage from './LandingPage';
-import HomeView from './HomeView'; 
-import AuthModal from './AuthModal';
-import AdminPanel from './AdminPanel';
-import LoginModal from './LoginModal'; 
-import ProfileModal from './ProfileModal'; 
-import ParticleBackground from './ParticleBackground';
-import { searchWithGoogle, generateFuturisticArticles } from '../services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon } from './icons';
-import { NewsArticle, UserProfile } from '../types';
-import { HolographicScanner } from './Loaders';
-import { auth } from '../services/firebase';
+import Header from './components/Header';
+import NewsCard from './components/NewsCard';
+import ArticleModal from './components/ArticleModal';
+import ChatBot from './components/ChatBot';
+import LiveAgent from './components/LiveAgent';
+import SearchResultsModal from './components/SearchResultsModal';
+import PersonalizationModal from './components/PersonalizationModal';
+import ReelsView from './components/ReelsView';
+import AudioGenerationModal from './components/AudioGenerationModal';
+import BottomNav from './components/BottomNav';
+import ErrorBoundary from './components/ErrorBoundary';
+import LandingPage from './components/LandingPage';
+import HomeView from './components/HomeView'; 
+import AuthModal from './components/AuthModal';
+import AdminPanel from './components/AdminPanel';
+import LoginModal from './components/LoginModal'; 
+import ProfileModal from './components/ProfileModal'; 
+import ParticleBackground from './components/ParticleBackground';
+import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
+import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
+import { NewsArticle, UserProfile } from './types';
+import { HolographicScanner } from './components/Loaders';
+import { auth } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin } from '../services/dbService';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin, createUserProfile } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -134,19 +134,34 @@ const App = () => {
     // Auth & Data Sync
     const checkUserProfile = useCallback(async (user: User) => {
         try {
-            const profile = await getUserProfile(user.uid);
+            let profile = await getUserProfile(user.uid);
+            
+            if (!profile) {
+                // AUTO-CREATE PROFILE to skip setup screen
+                const newProfile = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || 'News Agent',
+                    photoURL: user.photoURL || undefined,
+                    role: 'user' as const,
+                    bio: 'Ready for intelligence.',
+                };
+                await createUserProfile(user.uid, newProfile);
+                
+                // Fetch the newly created profile
+                profile = await getUserProfile(user.uid);
+            }
+
             if (profile) {
                 setUserProfile(profile);
-                setShowAuthModal(false);
+                setShowAuthModal(false); // Ensure modal is closed
                 // Log login time
                 await logUserLogin(user.uid);
-            } else {
-                // Profile doesn't exist - Trigger signup flow
-                setShowAuthModal(true);
             }
         } catch (err) {
-            console.error("Profile check failed", err);
-            // Don't block app, maybe show error or retry
+            console.error("Profile check/creation failed", err);
+            // Fallback: If auto-creation fails, we might end up here, 
+            // but we avoid blocking the user from at least seeing the public interface.
         }
     }, []);
 
@@ -156,7 +171,7 @@ const App = () => {
             if (user) {
                 setIsVerifyingIdentity(true); // START LOADING
                 
-                // Check if profile exists in DB
+                // Check if profile exists in DB (or create it)
                 await checkUserProfile(user);
 
                 // Load Cloud Data
@@ -444,7 +459,7 @@ const App = () => {
             
             {mainContent}
 
-            {/* Auth Modal for New Users */}
+            {/* Auth Modal for New Users - Kept for fallback/completeness but skipped by logic */}
             {showAuthModal && currentUser && (
                 <AuthModal user={currentUser} onComplete={handleProfileComplete} />
             )}
