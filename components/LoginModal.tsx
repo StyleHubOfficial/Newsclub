@@ -76,7 +76,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLoginSuccess }) => {
         setSuccessMessage(null);
         try {
             await resetPassword(email);
-            setSuccessMessage("Password reset email sent. Check your inbox.");
+            setSuccessMessage("If an account exists for this email, a reset link has been sent. Please check spam.");
             setIsForgotPassword(false);
         } catch (err: any) {
             setError(err.message || "Failed to send reset email.");
@@ -180,6 +180,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLoginSuccess }) => {
                                         {isForgotPassword ? (
                                             <form onSubmit={handleForgotPasswordSubmit} className="space-y-4 animate-fade-in">
                                                 <h3 className="text-center text-white font-orbitron text-sm">RESET PASSWORD</h3>
+                                                <p className="text-[10px] text-gray-400 text-center mb-2">Note: This only works if you signed up with an email and password.</p>
                                                 <div className="relative group">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                         <MailIcon className="h-5 w-5 text-gray-500 group-focus-within:text-brand-secondary transition-colors" />

@@ -1,5 +1,5 @@
 
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, getDocs, orderBy, limit, addDoc, where } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, getDocs, orderBy, limit, addDoc, serverTimestamp, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { UserProfile, AdminMessage, ClubSubmission, AIFeedback, WeeklyTask } from "../types";
@@ -57,7 +57,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     try {
         const userRef = doc(db, "users", uid);
         const docSnap = await getDoc(userRef);
-        if (docSnap.exists() && docSnap.data().role) {
+        if (docSnap.exists()) {
             return docSnap.data() as UserProfile;
         }
         return null;
@@ -71,12 +71,22 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 export const createUserProfile = async (uid: string, profileData: Partial<UserProfile>) => {
     try {
         const userRef = doc(db, "users", uid);
-        await setDoc(userRef, {
-            ...profileData,
-            createdAt: new Date(),
+        
+        // 1. Sanitize data: remove undefined values which Firestore hates
+        const cleanData = JSON.parse(JSON.stringify(profileData));
+
+        // 2. Prepare payload with server timestamps
+        const payload = {
+            ...cleanData,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+            role: 'user', // Enforce 'user' role on creation
             preferences: { categories: [], sources: [] },
             savedArticles: []
-        }, { merge: true });
+        };
+
+        // 3. Write
+        await setDoc(userRef, payload, { merge: true });
     } catch (error) {
         console.error("Error creating profile:", error);
         throw error;
@@ -86,7 +96,9 @@ export const createUserProfile = async (uid: string, profileData: Partial<UserPr
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
     try {
         const userRef = doc(db, "users", uid);
-        await updateDoc(userRef, data);
+        // Remove undefined fields from data
+        const cleanData = JSON.parse(JSON.stringify(data));
+        await updateDoc(userRef, cleanData);
     } catch (error) {
         console.error("Error updating profile:", error);
         throw error;
@@ -108,7 +120,7 @@ export const uploadProfilePicture = async (uid: string, file: File): Promise<str
 export const logUserLogin = async (uid: string) => {
     try {
         const userRef = doc(db, "users", uid);
-        await setDoc(userRef, { lastLogin: new Date() }, { merge: true });
+        await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
     } catch (e) { /* ignore */ }
 };
 
@@ -127,9 +139,10 @@ export const toggleUserStatus = async (uid: string, field: 'isPinned' | 'isStarr
 
 export const sendAdminMessage = async (message: AdminMessage) => {
     const msgRef = collection(db, "messages");
-    await addDoc(msgRef, message);
-    if (message.channels.includes('whatsapp')) console.log(`[MOCK] WhatsApp sent to ${message.recipients.length}`);
-    if (message.channels.includes('sms')) console.log(`[MOCK] SMS sent to ${message.recipients.length}`);
+    await addDoc(msgRef, {
+        ...message,
+        createdAt: serverTimestamp()
+    });
 };
 
 export const getUserMessages = async (uid: string): Promise<AdminMessage[]> => {
@@ -155,11 +168,41 @@ export const markMessageRead = async (msgId: string, uid: string) => {
     });
 };
 
-// --- CLUB FEATURES ---
+// --- CLUB DASHBOARD FEATURES ---
 
-export const uploadClubVideo = async (userId: string, weekNo: number, file: File): Promise<string> => {
+export const getWeeklyTask = async (weekNo: number): Promise<WeeklyTask | null> => {
     try {
-        const storageRef = ref(storage, `club_submissions/${userId}/week_${weekNo}/${file.name}`);
+        // Fallback Task for Demo/Development
+        const defaultTask: WeeklyTask = {
+            id: 'demo-task',
+            weekNo,
+            title: 'Reporting Live: Future Tech',
+            description: 'Record a 60-second segment reporting on a breakthrough in AI or Robotics. Focus on clear diction and confident body language.',
+            deadline: 'Sunday 23:59'
+        };
+        
+        const q = query(collection(db, "weeklyTasks"), where("weekNo", "==", weekNo), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            const data = snapshot.docs[0].data();
+            return { id: snapshot.docs[0].id, ...data } as WeeklyTask;
+        }
+        return defaultTask;
+    } catch (e) {
+        console.error("Error fetching task, returning default:", e);
+        return {
+            id: 'demo-task',
+            weekNo,
+            title: 'Reporting Live: Future Tech',
+            description: 'Record a 60-second segment reporting on a breakthrough in AI or Robotics. Focus on clear diction and confident body language.',
+            deadline: 'Sunday 23:59'
+        };
+    }
+};
+
+export const uploadClubVideo = async (uid: string, weekNo: number, file: File): Promise<string> => {
+    try {
+        const storageRef = ref(storage, `club_submissions/${uid}/week_${weekNo}/${file.name}`);
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
     } catch (error) {
@@ -168,44 +211,35 @@ export const uploadClubVideo = async (userId: string, weekNo: number, file: File
     }
 };
 
-export const saveClubSubmission = async (userId: string, weekNo: number, videoUrl: string, feedback: AIFeedback) => {
+export const saveClubSubmission = async (uid: string, weekNo: number, videoUrl: string, feedback: AIFeedback) => {
     try {
-        const submissionRef = collection(db, "submissions");
-        await addDoc(submissionRef, {
-            userId,
+        const submissionId = `${uid}_week${weekNo}`;
+        const submissionRef = doc(db, "clubSubmissions", submissionId);
+        
+        const submission: any = {
+            userId: uid,
             weekNo,
             videoUrl,
             feedback,
-            submittedAt: new Date()
-        });
+            submittedAt: serverTimestamp()
+        };
+        
+        await setDoc(submissionRef, submission);
     } catch (error) {
         console.error("Error saving submission:", error);
         throw error;
     }
 };
 
-export const getStudentHistory = async (userId: string): Promise<ClubSubmission[]> => {
+export const getStudentHistory = async (uid: string): Promise<ClubSubmission[]> => {
     try {
-        const q = query(
-            collection(db, "submissions"),
-            where("userId", "==", userId),
-            orderBy("submittedAt", "desc")
-        );
+        const q = query(collection(db, "clubSubmissions"), where("userId", "==", uid));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubSubmission));
+        const submissions = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ClubSubmission));
+        // Sort by weekNo descending
+        return submissions.sort((a, b) => b.weekNo - a.weekNo);
     } catch (error) {
-        console.error("Error getting history:", error);
+        console.error("Error fetching history:", error);
         return [];
     }
-};
-
-export const getWeeklyTask = async (weekNo: number): Promise<WeeklyTask | null> => {
-    // In a real application, fetch from 'tasks' collection where weekNo matches
-    return {
-        id: `week-${weekNo}`,
-        weekNo,
-        title: `News Report: Week ${weekNo}`,
-        description: "Record a 2-minute news segment covering a local event or a technological breakthrough. Focus on clear diction and maintaining eye contact.",
-        deadline: "Sunday 23:59"
-    };
 };

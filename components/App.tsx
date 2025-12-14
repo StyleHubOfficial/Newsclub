@@ -133,15 +133,20 @@ const App = () => {
 
     // Auth & Data Sync
     const checkUserProfile = useCallback(async (user: User) => {
-        const profile = await getUserProfile(user.uid);
-        if (profile) {
-            setUserProfile(profile);
-            setShowAuthModal(false);
-            // Log login time
-            await logUserLogin(user.uid);
-        } else {
-            // Profile doesn't exist - Trigger signup flow
-            setShowAuthModal(true);
+        try {
+            const profile = await getUserProfile(user.uid);
+            if (profile) {
+                setUserProfile(profile);
+                setShowAuthModal(false);
+                // Log login time
+                await logUserLogin(user.uid);
+            } else {
+                // Profile doesn't exist - Trigger signup flow
+                setShowAuthModal(true);
+            }
+        } catch (err) {
+            console.error("Profile check failed", err);
+            // Don't block app, maybe show error or retry
         }
     }, []);
 
@@ -225,8 +230,7 @@ const App = () => {
 
     const fetchMoreArticles = useCallback(async () => {
         if (isLoadingMore) return;
-        // LOGIN RESTRICTION FOR INFINITE SCROLL REMOVED
-
+        
         setIsLoadingMore(true);
         try {
             const newRawArticles = await generateFuturisticArticles(4);
@@ -245,8 +249,7 @@ const App = () => {
 
     const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
         if (isLoadingMore || showSavedOnly) return;
-        // If not logged in, we don't trigger load more (REMOVED)
-
+        
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting) {
@@ -398,19 +401,8 @@ const App = () => {
                         onTriggerLogin={() => setShowLoginModal(true)}
                     />
                     
-                    {/* Infinite Scroll Trigger OR Login Prompt */}
-                    {currentUser ? (
-                        <div ref={lastArticleElementRef} className="h-10 w-full"></div>
-                    ) : (
-                        <div className="py-8 pb-32 flex justify-center w-full">
-                            <button 
-                                onClick={() => setShowLoginModal(true)}
-                                className="px-8 py-3 bg-brand-primary/10 border border-brand-primary/50 text-brand-primary font-orbitron text-xs rounded-full hover:bg-brand-primary hover:text-black transition-all animate-pulse-glow"
-                            >
-                                LOGIN TO ACCESS FULL DATABASE
-                            </button>
-                        </div>
-                    )}
+                    {/* Infinite Scroll Trigger - Always Active */}
+                    <div ref={lastArticleElementRef} className="h-10 w-full"></div>
 
                     {isLoadingMore && !showSavedOnly && (
                         <div className="flex justify-center items-center py-8">
