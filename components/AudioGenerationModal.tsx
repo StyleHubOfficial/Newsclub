@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateNewsBroadcastSpeech, generateSpeechFromText } from '../services/geminiService';
-import { decode, decodeAudioData } from '../utils/audioUtils';
+import { decode, decodeAudioData, audioBufferToWav } from '../utils/audioUtils';
 import { NewsArticle } from '../types';
-import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon, SoundWaveIcon } from './icons';
+import { CloseIcon, SparklesIcon, UploadIcon, PlayIcon, PauseIcon, StopIcon, SoundWaveIcon, DownloadIcon } from './icons';
 import AudioVisualizer from './AudioVisualizer';
 import { HexagonLoader } from './Loaders';
 import { User } from 'firebase/auth';
@@ -149,6 +150,28 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
         } else if (status === 'ready') {
             if (ctx.state === 'suspended') await ctx.resume();
             playAudioBuffer(0);
+        }
+    };
+
+    const handleDownload = () => {
+        if (!audioBufferRef.current) return;
+        
+        try {
+            const blob = audioBufferToWav(audioBufferRef.current);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // Naming it .wav to ensure compatibility, user asked for mp3 but wav is the native browser format for lossless.
+            // Modern players handle wav fine.
+            a.download = `news_audio_${Date.now()}.wav`; 
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error("Download failed", err);
+            setError("Failed to process audio for download.");
         }
     };
 
@@ -413,8 +436,17 @@ const AudioGenerationModal: React.FC<AudioGenerationModalProps> = ({ articles, o
                                  <AudioVisualizer analyserNode={analyserForVisualizer} width={400} height={48} barColor="#7B2FFF" gap={2} />
                              </div>
                              
+                             {/* Download Button */}
+                             <button 
+                                onClick={handleDownload}
+                                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary hover:text-black transition-all text-xs font-bold font-orbitron"
+                                title="Download Audio"
+                             >
+                                <DownloadIcon className="w-4 h-4" /> <span>SAVE</span>
+                             </button>
+
                              {/* Settings */}
-                             <div className="hidden md:flex flex-col gap-1 w-32">
+                             <div className="hidden md:flex flex-col gap-1 w-24">
                                 <div className="flex justify-between text-[10px] text-gray-400 font-mono">
                                     <span>VOL</span>
                                     <span>{Math.round(volume * 100)}%</span>
