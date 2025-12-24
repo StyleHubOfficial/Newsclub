@@ -13,7 +13,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
 
     const handleRedirect = () => {
-        window.location.href = 'https://newsclub-app.vercel.app';
+        window.location.href = 'https://newsapp02.vercel.app';
     };
 
     return (
