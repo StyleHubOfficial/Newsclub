@@ -339,7 +339,7 @@ export async function generateNewsBroadcastSpeech(
     }
 }
 
-export async function generateSpeechFromText(text: string): Promise<string | null> {
+export async function generateSpeechFromText(text: string, voiceName: string = 'Kore'): Promise<string | null> {
     const ai = getAiClient();
     try {
         const response = await ai.models.generateContent({
@@ -349,7 +349,7 @@ export async function generateSpeechFromText(text: string): Promise<string | nul
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' },
+                        prebuiltVoiceConfig: { voiceName: voiceName },
                     },
                 },
             },
