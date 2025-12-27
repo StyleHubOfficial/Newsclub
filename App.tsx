@@ -14,10 +14,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import HomeView from './components/HomeView'; 
 import AuthModal from './components/AuthModal';
-import ClubDashboard from './components/ClubDashboard';
 import AdminPanel from './components/AdminPanel';
 import LoginModal from './components/LoginModal'; 
 import ProfileModal from './components/ProfileModal'; 
+import VoiceCloneModal from './components/VoiceCloneModal';
 import ParticleBackground from './components/ParticleBackground';
 import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
 import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
@@ -25,7 +25,7 @@ import { NewsArticle, UserProfile } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin } from './services/dbService';
+import { toggleCloudSavedArticle, loadUserData, saveUserPreferences, getUserProfile, logUserLogin, createUserProfile } from './services/dbService';
 
 const initialArticles = [
     // Page 1
@@ -111,6 +111,8 @@ const App = () => {
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
     const [isAudioGenOpen, setAudioGenOpen] = useState(false);
+    const [isVoiceCloneOpen, setVoiceCloneOpen] = useState(false);
+    
     const [searchResults, setSearchResults] = useState<any>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
@@ -118,7 +120,7 @@ const App = () => {
     // Pagination & Infinite Scroll
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [preferences, setPreferences] = useState<{categories: string[], sources: string[]}>({ categories: [], sources: [] });
-    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'club' | 'admin'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'reels' | 'admin'>('grid');
     
     const [savedArticles, setSavedArticles] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -134,15 +136,35 @@ const App = () => {
 
     // Auth & Data Sync
     const checkUserProfile = useCallback(async (user: User) => {
-        const profile = await getUserProfile(user.uid);
-        if (profile) {
-            setUserProfile(profile);
-            setShowAuthModal(false);
-            // Log login time
-            await logUserLogin(user.uid);
-        } else {
-            // Profile doesn't exist - Trigger signup flow
-            setShowAuthModal(true);
+        try {
+            let profile = await getUserProfile(user.uid);
+            
+            if (!profile) {
+                // AUTO-CREATE PROFILE to skip setup screen
+                const newProfile = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || 'News Agent',
+                    photoURL: user.photoURL || undefined,
+                    role: 'user' as const,
+                    bio: 'Ready for intelligence.',
+                };
+                await createUserProfile(user.uid, newProfile);
+                
+                // Fetch the newly created profile
+                profile = await getUserProfile(user.uid);
+            }
+
+            if (profile) {
+                setUserProfile(profile);
+                setShowAuthModal(false); // Ensure modal is closed
+                // Log login time
+                await logUserLogin(user.uid);
+            }
+        } catch (err) {
+            console.error("Profile check/creation failed", err);
+            // Fallback: If auto-creation fails, we might end up here, 
+            // but we avoid blocking the user from at least seeing the public interface.
         }
     }, []);
 
@@ -152,7 +174,7 @@ const App = () => {
             if (user) {
                 setIsVerifyingIdentity(true); // START LOADING
                 
-                // Check if profile exists in DB
+                // Check if profile exists in DB (or create it)
                 await checkUserProfile(user);
 
                 // Load Cloud Data
@@ -182,10 +204,11 @@ const App = () => {
     };
 
     // Helper to ensure mutual exclusivity
-    const openTool = useCallback((tool: 'chat' | 'live' | 'audio') => {
+    const openTool = useCallback((tool: 'chat' | 'live' | 'audio' | 'voiceClone') => {
         setChatOpen(tool === 'chat');
         setLiveAgentOpen(tool === 'live');
         setAudioGenOpen(tool === 'audio');
+        setVoiceCloneOpen(tool === 'voiceClone');
         setSelectedArticle(null); // Close article if open
         setPersonalizationModalOpen(false); // Close personalization
         setProfileModalOpen(false);
@@ -195,6 +218,7 @@ const App = () => {
         setChatOpen(false);
         setLiveAgentOpen(false);
         setAudioGenOpen(false);
+        setVoiceCloneOpen(false);
         setSelectedArticle(null);
         setPersonalizationModalOpen(false);
         setProfileModalOpen(false);
@@ -226,9 +250,7 @@ const App = () => {
 
     const fetchMoreArticles = useCallback(async () => {
         if (isLoadingMore) return;
-        // LOGIN RESTRICTION FOR INFINITE SCROLL
-        if (!currentUser) return; 
-
+        
         setIsLoadingMore(true);
         try {
             const newRawArticles = await generateFuturisticArticles(4);
@@ -243,13 +265,11 @@ const App = () => {
         } finally {
             setIsLoadingMore(false);
         }
-    }, [isLoadingMore, currentUser]);
+    }, [isLoadingMore]);
 
     const lastArticleElementRef = useCallback((node: HTMLDivElement) => {
         if (isLoadingMore || showSavedOnly) return;
-        // If not logged in, we don't trigger load more
-        if (!currentUser) return;
-
+        
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting) {
@@ -257,7 +277,7 @@ const App = () => {
             }
         });
         if (node) observer.current.observe(node);
-    }, [isLoadingMore, showSavedOnly, fetchMoreArticles, currentUser]);
+    }, [isLoadingMore, showSavedOnly, fetchMoreArticles]);
 
     const handleCardClick = useCallback((article: NewsArticle) => {
         closeAll();
@@ -363,18 +383,6 @@ const App = () => {
                 </ErrorBoundary>
             </div>
         );
-    } else if (viewMode === 'club') {
-        mainContent = currentUser ? (
-            <div key="club" className="flex-grow relative z-10 animate-page-enter pt-16">
-                <ErrorBoundary componentName="ClubDashboard">
-                    <ClubDashboard user={currentUser} />
-                </ErrorBoundary>
-            </div>
-        ) : (
-            <div className="flex-grow flex items-center justify-center pt-16">
-                <p className="text-white">Please Login to access Club Features.</p>
-            </div>
-        );
     } else if (viewMode === 'admin') {
         mainContent = (currentUser && userProfile?.role === 'admin') ? (
             <div key="admin" className="flex-grow relative z-10 animate-page-enter pt-16 h-screen">
@@ -407,25 +415,15 @@ const App = () => {
                         onOpenChat={() => openTool('chat')}
                         onOpenLive={() => openTool('live')}
                         onOpenAudio={() => openTool('audio')}
+                        onOpenVoiceClone={() => openTool('voiceClone')}
                         onViewReels={() => setViewMode('reels')}
                         onSearch={handleSearch}
                         isUserLoggedIn={!!currentUser} // PASS USER STATUS
                         onTriggerLogin={() => setShowLoginModal(true)}
                     />
                     
-                    {/* Infinite Scroll Trigger OR Login Prompt */}
-                    {currentUser ? (
-                        <div ref={lastArticleElementRef} className="h-10 w-full"></div>
-                    ) : (
-                        <div className="py-8 pb-32 flex justify-center w-full">
-                            <button 
-                                onClick={() => window.location.href = 'https://newsclub-app.vercel.app'}
-                                className="px-8 py-3 bg-brand-primary/10 border border-brand-primary/50 text-brand-primary font-orbitron text-xs rounded-full hover:bg-brand-primary hover:text-black transition-all animate-pulse-glow"
-                            >
-                                LOGIN TO ACCESS FULL DATABASE
-                            </button>
-                        </div>
-                    )}
+                    {/* Infinite Scroll Trigger - Always Active */}
+                    <div ref={lastArticleElementRef} className="h-10 w-full"></div>
 
                     {isLoadingMore && !showSavedOnly && (
                         <div className="flex justify-center items-center py-8">
@@ -467,7 +465,7 @@ const App = () => {
             
             {mainContent}
 
-            {/* Auth Modal for New Users */}
+            {/* Auth Modal for New Users - Kept for fallback/completeness but skipped by logic */}
             {showAuthModal && currentUser && (
                 <AuthModal user={currentUser} onComplete={handleProfileComplete} />
             )}
@@ -524,8 +522,15 @@ const App = () => {
                         articles={articles} 
                         onClose={() => setAudioGenOpen(false)} 
                         user={currentUser} // PASS USER
-                        onLoginRequest={() => { /* Guest access allowed, login prompt inside if needed */ }}
+                        onLoginRequest={() => { /* Guest access allowed */ }}
                     />
+                </ErrorBoundary>
+            )}
+
+            {/* Voice Clone Modal */}
+            {isVoiceCloneOpen && (
+                <ErrorBoundary componentName="VoiceCloneModal">
+                    <VoiceCloneModal onClose={() => setVoiceCloneOpen(false)} />
                 </ErrorBoundary>
             )}
             
@@ -580,7 +585,7 @@ const App = () => {
             {/* Bottom Nav - Hide in reels mode */}
             {viewMode !== 'reels' && (
                 <BottomNav 
-                    viewMode={(viewMode === 'club' || viewMode === 'admin') ? 'grid' : viewMode}
+                    viewMode={viewMode === 'admin' ? 'grid' : viewMode}
                     onChangeView={(mode) => setViewMode(mode)}
                     onOpenExplore={() => {
                         document.getElementById('trending-section')?.scrollIntoView({ behavior: 'smooth' });

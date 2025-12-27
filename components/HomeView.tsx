@@ -12,7 +12,8 @@ import {
     ReelsIcon, 
     ChartIcon,
     SearchIcon,
-    ListIcon
+    ListIcon,
+    FingerprintIcon
 } from './icons';
 import NeonSignature from './NeonSignature';
 
@@ -24,6 +25,7 @@ interface HomeViewProps {
     onOpenChat: () => void;
     onOpenLive: () => void;
     onOpenAudio: () => void;
+    onOpenVoiceClone: () => void;
     onViewReels: () => void;
     onSearch: (query: string) => void;
     isUserLoggedIn: boolean;
@@ -84,6 +86,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     onOpenChat,
     onOpenLive,
     onOpenAudio,
+    onOpenVoiceClone,
     onViewReels,
     onSearch,
     isUserLoggedIn,
@@ -149,10 +152,10 @@ const HomeView: React.FC<HomeViewProps> = ({
                 
                 <div className="grid grid-cols-3 gap-3 md:gap-6">
                     {[
-                        { label: 'AI Audio', icon: <SoundWaveIcon className="w-6 h-6"/>, action: onOpenAudio, color: 'text-brand-secondary', bg: 'bg-brand-secondary/10', glow: 'shadow-[0_0_20px_rgba(123,47,255,0.4)]' },
+                        { label: 'Voice Clone', icon: <FingerprintIcon className="w-6 h-6"/>, action: onOpenVoiceClone, color: 'text-teal-400', bg: 'bg-teal-400/10', glow: 'shadow-[0_0_20px_rgba(45,212,191,0.4)]' },
                         { label: 'Live Agent', icon: <MicIcon className="w-6 h-6"/>, action: onOpenLive, color: 'text-brand-accent', bg: 'bg-brand-accent/10', glow: 'shadow-[0_0_20px_rgba(40,255,211,0.4)]' },
                         { label: 'AI Chat', icon: <BoltIcon className="w-6 h-6"/>, action: onOpenChat, color: 'text-brand-primary', bg: 'bg-brand-primary/10', glow: 'shadow-[0_0_20px_rgba(58,190,254,0.4)]' },
-                        { label: 'Img Create', icon: <ImageIcon className="w-6 h-6"/>, action: () => onOpenChat(), color: 'text-green-400', bg: 'bg-green-400/10', glow: 'shadow-[0_0_20px_rgba(74,222,128,0.4)]' }, 
+                        { label: 'AI Audio', icon: <SoundWaveIcon className="w-6 h-6"/>, action: onOpenAudio, color: 'text-brand-secondary', bg: 'bg-brand-secondary/10', glow: 'shadow-[0_0_20px_rgba(123,47,255,0.4)]' },
                         { label: 'Analyzer', icon: <BrainIcon className="w-6 h-6"/>, action: () => onSearch('Deep analysis of current global news trends'), color: 'text-yellow-400', bg: 'bg-yellow-400/10', glow: 'shadow-[0_0_20px_rgba(250,204,21,0.4)]' },
                         { label: 'Reels Mode', icon: <ReelsIcon className="w-6 h-6"/>, action: onViewReels, color: 'text-pink-400', bg: 'bg-pink-400/10', glow: 'shadow-[0_0_20px_rgba(244,114,182,0.4)]' },
                     ].map((feature, idx) => (
