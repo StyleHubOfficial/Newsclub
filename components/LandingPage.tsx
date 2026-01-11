@@ -12,38 +12,46 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
-    const [isDownloading, setIsDownloading] = useState(false);
+    const [showInstallModal, setShowInstallModal] = useState(false);
 
-    const handleRedirect = () => {
-        window.location.href = 'https://newsapp02.vercel.app';
-    };
-
-    const handleDownloadApk = () => {
-        if (isDownloading) return;
-        setIsDownloading(true);
-        
-        // Simulate download preparation
-        setTimeout(() => {
-            const link = document.createElement('a');
-            // Mock file creation
-            const blob = new Blob(["News Club APK Installer v3.0 - (Simulation)"], { type: 'application/vnd.android.package-archive' });
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = 'NewsClub_v3.0.apk';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            setIsDownloading(false);
-            alert("Download Started: NewsClub_v3.0.apk");
-        }, 2000);
+    const handleInstallApp = () => {
+        // Since we can't build a real APK in the browser, we show an instruction modal
+        // explaining that this is a Web App (PWA) or that the APK is coming soon.
+        setShowInstallModal(true);
     };
 
     return (
         <div className="min-h-[100dvh] bg-[#050505] text-brand-text overflow-x-hidden relative selection:bg-brand-primary selection:text-black">
             
-            {/* Background Parallax Elements - Updated Colors */}
+            {/* Install Modal */}
+            {showInstallModal && (
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowInstallModal(false)}>
+                    <div className="bg-[#121212] border border-white/10 p-8 rounded-3xl max-w-sm text-center relative shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AndroidIcon className="w-8 h-8 text-green-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Install App</h3>
+                        <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                            The native APK is currently in Beta. For the best experience now, install the Web App directly to your device:
+                        </p>
+                        <div className="bg-white/5 rounded-xl p-4 text-left space-y-3 mb-6">
+                            <div className="flex items-center gap-3 text-sm text-gray-300">
+                                <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">1</span>
+                                <span>Tap the browser menu (⋮)</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-gray-300">
+                                <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">2</span>
+                                <span>Select "Install App" or "Add to Home Screen"</span>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowInstallModal(false)} className="w-full py-3 bg-brand-primary text-black font-bold rounded-xl hover:bg-white transition-colors">
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Background Parallax Elements */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]"></div>
                 <div className="absolute top-[-20%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand-primary/10 rounded-full blur-[100px] animate-pulse-glow"></div>
@@ -78,7 +86,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                              News Club is a sentient information hub. Voice, audio, and vision integrated into one seamless glass interface.
                         </p>
                         
-                        {/* TAGLINE ADDITION */}
                         <div className="inline-flex items-center gap-2 md:pl-6 animate-pulse-glow">
                             <BoltIcon className="w-4 h-4 text-brand-primary" />
                             <span className="text-[10px] md:text-xs font-orbitron font-bold text-brand-primary tracking-widest uppercase text-shadow-neon">
@@ -106,13 +113,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
                                 ENTER SYSTEM <BoltIcon className="w-5 h-5" />
                             </span>
-                            {/* Inner Shine Effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                         </button>
 
                         <button 
-                            onClick={handleDownloadApk}
-                            disabled={isDownloading}
+                            onClick={handleInstallApp}
                             className="
                                 group relative px-10 py-4 overflow-hidden rounded-full 
                                 bg-green-500/10 border border-green-500/50 text-green-400 font-orbitron tracking-[0.2em] 
@@ -120,27 +125,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                                 hover:bg-green-500/20 hover:border-green-400 hover:shadow-[0_0_40px_rgba(74,222,128,0.4)] 
                                 hover:scale-105 hover:text-white
                                 active:scale-95 w-full md:w-auto backdrop-blur-md
-                                disabled:opacity-70 disabled:cursor-wait
                             "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
-                                {isDownloading ? 'INITIALIZING...' : 'DOWNLOAD APP'} <AndroidIcon className="w-5 h-5" />
-                            </span>
-                        </button>
-
-                        <button 
-                            onClick={handleRedirect}
-                            className="
-                                group relative px-10 py-4 overflow-hidden rounded-full 
-                                bg-brand-accent/10 border border-brand-accent text-brand-accent font-orbitron tracking-[0.2em] 
-                                transition-all duration-300 
-                                hover:bg-brand-accent hover:text-black hover:shadow-[0_0_40px_rgba(40,255,211,0.6)] 
-                                hover:scale-105
-                                active:scale-95 w-full md:w-auto backdrop-blur-md
-                            "
-                        >
-                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
-                                NEW INTERFACE <UserIcon className="w-5 h-5" />
+                                GET APP <AndroidIcon className="w-5 h-5" />
                             </span>
                         </button>
                     </div>
@@ -156,7 +144,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                             <h2 className="text-2xl md:text-4xl font-orbitron font-bold text-white tracking-[0.25em] uppercase relative z-10 animate-text-shimmer bg-[length:200%_auto]">
                                 <span className="text-brand-secondary mr-3">///</span> Advanced Modules
                             </h2>
-                            {/* Neon Underline & Light Beam Trail */}
                             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-brand-secondary to-transparent shadow-[0_0_15px_#7B2FFF] animate-draw-line"></div>
                             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1/4 h-[2px] bg-white blur-[2px] animate-pulse"></div>
                         </div>
@@ -180,8 +167,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                                     border border-white/10 
                                     p-8 
                                     shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]
-                                    
-                                    /* Micro-Interactions */
                                     animate-card-enter
                                     transition-all duration-300
                                     hover:scale-[1.02]
@@ -203,7 +188,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                 </div>
             </section>
 
-
             {/* SECTION D: AI POWER STRIP */}
             <section className="py-10 bg-brand-primary/5 border-y border-brand-primary/10 overflow-hidden relative">
                 <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]"></div>
@@ -222,7 +206,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                     ))}
                 </div>
             </section>
-
 
             {/* SECTION E: COMPARISON GRID */}
             <section className="py-20 container mx-auto px-4 md:px-6">
@@ -250,12 +233,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         <div key={idx} className={`
                             p-8 rounded-[22px] backdrop-blur-md transition-all border
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]
-                            
-                            /* Micro-Interactions */
                             animate-card-enter
                             hover:scale-[1.02]
                             hover:-translate-y-1
-                            
                             ${item.positive 
                                 ? 'bg-gradient-to-br from-brand-primary/10 to-transparent border-brand-primary/30 shadow-[0_0_20px_rgba(58,190,254,0.05)] hover:border-brand-primary/50' 
                                 : 'bg-gradient-to-br from-white/5 to-transparent border-white/5 grayscale opacity-60 hover:opacity-100 hover:border-white/20'}
@@ -287,8 +267,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                             bg-white/5 border border-brand-accent/50
                             text-white font-orbitron font-bold text-xl tracking-[0.2em] 
                             backdrop-blur-md
-                            
-                            /* Micro-Interactions */
                             transition-all duration-300 transform 
                             hover:bg-brand-accent/20 hover:border-brand-accent
                             hover:shadow-[0_0_80px_rgba(40,255,211,0.6)] 
@@ -299,7 +277,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         <span className="relative z-10 flex items-center justify-center gap-3">
                             LAUNCH APP <BoltIcon />
                         </span>
-                         {/* Inner Shine Effect */}
                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-sheen skew-x-12 z-0"></div>
                     </button>
                     
