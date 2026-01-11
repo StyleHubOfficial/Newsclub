@@ -13,7 +13,8 @@ import {
     ChartIcon,
     SearchIcon,
     ListIcon,
-    FingerprintIcon
+    FingerprintIcon,
+    AndroidIcon
 } from './icons';
 import NeonSignature from './NeonSignature';
 
@@ -94,6 +95,19 @@ const HomeView: React.FC<HomeViewProps> = ({
 }) => {
     // Trending Topics Data
     const trendingTopics = ["Artificial Intelligence", "Space Exploration", "Quantum Tech", "Biotech", "Cybersecurity", "Green Energy"];
+
+    const handleDownloadApk = () => {
+        const link = document.createElement('a');
+        const blob = new Blob(["News Club APK Installer v3.0 - (Simulation)"], { type: 'application/vnd.android.package-archive' });
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = 'NewsClub_v3.0.apk';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert("Download Started: NewsClub_v3.0.apk");
+    };
 
     return (
         <div className="flex flex-col space-y-10 md:space-y-16 pb-24 animate-fade-in pt-8">
@@ -319,6 +333,9 @@ const HomeView: React.FC<HomeViewProps> = ({
             <footer className="mt-16 py-16 border-t border-brand-primary/10 bg-[#020202] text-center">
                 <RevealOnScroll animation="fade-up">
                     <div className="flex flex-col items-center gap-6">
+                        <button onClick={handleDownloadApk} className="text-[10px] text-green-400 font-orbitron tracking-widest uppercase flex items-center gap-2 hover:underline">
+                            <AndroidIcon className="w-4 h-4" /> Download Mobile App
+                        </button>
                         <p className="text-[9px] text-brand-text-muted font-orbitron tracking-[0.3em] uppercase opacity-50">
                             Architected & Designed By
                         </p>

@@ -1,9 +1,10 @@
 
-import React, { useRef } from 'react';
-import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon, UserIcon } from './icons';
+import React, { useRef, useState } from 'react';
+import { BoltIcon, MicIcon, SoundWaveIcon, BrainIcon, ImageIcon, ChartIcon, UserIcon, AndroidIcon, DownloadIcon } from './icons';
 import ThreeDEarth from './ThreeDEarth';
 import NeonSignature from './NeonSignature';
 import RevealOnScroll from './RevealOnScroll';
+import { HexagonLoader } from './Loaders';
 
 interface LandingPageProps {
     onEnterApp: () => void;
@@ -11,9 +12,32 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
     const featureSectionRef = useRef<HTMLElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const handleRedirect = () => {
         window.location.href = 'https://newsapp02.vercel.app';
+    };
+
+    const handleDownloadApk = () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        
+        // Simulate download preparation
+        setTimeout(() => {
+            const link = document.createElement('a');
+            // Mock file creation
+            const blob = new Blob(["News Club APK Installer v3.0 - (Simulation)"], { type: 'application/vnd.android.package-archive' });
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = 'NewsClub_v3.0.apk';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            setIsDownloading(false);
+            alert("Download Started: NewsClub_v3.0.apk");
+        }, 2000);
     };
 
     return (
@@ -67,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                          <NeonSignature />
                     </div>
 
-                    <div className="flex flex-col md:flex-row gap-4 pt-4 md:pt-6 items-center md:items-start w-full md:w-auto">
+                    <div className="flex flex-col md:flex-row gap-4 pt-4 md:pt-6 items-center md:items-start w-full md:w-auto flex-wrap justify-center md:justify-start">
                         <button 
                             onClick={onEnterApp}
                             className="
@@ -87,6 +111,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                         </button>
 
                         <button 
+                            onClick={handleDownloadApk}
+                            disabled={isDownloading}
+                            className="
+                                group relative px-10 py-4 overflow-hidden rounded-full 
+                                bg-green-500/10 border border-green-500/50 text-green-400 font-orbitron tracking-[0.2em] 
+                                transition-all duration-300 
+                                hover:bg-green-500/20 hover:border-green-400 hover:shadow-[0_0_40px_rgba(74,222,128,0.4)] 
+                                hover:scale-105 hover:text-white
+                                active:scale-95 w-full md:w-auto backdrop-blur-md
+                                disabled:opacity-70 disabled:cursor-wait
+                            "
+                        >
+                             <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
+                                {isDownloading ? 'INITIALIZING...' : 'DOWNLOAD APP'} <AndroidIcon className="w-5 h-5" />
+                            </span>
+                        </button>
+
+                        <button 
                             onClick={handleRedirect}
                             className="
                                 group relative px-10 py-4 overflow-hidden rounded-full 
@@ -98,7 +140,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                             "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
-                                LOGIN TO NEW INTERFACE <UserIcon className="w-5 h-5" />
+                                NEW INTERFACE <UserIcon className="w-5 h-5" />
                             </span>
                         </button>
                     </div>

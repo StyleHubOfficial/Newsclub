@@ -1,4 +1,4 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HolographicScanner } from './Loaders';
 
 interface ErrorBoundaryProps {
@@ -11,28 +11,25 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null
-    };
-  }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  };
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`Uncaught error in ${this.props.componentName || 'Unknown Component'}:`, error, errorInfo);
   }
 
-  handleReset = () => {
+  public handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
 
-  render() {
+  public render() {
     if (this.state.hasError) {
       return (
         <div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-6 bg-brand-surface/50 border border-brand-accent/30 rounded-lg backdrop-blur-sm animate-fade-in">
