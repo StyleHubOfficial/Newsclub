@@ -233,7 +233,6 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
         const enhancedPrompt = `High quality, photorealistic, cinematic lighting, futuristic style: ${prompt}`;
 
         // Using gemini-2.5-flash-image for speed and stability
-        // REMOVED imageSize as it is not supported on flash models and causes 500 errors
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', 
             contents: [{
@@ -375,7 +374,7 @@ export async function generateFuturisticArticles(count: number = 4): Promise<Omi
         - category: string (One word e.g. 'Cybernetics', 'Space')
         - source: string (Fictional news source name)
         
-        Do not use markdown formatting. Just raw JSON.`;
+        IMPORTANT: Return ONLY the raw JSON. Do not wrap it in markdown code blocks like \`\`\`json ... \`\`\`. Do not add any conversational text.`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -385,8 +384,10 @@ export async function generateFuturisticArticles(count: number = 4): Promise<Omi
             }
         });
         
-        const rawText = response.text;
-        if (!rawText) return [];
+        let rawText = response.text || "[]";
+        
+        // CLEANUP: Remove markdown code blocks if they exist (common model behavior even with JSON mode)
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const articles = JSON.parse(rawText);
         

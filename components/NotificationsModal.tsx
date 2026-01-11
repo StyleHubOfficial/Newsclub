@@ -16,16 +16,38 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ userId, onClose
 
     useEffect(() => {
         const fetch = async () => {
-            const msgs = await getUserMessages(userId);
-            setMessages(msgs);
-            setLoading(false);
-            
-            // Mark unread as read
-            msgs.forEach(msg => {
-                if (!msg.readBy?.includes(userId) && msg.id) {
-                    markMessageRead(msg.id, userId);
+            try {
+                let msgs = await getUserMessages(userId);
+                
+                // Fallback System Message if empty
+                if (msgs.length === 0) {
+                    const welcomeMsg: AdminMessage = {
+                        id: 'system-welcome',
+                        senderId: 'system',
+                        senderName: 'News Club System',
+                        recipients: [userId],
+                        targetType: 'user',
+                        content: "Welcome to News Club. This is your secure feed for admin updates and personalized alerts. Stay tuned for intelligence briefings.",
+                        channels: ['app'],
+                        readBy: [],
+                        createdAt: { seconds: Date.now() / 1000 }
+                    };
+                    msgs = [welcomeMsg];
                 }
-            });
+
+                setMessages(msgs);
+                
+                // Mark unread as read (except system dummy)
+                msgs.forEach(msg => {
+                    if (msg.id !== 'system-welcome' && !msg.readBy?.includes(userId) && msg.id) {
+                        markMessageRead(msg.id, userId);
+                    }
+                });
+            } catch (error) {
+                console.error("Failed to load notifications", error);
+            } finally {
+                setLoading(false);
+            }
         };
         fetch();
     }, [userId]);
@@ -56,7 +78,7 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({ userId, onClose
                                 <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary"></div>
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-brand-primary text-xs font-bold font-orbitron flex items-center gap-1">
-                                        <BoltIcon className="w-3 h-3" /> ADMIN
+                                        <BoltIcon className="w-3 h-3" /> {msg.senderName || 'ADMIN'}
                                     </span>
                                     <span className="text-[10px] text-gray-500">
                                         {msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}

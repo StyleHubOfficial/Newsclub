@@ -128,7 +128,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
                             "
                         >
                              <span className="relative flex items-center justify-center gap-3 font-bold text-sm md:text-base z-10">
-                                GET APP <AndroidIcon className="w-5 h-5" />
+                                INSTALL APP <AndroidIcon className="w-5 h-5" />
                             </span>
                         </button>
                     </div>
