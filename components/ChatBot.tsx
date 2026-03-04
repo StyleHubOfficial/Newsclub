@@ -31,6 +31,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
     ]);
     const [input, setInput] = useState('');
     const [mode, setMode] = useState<'chat' | 'image'>('chat');
+    const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
     const [isRecording, setIsRecording] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -146,7 +147,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
                     ? { ...msg, text: (msg.text || '') + chunk, isLoading: false } 
                     : msg
             ));
-        });
+        }, selectedModel);
     }
 
     const handleImageGeneration = async () => {
@@ -221,7 +222,21 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
                             <h2 className="font-orbitron text-sm text-brand-primary font-bold tracking-wider">NEWS REPORTER</h2>
                             <div className="flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-pulse shadow-[0_0_5px_#28FFD3]"></span>
-                                <span className="text-[9px] text-brand-text-muted uppercase tracking-widest">System Active</span>
+                                <select 
+                                    value={selectedModel} 
+                                    onChange={(e) => {
+                                        const newModel = e.target.value;
+                                        setSelectedModel(newModel);
+                                        resetChat();
+                                        setMessages([{ id: 'initial', text: `Switched to ${newModel}. How can I help you?`, sender: 'bot' }]);
+                                    }}
+                                    className="bg-transparent border-none text-[9px] text-brand-text-muted uppercase tracking-widest focus:outline-none cursor-pointer hover:text-brand-primary"
+                                >
+                                    <option value="gemini-2.5-flash" className="bg-[#050505] text-white">Gemini 2.5 Flash</option>
+                                    <option value="gemini-3-flash-preview" className="bg-[#050505] text-white">Gemini 3 Flash</option>
+                                    <option value="gemini-3.1-pro-preview" className="bg-[#050505] text-white">Gemini 3.1 Pro</option>
+                                    <option value="gemini-3.1-flash-lite-preview" className="bg-[#050505] text-white">Gemini 3.1 Flash Lite</option>
+                                </select>
                             </div>
                         </div>
                     </div>

@@ -27,6 +27,7 @@ interface HomeViewProps {
     onOpenLive: () => void;
     onOpenAudio: () => void;
     onOpenVoiceClone: () => void;
+    onOpenImageGen: () => void;
     onViewReels: () => void;
     onSearch: (query: string) => void;
     isUserLoggedIn: boolean;
@@ -88,6 +89,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     onOpenLive,
     onOpenAudio,
     onOpenVoiceClone,
+    onOpenImageGen,
     onViewReels,
     onSearch,
     isUserLoggedIn,
@@ -161,7 +163,7 @@ const HomeView: React.FC<HomeViewProps> = ({
                         { label: 'Live Agent', icon: <MicIcon className="w-6 h-6"/>, action: onOpenLive, color: 'text-brand-accent', bg: 'bg-brand-accent/10', glow: 'shadow-[0_0_20px_rgba(40,255,211,0.4)]' },
                         { label: 'AI Chat', icon: <BoltIcon className="w-6 h-6"/>, action: onOpenChat, color: 'text-brand-primary', bg: 'bg-brand-primary/10', glow: 'shadow-[0_0_20px_rgba(58,190,254,0.4)]' },
                         { label: 'AI Audio', icon: <SoundWaveIcon className="w-6 h-6"/>, action: onOpenAudio, color: 'text-brand-secondary', bg: 'bg-brand-secondary/10', glow: 'shadow-[0_0_20px_rgba(123,47,255,0.4)]' },
-                        { label: 'Analyzer', icon: <BrainIcon className="w-6 h-6"/>, action: () => onSearch('Deep analysis of current global news trends'), color: 'text-yellow-400', bg: 'bg-yellow-400/10', glow: 'shadow-[0_0_20px_rgba(250,204,21,0.4)]' },
+                        { label: 'Image Gen', icon: <ImageIcon className="w-6 h-6"/>, action: onOpenImageGen, color: 'text-pink-500', bg: 'bg-pink-500/10', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.4)]' },
                         { label: 'Reels Mode', icon: <ReelsIcon className="w-6 h-6"/>, action: onViewReels, color: 'text-pink-400', bg: 'bg-pink-400/10', glow: 'shadow-[0_0_20px_rgba(244,114,182,0.4)]' },
                     ].map((feature, idx) => (
                         <RevealOnScroll key={idx} animation="fade-up" delay={idx * 50}>

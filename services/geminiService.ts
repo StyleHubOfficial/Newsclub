@@ -33,12 +33,14 @@ function getAiClient() {
 }
 
 let chatInstance: Chat | null = null;
+let currentModel: string = 'gemini-2.5-flash';
 
-function getChatInstance(forceReset: boolean = false): Chat {
-    if (forceReset || !chatInstance) {
+function getChatInstance(forceReset: boolean = false, model: string = 'gemini-2.5-flash'): Chat {
+    if (forceReset || !chatInstance || currentModel !== model) {
         const ai = getAiClient();
+        currentModel = model;
         chatInstance = ai.chats.create({
-            model: 'gemini-2.5-flash',
+            model: model,
             config: {
                 // STRICT TOPIC RESTRICTION ADDED
                 systemInstruction: 'You are a dedicated News & Technology Reporter for the News Club App. You ONLY discuss news, current events, science, technology, and futuristic concepts. If a user asks about personal advice, creative writing (unrelated to news), or general chit-chat, politely refuse and steer the conversation back to the latest news or technological updates. Keep responses concise, professional, and informative.',
@@ -140,11 +142,12 @@ export async function searchWithGoogle(query: string): Promise<SearchResult> {
 
 export async function streamChatResponse(
     message: string | Part[],
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    model: string = 'gemini-2.5-flash'
 ): Promise<void> {
     try {
         // We use the existing instance. If it needs reset, it should be done via resetChat()
-        const chat = getChatInstance(); 
+        const chat = getChatInstance(false, model); 
         
         // The SDK expects { message: string | Part[] }
         const responseStream = await chat.sendMessageStream({ message });
@@ -225,7 +228,7 @@ async function addWatermark(base64Image: string): Promise<string> {
     });
 }
 
-export async function generateImageFromPrompt(prompt: string): Promise<string> {
+export async function generateImageFromPrompt(prompt: string, aspectRatio: string = "1:1"): Promise<string> {
     try {
         const ai = getAiClient();
         
@@ -240,7 +243,7 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
             }],
             config: {
                 imageConfig: {
-                    aspectRatio: "1:1",
+                    aspectRatio: aspectRatio,
                 }
             }
         });

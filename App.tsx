@@ -18,9 +18,10 @@ import AdminPanel from './components/AdminPanel';
 import LoginModal from './components/LoginModal'; 
 import ProfileModal from './components/ProfileModal'; 
 import VoiceCloneModal from './components/VoiceCloneModal';
+import ImageGenerationModal from './components/ImageGenerationModal';
 import ParticleBackground from './components/ParticleBackground';
 import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon } from './components/icons';
+import { BoltIcon, MicIcon, SoundWaveIcon, ImageIcon } from './components/icons';
 import { NewsArticle, UserProfile } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
@@ -111,6 +112,7 @@ const App = () => {
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
     const [isAudioGenOpen, setAudioGenOpen] = useState(false);
+    const [isImageGenOpen, setIsImageGenOpen] = useState(false);
     const [isVoiceCloneOpen, setVoiceCloneOpen] = useState(false);
     
     const [searchResults, setSearchResults] = useState<any>(null);
@@ -204,11 +206,12 @@ const App = () => {
     };
 
     // Helper to ensure mutual exclusivity
-    const openTool = useCallback((tool: 'chat' | 'live' | 'audio' | 'voiceClone') => {
+    const openTool = useCallback((tool: 'chat' | 'live' | 'audio' | 'voiceClone' | 'image') => {
         setChatOpen(tool === 'chat');
         setLiveAgentOpen(tool === 'live');
         setAudioGenOpen(tool === 'audio');
         setVoiceCloneOpen(tool === 'voiceClone');
+        setIsImageGenOpen(tool === 'image');
         setSelectedArticle(null); // Close article if open
         setPersonalizationModalOpen(false); // Close personalization
         setProfileModalOpen(false);
@@ -219,6 +222,7 @@ const App = () => {
         setLiveAgentOpen(false);
         setAudioGenOpen(false);
         setVoiceCloneOpen(false);
+        setIsImageGenOpen(false);
         setSelectedArticle(null);
         setPersonalizationModalOpen(false);
         setProfileModalOpen(false);
@@ -416,6 +420,7 @@ const App = () => {
                         onOpenLive={() => openTool('live')}
                         onOpenAudio={() => openTool('audio')}
                         onOpenVoiceClone={() => openTool('voiceClone')}
+                        onOpenImageGen={() => openTool('image')}
                         onViewReels={() => setViewMode('reels')}
                         onSearch={handleSearch}
                         isUserLoggedIn={!!currentUser} // PASS USER STATUS
@@ -533,10 +538,31 @@ const App = () => {
                     <VoiceCloneModal onClose={() => setVoiceCloneOpen(false)} />
                 </ErrorBoundary>
             )}
+
+            {/* Image Generation Modal */}
+            {isImageGenOpen && (
+                <ErrorBoundary componentName="ImageGenerationModal">
+                    <ImageGenerationModal onClose={() => setIsImageGenOpen(false)} />
+                </ErrorBoundary>
+            )}
             
             {/* Desktop FABs - Hide in reels mode */}
             {viewMode !== 'reels' && viewMode !== 'admin' && (
                 <div className="hidden md:flex fixed bottom-6 right-6 flex-col items-center gap-6 z-50">
+                    <button
+                        onClick={() => openTool('image')}
+                        className={`
+                            w-16 h-16 rounded-full flex items-center justify-center text-white 
+                            bg-white/5 border border-brand-primary/50 backdrop-blur-xl
+                            shadow-[0_0_20px_rgba(58,190,254,0.4)]
+                            hover:bg-brand-primary hover:text-black hover:shadow-[0_0_30px_#3ABEFE] hover:scale-110 
+                            transition-all duration-300
+                            ${isImageGenOpen ? 'ring-2 ring-white/50 bg-brand-primary text-black' : ''}
+                        `}
+                        aria-label="Open Image Generator"
+                    >
+                        <ImageIcon className="w-8 h-8" />
+                    </button>
                      <button
                         onClick={() => openTool('audio')}
                         className={`

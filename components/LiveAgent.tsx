@@ -171,7 +171,7 @@ const LiveAgent: React.FC<LiveAgentProps> = ({ onClose }) => {
                             setCurrentTurn({ user: '', model: '' });
                         }
 
-                        const audioData = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                         if (audioData && outputAudioContextRef.current) {
                             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputAudioContextRef.current.currentTime);
                             const audioBuffer = await decodeAudioData(decode(audioData), outputAudioContextRef.current, 24000, 1);

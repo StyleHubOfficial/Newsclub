@@ -213,7 +213,7 @@ const Header: React.FC<HeaderProps> = ({
                              </div>
                         ) : (
                              <button 
-                                onClick={onPersonalizeClick}
+                                onClick={() => window.location.href = 'https://newsclub-app.vercel.app'}
                                 className="
                                     group relative flex items-center justify-center gap-2 px-5 py-2 rounded-full overflow-hidden
                                     bg-white/5 border border-brand-primary/50 
