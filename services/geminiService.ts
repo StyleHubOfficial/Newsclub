@@ -88,7 +88,7 @@ export async function getDeepAnalysis(text: string): Promise<string> {
     const ai = getAiClient();
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: `Provide a deep, insightful analysis of the following article. Consider the technological, ethical, and societal implications. Break it down into sections with clear headings:\n\n---\n${text}`,
             config: {
                 thinkingConfig: { thinkingBudget: 16000 },
@@ -157,9 +157,22 @@ export async function streamChatResponse(
                 onChunk(chunk.text);
             }
         }
-    } catch (error) {
-        console.error("Chat streaming failed:", error);
-        onChunk("Sorry, an error occurred. Please try again or refresh the chat.");
+    } catch (error: any) {
+        console.error(`Chat streaming failed with model ${model}:`, error);
+        
+        // Fallback logic for 3.x models to 2.5-flash
+        if (model !== 'gemini-2.5-flash') {
+            console.log("Attempting fallback to gemini-2.5-flash...");
+            onChunk("\n\n[System: Primary model failed. Switching to backup frequency...]\n\n");
+            try {
+                await streamChatResponse(message, onChunk, 'gemini-2.5-flash');
+            } catch (fallbackError) {
+                console.error("Fallback chat streaming failed:", fallbackError);
+                onChunk("Sorry, connection to Neural Network lost. Please try again.");
+            }
+        } else {
+            onChunk("Sorry, an error occurred. Please try again or refresh the chat.");
+        }
     }
 }
 
@@ -235,9 +248,9 @@ export async function generateImageFromPrompt(prompt: string, aspectRatio: strin
         // Enhance prompt to ensure high quality and prevent model refusal on vague prompts
         const enhancedPrompt = `High quality, photorealistic, cinematic lighting, futuristic style: ${prompt}`;
 
-        // Using gemini-2.5-flash-image for speed and stability
+        // Using gemini-3.1-flash-image-preview as requested to avoid quota limits on 2.5
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image', 
+            model: 'gemini-3.1-flash-image-preview', 
             contents: [{
                 parts: [{ text: enhancedPrompt }],
             }],
