@@ -45,6 +45,14 @@ const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNo
         accent: 'from-brand-accent via-white',
         white: 'from-white via-brand-text-muted'
     };
+    
+    const textMap = {
+        primary: 'text-brand-primary',
+        secondary: 'text-brand-secondary',
+        accent: 'text-brand-accent',
+        white: 'text-white'
+    };
+
     const shadowColor = {
             primary: '#3ABEFE',
             secondary: '#7B2FFF',
@@ -69,7 +77,7 @@ const SectionHeading: React.FC<{ children: React.ReactNode, icon?: React.ReactNo
     return (
         <div ref={ref} className="group relative inline-block mb-8 transition-all duration-700">
             <div className={`flex items-center gap-3 relative z-10 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                {icon && <div className={`text-brand-${accent} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
+                {icon && <div className={`${textMap[accent]} drop-shadow-[0_0_5px_${shadowColor[accent]}] group-hover:scale-110 transition-transform duration-500`}>{icon}</div>}
                 <h3 className="text-sm md:text-base font-orbitron font-bold text-white tracking-[0.25em] uppercase">
                     {children}
                 </h3>
@@ -97,14 +105,48 @@ const HomeView: React.FC<HomeViewProps> = ({
 }) => {
     // Trending Topics Data
     const trendingTopics = ["Artificial Intelligence", "Space Exploration", "Quantum Tech", "Biotech", "Cybersecurity", "Green Energy"];
+    const [showInstallModal, setShowInstallModal] = useState(false);
 
     const handleInstallApp = () => {
-        alert("To install the Web App:\n\n1. Open your browser menu.\n2. Tap 'Add to Home Screen' or 'Install App'.\n\nNative Android APK is coming soon.");
+        setShowInstallModal(true);
     };
 
     return (
-        <div className="flex flex-col space-y-10 md:space-y-16 pb-24 animate-fade-in pt-8">
+        <div className="flex flex-col space-y-10 md:space-y-16 pb-24 animate-fade-in pt-8 relative">
             
+            {/* Install App Modal */}
+            {showInstallModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowInstallModal(false)}>
+                    <div className="bg-[#0a0a0a] border border-brand-primary/30 rounded-2xl p-6 max-w-sm w-full shadow-[0_0_30px_rgba(58,190,254,0.2)] relative" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-brand-text-muted hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className="p-3 bg-brand-primary/10 rounded-full border border-brand-primary/30">
+                                <AndroidIcon className="w-8 h-8 text-brand-primary" />
+                            </div>
+                            <h3 className="text-xl font-orbitron text-white tracking-wider">INSTALL APP</h3>
+                            <p className="text-sm text-brand-text-muted font-light leading-relaxed">
+                                To install the Web App:
+                                <br/><br/>
+                                1. Open your browser menu.
+                                <br/>
+                                2. Tap <span className="text-brand-primary font-bold">'Add to Home Screen'</span> or <span className="text-brand-primary font-bold">'Install App'</span>.
+                            </p>
+                            <p className="text-xs text-gray-500 pt-2">Native Android APK is coming soon.</p>
+                            <button 
+                                onClick={() => setShowInstallModal(false)}
+                                className="px-6 py-2 bg-brand-primary/10 border border-brand-primary/50 rounded-full text-brand-primary hover:bg-brand-primary hover:text-black transition-all font-orbitron text-xs tracking-widest mt-2"
+                            >
+                                GOT IT
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* SECTION A: HERO SECTION */}
             <section className="px-4 md:px-6 text-center space-y-5">
                 <RevealOnScroll animation="zoom-in">
@@ -283,13 +325,49 @@ const HomeView: React.FC<HomeViewProps> = ({
                 
                 <div className="grid grid-cols-3 gap-4 md:gap-6">
                     {[
-                        { title: 'Summarize', sub: 'Smart Briefs', icon: <ListIcon/>, action: () => onOpenChat(), color: 'primary' },
-                        { title: 'Voice Search', sub: 'Hands-Free', icon: <MicIcon/>, action: () => onOpenLive(), color: 'accent' },
-                        { title: 'Deep Dive', sub: 'Analytics', icon: <ChartIcon/>, action: () => onSearch('Analysis'), color: 'secondary' }
+                        { 
+                            title: 'Summarize', 
+                            sub: 'Smart Briefs', 
+                            icon: <ListIcon/>, 
+                            action: () => onOpenChat(), 
+                            classes: {
+                                hoverBorder: 'hover:border-brand-primary/50',
+                                bg: 'bg-brand-primary/10',
+                                text: 'text-brand-primary',
+                                groupHoverBg: 'group-hover:bg-brand-primary',
+                                groupHoverText: 'group-hover:text-brand-primary'
+                            }
+                        },
+                        { 
+                            title: 'Voice Search', 
+                            sub: 'Hands-Free', 
+                            icon: <MicIcon/>, 
+                            action: () => onOpenLive(), 
+                            classes: {
+                                hoverBorder: 'hover:border-brand-accent/50',
+                                bg: 'bg-brand-accent/10',
+                                text: 'text-brand-accent',
+                                groupHoverBg: 'group-hover:bg-brand-accent',
+                                groupHoverText: 'group-hover:text-brand-accent'
+                            }
+                        },
+                        { 
+                            title: 'Deep Dive', 
+                            sub: 'Analytics', 
+                            icon: <ChartIcon/>, 
+                            action: () => onSearch('Analysis'), 
+                            classes: {
+                                hoverBorder: 'hover:border-brand-secondary/50',
+                                bg: 'bg-brand-secondary/10',
+                                text: 'text-brand-secondary',
+                                groupHoverBg: 'group-hover:bg-brand-secondary',
+                                groupHoverText: 'group-hover:text-brand-secondary'
+                            }
+                        }
                     ].map((tool, idx) => (
                         <RevealOnScroll key={idx} animation="fade-up" delay={idx * 100}>
                             <button 
-                                className="
+                                className={`
                                     w-full
                                     flex flex-col items-center justify-center gap-3 
                                     px-4 py-6 
@@ -302,18 +380,18 @@ const HomeView: React.FC<HomeViewProps> = ({
                                     /* Micro-Interactions */
                                     transition-all duration-300
                                     hover:scale-[1.02]
-                                    hover:border-brand-${tool.color}/50  
+                                    ${tool.classes.hoverBorder}
                                     hover:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)]
                                     active:scale-95 active:animate-ripple
                                     group
-                                "
+                                `}
                                 onClick={tool.action}
                             >
-                                <div className={`p-3 rounded-full bg-brand-${tool.color}/10 border border-white/5 text-brand-${tool.color} group-hover:bg-brand-${tool.color} group-hover:text-black transition-colors shadow-inner`}>
+                                <div className={`p-3 rounded-full ${tool.classes.bg} border border-white/5 ${tool.classes.text} ${tool.classes.groupHoverBg} group-hover:text-black transition-colors shadow-inner`}>
                                     <div className="group-hover:animate-pulse-once">{tool.icon}</div>
                                 </div>
                                 <div className="text-center">
-                                    <span className={`block text-xs font-bold font-orbitron text-white group-hover:text-brand-${tool.color} transition-colors`}>{tool.title}</span>
+                                    <span className={`block text-xs font-bold font-orbitron text-white ${tool.classes.groupHoverText} transition-colors`}>{tool.title}</span>
                                     <span className="block text-[8px] text-gray-500 mt-1 uppercase tracking-wider">{tool.sub}</span>
                                 </div>
                             </button>
