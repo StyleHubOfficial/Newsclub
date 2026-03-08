@@ -10,6 +10,7 @@ interface ImageGenerationModalProps {
 const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) => {
     const [prompt, setPrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState('1:1');
+    const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image-preview');
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,7 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
         setGeneratedImage(null);
 
         try {
-            const imageUrl = await generateImageFromPrompt(prompt, aspectRatio);
+            const imageUrl = await generateImageFromPrompt(prompt, aspectRatio, selectedModel);
             setGeneratedImage(imageUrl);
         } catch (err: any) {
             setError(err.message || "Failed to generate image.");
@@ -39,6 +40,14 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
         a.click();
         document.body.removeChild(a);
     };
+
+    const imageModels = [
+        { id: 'gemini-3.1-flash-image-preview', name: 'Nano Banana 2' },
+        { id: 'gemini-2.5-flash-image', name: 'Nano Banana' },
+        { id: 'imagen-4.0-generate-001', name: 'Imagen 4 Standard' },
+        { id: 'imagen-4.0-ultra-generate-001', name: 'Imagen 4 Ultra' },
+        { id: 'imagen-4.0-fast-generate-001', name: 'Imagen 4 Fast' },
+    ];
 
     return (
         <div className="fixed inset-0 bg-[#050505]/95 backdrop-blur-md flex items-center justify-center z-[60] p-4 animate-fade-in" onClick={onClose}>
@@ -69,12 +78,27 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
                     {/* Controls */}
                     <div className="w-full md:w-1/3 space-y-6">
                         <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Model</label>
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-brand-primary outline-none transition-colors appearance-none font-light"
+                            >
+                                {imageModels.map(model => (
+                                    <option key={model.id} value={model.id} className="bg-[#050505] text-white">
+                                        {model.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Prompt</label>
                             <textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 placeholder="Describe a futuristic city..."
-                                className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-primary outline-none transition-colors resize-none placeholder-gray-600 font-light"
+                                className="w-full h-24 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-brand-primary outline-none transition-colors resize-none placeholder-gray-600 font-light"
                             />
                         </div>
 
