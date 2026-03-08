@@ -233,7 +233,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ isOpen, onClose, user }) => {
                                     className="bg-transparent border-none text-[9px] text-brand-text-muted uppercase tracking-widest focus:outline-none cursor-pointer hover:text-brand-primary"
                                 >
                                     <option value="gemini-2.5-flash" className="bg-[#050505] text-white">Gemini 2.5 Flash</option>
-                                    <option value="gemini-2.5-pro" className="bg-[#050505] text-white">Gemini 2.5 Pro</option>
                                     <option value="gemini-3-flash-preview" className="bg-[#050505] text-white">Gemini 3 Flash</option>
                                     <option value="gemini-3.1-pro-preview" className="bg-[#050505] text-white">Gemini 3.1 Pro</option>
                                     <option value="gemini-3.1-flash-lite-preview" className="bg-[#050505] text-white">Gemini 3.1 Flash Lite</option>

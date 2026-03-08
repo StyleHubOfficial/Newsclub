@@ -251,7 +251,7 @@ export async function generateImageFromPrompt(prompt: string, aspectRatio: strin
         let base64ImageBytes: string = '';
         let mimeType: string = 'image/png';
 
-        if (model.startsWith('imagen-4.0')) {
+        if (model.startsWith('imagen-')) {
             // Use generateImages for Imagen models
             const response = await ai.models.generateImages({
                 model: model,

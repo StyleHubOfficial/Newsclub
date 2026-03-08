@@ -44,9 +44,11 @@ const ImageGenerationModal: React.FC<ImageGenerationModalProps> = ({ onClose }) 
     const imageModels = [
         { id: 'gemini-3.1-flash-image-preview', name: 'Nano Banana 2' },
         { id: 'gemini-2.5-flash-image', name: 'Nano Banana' },
-        { id: 'imagen-4.0-generate-001', name: 'Imagen 4 Standard' },
-        { id: 'imagen-4.0-ultra-generate-001', name: 'Imagen 4 Ultra' },
-        { id: 'imagen-4.0-fast-generate-001', name: 'Imagen 4 Fast' },
+        { id: 'imagen-3.0-generate-001', name: 'Imagen 3 Standard' },
+        { id: 'imagen-3.0-fast-generate-001', name: 'Imagen 3 Fast' },
+        { id: 'imagen-2.0-generate-001', name: 'Imagen 2' },
+        { id: 'imagen-1.0-generate-001', name: 'Imagen 1' },
+        { id: 'imagen-3.0-generate-001', name: 'Imagen' },
     ];
 
     return (
