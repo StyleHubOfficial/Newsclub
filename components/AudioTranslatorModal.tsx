@@ -24,8 +24,13 @@ const AudioTranslatorModal: React.FC<AudioTranslatorModalProps> = ({ onClose }) 
         setTranslatedAudio(null);
 
         try {
-            const audioBase64 = await translateAudio(audioFile, sourceLang, targetLang);
-            setStatus('GENERATING AUDIO...');
+            const audioBase64 = await translateAudio(
+                audioFile, 
+                sourceLang, 
+                targetLang,
+                (newStatus) => setStatus(newStatus)
+            );
+            setStatus('DONE');
             setTranslatedAudio(`data:audio/wav;base64,${audioBase64}`);
         } catch (err: any) {
             setError(err.message || "Failed to translate audio.");

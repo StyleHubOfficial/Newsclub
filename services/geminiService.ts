@@ -507,9 +507,15 @@ export async function analyzeStudentVideo(videoFile: File): Promise<AIFeedback> 
     }
 }
 
-export async function translateAudio(audioFile: File, sourceLang: string, targetLang: string): Promise<string> {
+export async function translateAudio(
+    audioFile: File, 
+    sourceLang: string, 
+    targetLang: string,
+    onProgress?: (status: string) => void
+): Promise<string> {
     const ai = getAiClient();
     
+    onProgress?.('READING AUDIO FILE...');
     // 1. Convert File to Base64
     const base64Data = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -518,29 +524,31 @@ export async function translateAudio(audioFile: File, sourceLang: string, target
         reader.onerror = error => reject(error);
     });
 
+    onProgress?.('TRANSCRIBING & TRANSLATING...');
     // 2. Transcribe and Translate using Gemini
-    const prompt = `Transcribe the following audio and translate it from ${sourceLang === 'auto' ? 'the detected language' : sourceLang} to ${targetLang}. Return ONLY the translated text.`;
+    const prompt = `Transcribe the following audio and translate it from ${sourceLang === 'auto' ? 'the detected language' : sourceLang} to ${targetLang}. Return ONLY the translated text without any extra conversational text.`;
     
+    const mimeType = audioFile.type || 'audio/mp3';
+
     const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [
-            {
-                parts: [
-                    { text: prompt },
-                    { 
-                        inlineData: { 
-                            mimeType: audioFile.type, 
-                            data: base64Data 
-                        } 
-                    }
-                ]
-            }
-        ]
+        contents: {
+            parts: [
+                { 
+                    inlineData: { 
+                        mimeType: mimeType, 
+                        data: base64Data 
+                    } 
+                },
+                { text: prompt }
+            ]
+        }
     });
     
-    const translatedText = response.text;
-    if (!translatedText) throw new Error("Translation failed.");
+    const translatedText = response.text?.trim();
+    if (!translatedText) throw new Error("Translation failed. No text returned.");
     
+    onProgress?.('GENERATING SPEECH...');
     // 3. Generate Audio from Translated Text
     const audio = await generateSpeechFromText(translatedText);
     if (!audio) throw new Error("Audio generation failed.");
