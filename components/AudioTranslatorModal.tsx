@@ -12,22 +12,26 @@ const AudioTranslatorModal: React.FC<AudioTranslatorModalProps> = ({ onClose }) 
     const [sourceLang, setSourceLang] = useState('auto');
     const [targetLang, setTargetLang] = useState('English');
     const [translatedAudio, setTranslatedAudio] = useState<string | null>(null);
+    const [status, setStatus] = useState<string>('TRANSLATE');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleTranslate = async () => {
         if (!audioFile) return;
         setIsLoading(true);
+        setStatus('TRANSCRIBING & TRANSLATING...');
         setError(null);
         setTranslatedAudio(null);
 
         try {
             const audioBase64 = await translateAudio(audioFile, sourceLang, targetLang);
+            setStatus('GENERATING AUDIO...');
             setTranslatedAudio(`data:audio/wav;base64,${audioBase64}`);
         } catch (err: any) {
             setError(err.message || "Failed to translate audio.");
         } finally {
             setIsLoading(false);
+            setStatus('TRANSLATE');
         }
     };
 
@@ -66,7 +70,7 @@ const AudioTranslatorModal: React.FC<AudioTranslatorModalProps> = ({ onClose }) 
                         disabled={isLoading || !audioFile}
                         className="w-full py-4 rounded-xl bg-gradient-to-r from-brand-primary to-blue-600 text-white font-orbitron font-bold tracking-widest shadow-[0_0_30px_rgba(58,190,254,0.4)] hover:scale-105 transition-all disabled:opacity-50"
                     >
-                        {isLoading ? 'TRANSLATING...' : 'TRANSLATE'}
+                        {status}
                     </button>
 
                     {error && <div className="p-3 bg-red-900/20 border border-red-500/50 rounded-xl text-red-200 text-xs font-mono">{error}</div>}

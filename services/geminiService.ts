@@ -522,7 +522,7 @@ export async function translateAudio(audioFile: File, sourceLang: string, target
     const prompt = `Transcribe the following audio and translate it from ${sourceLang === 'auto' ? 'the detected language' : sourceLang} to ${targetLang}. Return ONLY the translated text.`;
     
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: [
             {
                 parts: [
