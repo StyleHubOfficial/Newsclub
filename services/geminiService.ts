@@ -506,3 +506,44 @@ export async function analyzeStudentVideo(videoFile: File): Promise<AIFeedback> 
         throw new Error("Failed to analyze video. Ensure the file is valid and under size limits.");
     }
 }
+
+export async function translateAudio(audioFile: File, sourceLang: string, targetLang: string): Promise<string> {
+    const ai = getAiClient();
+    
+    // 1. Convert File to Base64
+    const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(audioFile);
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+
+    // 2. Transcribe and Translate using Gemini
+    const prompt = `Transcribe the following audio and translate it from ${sourceLang === 'auto' ? 'the detected language' : sourceLang} to ${targetLang}. Return ONLY the translated text.`;
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+            {
+                parts: [
+                    { text: prompt },
+                    { 
+                        inlineData: { 
+                            mimeType: audioFile.type, 
+                            data: base64Data 
+                        } 
+                    }
+                ]
+            }
+        ]
+    });
+    
+    const translatedText = response.text;
+    if (!translatedText) throw new Error("Translation failed.");
+    
+    // 3. Generate Audio from Translated Text
+    const audio = await generateSpeechFromText(translatedText);
+    if (!audio) throw new Error("Audio generation failed.");
+    
+    return audio;
+}

@@ -9,6 +9,7 @@ import SearchResultsModal from './components/SearchResultsModal';
 import PersonalizationModal from './components/PersonalizationModal';
 import ReelsView from './components/ReelsView';
 import AudioGenerationModal from './components/AudioGenerationModal';
+import AudioTranslatorModal from './components/AudioTranslatorModal';
 import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './components/LandingPage';
@@ -21,7 +22,7 @@ import VoiceCloneModal from './components/VoiceCloneModal';
 import ImageGenerationModal from './components/ImageGenerationModal';
 import ParticleBackground from './components/ParticleBackground';
 import { searchWithGoogle, generateFuturisticArticles } from './services/geminiService';
-import { BoltIcon, MicIcon, SoundWaveIcon, ImageIcon } from './components/icons';
+import { BoltIcon, MicIcon, SoundWaveIcon, ImageIcon, ListIcon } from './components/icons';
 import { NewsArticle, UserProfile } from './types';
 import { HolographicScanner } from './components/Loaders';
 import { auth } from './services/firebase';
@@ -112,6 +113,7 @@ const App = () => {
     const [isChatOpen, setChatOpen] = useState(false);
     const [isLiveAgentOpen, setLiveAgentOpen] = useState(false);
     const [isAudioGenOpen, setAudioGenOpen] = useState(false);
+    const [isAudioTranslatorOpen, setAudioTranslatorOpen] = useState(false);
     const [isImageGenOpen, setIsImageGenOpen] = useState(false);
     const [isVoiceCloneOpen, setVoiceCloneOpen] = useState(false);
     
@@ -206,10 +208,11 @@ const App = () => {
     };
 
     // Helper to ensure mutual exclusivity
-    const openTool = useCallback((tool: 'chat' | 'live' | 'audio' | 'voiceClone' | 'image') => {
+    const openTool = useCallback((tool: 'chat' | 'live' | 'audio' | 'audioTranslator' | 'voiceClone' | 'image') => {
         setChatOpen(tool === 'chat');
         setLiveAgentOpen(tool === 'live');
         setAudioGenOpen(tool === 'audio');
+        setAudioTranslatorOpen(tool === 'audioTranslator');
         setVoiceCloneOpen(tool === 'voiceClone');
         setIsImageGenOpen(tool === 'image');
         setSelectedArticle(null); // Close article if open
@@ -221,6 +224,7 @@ const App = () => {
         setChatOpen(false);
         setLiveAgentOpen(false);
         setAudioGenOpen(false);
+        setAudioTranslatorOpen(false);
         setVoiceCloneOpen(false);
         setIsImageGenOpen(false);
         setSelectedArticle(null);
@@ -419,6 +423,7 @@ const App = () => {
                         onOpenChat={() => openTool('chat')}
                         onOpenLive={() => openTool('live')}
                         onOpenAudio={() => openTool('audio')}
+                        onOpenAudioTranslator={() => openTool('audioTranslator')}
                         onOpenVoiceClone={() => openTool('voiceClone')}
                         onOpenImageGen={() => openTool('image')}
                         onViewReels={() => setViewMode('reels')}
@@ -529,6 +534,12 @@ const App = () => {
                         user={currentUser} // PASS USER
                         onLoginRequest={() => { /* Guest access allowed */ }}
                     />
+                </ErrorBoundary>
+            )}
+
+            {isAudioTranslatorOpen && (
+                <ErrorBoundary componentName="AudioTranslatorModal">
+                    <AudioTranslatorModal onClose={() => setAudioTranslatorOpen(false)} />
                 </ErrorBoundary>
             )}
 
